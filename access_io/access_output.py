@@ -10,7 +10,8 @@ def append_var_to_daily_tb_netcdf(*,year,month,day,satellite,var,
                                     valid_max=None,
                                     units=None,
                                     v_fill = -999.0,
-                                    dataroot='L:/access/'):
+                                    dataroot='L:/access/',
+                                    overwrite=False):
 
     from netCDF4 import Dataset as netcdf_dataset
 
@@ -21,8 +22,11 @@ def append_var_to_daily_tb_netcdf(*,year,month,day,satellite,var,
     try:
         v = root_grp.createVariable(var_name, 'f4', ('latitude', 'longitude','hours',),zlib=True)
     except:
-        print(f'Error -- likely that variable {var_name} already exists - trying to use it')
-        v = root_grp.variables[var_name]
+        if overwrite:
+            print(f'Warning -- variable {var_name} already exists - overwriting')
+            v = root_grp.variables[var_name]
+        else:
+            raise RuntimeError(f'Error -- Variable {var_name} already exists and overwrite is False, so raising error')
 
     if standard_name is not None:
         v.standard_name = standard_name
@@ -33,10 +37,11 @@ def append_var_to_daily_tb_netcdf(*,year,month,day,satellite,var,
         v.long_name = long_name
 
     v.FillValue = v_fill
+    # the next few lines are because an class attribute can not start with "_", but that is what CF requires.
     try:
         v.renameAttribute('FillValue', '_FillValue')
     except:
-        print('can not rename FillValue to _FillValue because it exists')
+        #print('can not rename FillValue to _FillValue because it exists')
         v.delncattr('_FillValue')
         v.renameAttribute('FillValue', '_FillValue')
 
