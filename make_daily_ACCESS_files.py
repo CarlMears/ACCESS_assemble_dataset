@@ -7,36 +7,14 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     import sys
-    sys.path.append('C:/Users/Carl/python_packages_cam/')
-    from land_masks.land_fraction import read_land_fraction_1440_720
 
-    sys.path.append('./access_io/')
-    sys.path.append('./resampled_tbs/')
-    sys.path.append('./util/')
-
-    from access_output import get_access_output_filename,append_lf_daily_tb_netcdf,write_daily_tb_netcdf
-    from read_resampled_orbit import get_orbit_range,read_resampled_tbs
-    from numpy_date_utils import calendar_dates_from_datetime64,convert_to_sec_in_day,convert_to_np_datetime64
-
-
-    lf_1440_720 = read_land_fraction_1440_720()
-    lf_1440_721 = np.zeros((721,1440))
-    temp = np.zeros((719,1440))
-    temp = 0.25*(lf_1440_720[0:719,:]+
-                 lf_1440_720[1:720,:]+
-                 np.roll(lf_1440_720[0:719,:],1,axis=1)+
-                 np.roll(lf_1440_720[1:720,:],1,axis=1))
-    lf_1440_721[1:720,:] = temp
-    lf_1440_721[0,:] = lf_1440_721[1,:]
-    lf_1440_721[720,:] = lf_1440_721[719,:]
-
-
+    from access_io.access_output import get_access_output_filename,write_daily_tb_netcdf
+    from resampled_tbs.read_resampled_orbit import get_orbit_range,read_resampled_tbs
+    from util.numpy_date_utils import calendar_dates_from_datetime64,convert_to_sec_in_day,convert_to_np_datetime64
     
 
     verbose = False
     satellite = 'amsr2'
-    orbit = 792+14
-    channel = '11H'
 
     num_lats = 721
     num_lons = 1440
@@ -89,13 +67,13 @@ if __name__ == "__main__":
     global_map(tb_array_by_hour[:,:,0,5],vmin=0.0,vmax=330)
     global_map(tb_array_by_hour[:,:,1,6],vmin=0.0,vmax=330)
 
+    global_map(tb_array_by_hour[:,:,1,6]+tb_array_by_hour[:,:,2,6],vmin=0.0,vmax=330)
+
+
     write_daily_tb_netcdf(year=year,month=month,day=day,satellite=satellite,
                        tb_array_by_hour=tb_array_by_hour,
                        time_array_by_hour=time_array_by_hour,
                        file_list=file_list)
-
-
-    append_lf_daily_tb_netcdf(year=year,month=month,day=day,satellite=satellite,land_fraction = lf_1440_721)
 
     filename = get_access_output_filename(year=year,month=month,day=day,satellite=satellite,dataroot='L:/access/')
     ds = xr.open_dataset(filename)

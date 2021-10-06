@@ -58,6 +58,61 @@ def append_var_to_daily_tb_netcdf(*,year,month,day,satellite,var,
     v[:,:,:] = var
     root_grp.close()
 
+def append_const_var_to_daily_tb_netcdf(*,year,month,day,satellite,var,
+                                    var_name,
+                                    standard_name=None,
+                                    long_name=None,
+                                    valid_min=None,
+                                    valid_max=None,
+                                    units=None,
+                                    v_fill = -999.0,
+                                    dataroot='L:/access/',
+                                    overwrite=False):
+
+    from netCDF4 import Dataset as netcdf_dataset
+
+   
+    filename = get_access_output_filename(year=year,month=month,day=day,satellite=satellite,dataroot=dataroot)
+
+    root_grp = netcdf_dataset(filename, 'a', format='NETCDF4')
+    try:
+        v = root_grp.createVariable(var_name, 'f4', ('latitude', 'longitude',),zlib=True)
+    except:
+        if overwrite:
+            print(f'Warning -- variable {var_name} already exists - overwriting')
+            v = root_grp.variables[var_name]
+        else:
+            raise RuntimeError(f'Error -- Variable {var_name} already exists and overwrite is False, so raising error')
+
+    if standard_name is not None:
+        v.standard_name = standard_name
+    else:
+        v.standard_name = var_name
+    
+    if long_name is not None:
+        v.long_name = long_name
+
+    v.FillValue = v_fill
+    # the next few lines are because an class attribute can not start with "_", but that is what CF requires.
+    try:
+        v.renameAttribute('FillValue', '_FillValue')
+    except:
+        #print('can not rename FillValue to _FillValue because it exists')
+        v.delncattr('_FillValue')
+        v.renameAttribute('FillValue', '_FillValue')
+
+    v.missing = v_fill
+
+    if valid_min is not None:
+        v.valid_min = valid_min
+    if valid_max is not None:
+        v.valid_max = valid_max
+    if units is not None:
+        v.units=units
+    v.coordinates = 'latitude longitude'
+
+    v[:,:] = var
+    root_grp.close()
 def append_lf_daily_tb_netcdf(*,year,month,day,satellite,land_fraction,dataroot='L:/access/'):
 
 

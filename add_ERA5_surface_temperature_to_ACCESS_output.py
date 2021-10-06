@@ -3,15 +3,10 @@ import numpy as np
 import xarray as xr
 from netCDF4 import Dataset as netcdf_dataset
 
-#These need to be installed.
-import sys
-sys.path.append('M:/job_access/python/dataset_assembly/era5/')
-from era5_requests import era5_hourly_single_level_request
-sys.path.append('M:/job_access/python/dataset_assembly/access_io/')
-from access_output import get_access_output_filename,append_var_to_daily_tb_netcdf
-sys.path.append('M:/job_access/python/dataset_assembly/util/')
-from access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
+from era5_request.era5_requests import era5_hourly_single_level_request
+from access_io.access_output import get_access_output_filename,append_var_to_daily_tb_netcdf
+from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 def add_ERA5_single_level_variable_to_ACCESS_output(*,year:int,
                                                       month:int,
@@ -84,7 +79,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(*,year:int,
         skt_at_time_map = time_interpolate_synoptic_maps_ACCESS(skt,skt_times,time_map)
         skt_by_hour[:,:,hour_index] = skt_at_time_map
 
-    #write the results to the existing ouotput file
+    #write the results to the existing output file
     append_var_to_daily_tb_netcdf(  year=year,
                                     month=month,
                                     day=day,

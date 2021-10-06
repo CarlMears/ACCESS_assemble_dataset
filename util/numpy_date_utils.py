@@ -16,7 +16,8 @@ def calendar_dates_from_datetime64(dt):
     cal : dictionary of arrays
             'Y' = year, 'M' = month, 'D' =day, 'h' = hour,
             'm' = minute, 's' = second, 'us' = microsecond
-            keys are the same of the datetim3 64 names except that I left out 'ms' and 'ns'
+            keys are the same of the datetime64 unit names except that 
+            I left out 'ms' and 'ns'
     """
 
     # create the output dict
@@ -37,7 +38,9 @@ def convert_to_sec_in_day(ob_time,year,month,day,
                           ref_year = 2000):
 
     '''converts at time, in seconds since Jan 1, ref_year to
-       seconds in day.  Reference year defaults to 2000'''
+       seconds in day.  Reference year defaults to 2000.  Not 
+       sure how leap seconds affect this, so DO NOT USE for 
+       geolocation'''
 
 
     date_jan1_2000 = np.datetime64(f'{ref_year:04d}-01-01T00:00:00')
