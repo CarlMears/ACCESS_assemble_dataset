@@ -11,7 +11,7 @@ def get_orbit_range(orbit:int = 10000):
 
     return orbit_lower,orbit_upper
 
-def read_resampled_tbs(*,satellite,channel,orbit,dataroot='L:/access/'):
+def read_resampled_tbs(*,satellite,channel,orbit,dataroot='L:/access/',verbose=False):
 
     list_of_channels=['time','6V','6H','7V','7H','11V','11H','19V','19H',
                      '24V','24H','37V','37H','89V','89H']
@@ -33,7 +33,8 @@ def read_resampled_tbs(*,satellite,channel,orbit,dataroot='L:/access/'):
         filename = f'{dataroot}{satellite}_tb_orbits/r{orbit_lower:05d}_{orbit_upper:05d}/r{orbit:05d}.time.nc'
     else:
         filename = f'{dataroot}{satellite}_tb_orbits/r{orbit_lower:05d}_{orbit_upper:05d}/r{orbit:05d}.gridded_tbs.{channel_str}.nc'
-    print(filename)
+    if verbose:
+        print(filename)
     ds = xr.open_dataset(filename)
     return ds.Data.values,filename
     print
