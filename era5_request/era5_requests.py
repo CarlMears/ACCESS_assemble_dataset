@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 """
 This a collection of subroutines that download one day for ERA5 data (including the first hour of the
 next day).
@@ -13,7 +13,6 @@ Then you need to get a key from ECMWF and put in a .cdsapirc file in your {user}
 
 """
 
-# !/usr/bin/env python
 import calendar
 import os.path
 import os, errno
