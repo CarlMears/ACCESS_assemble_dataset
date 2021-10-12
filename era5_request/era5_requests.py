@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This a collection of subroutines that download one day for ERA5 data (including the first hour of the
 next day).
