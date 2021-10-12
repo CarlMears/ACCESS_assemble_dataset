@@ -1,47 +1,81 @@
-
-import numpy as np
-import xarray as xr
-import datetime
 import os
+import typing
+from pathlib import Path
 
-def get_orbit_range(orbit:int = 10000):
-    j = int((orbit-1)/5000)
-    orbit_lower = 1 + j*5000
-    orbit_upper = orbit_lower+4999
+import xarray as xr
 
-    return orbit_lower,orbit_upper
+if os.name == "nt":
+    ACCESS_ROOT = "L:/access"
+elif os.name == "posix":
+    ACCESS_ROOT = "/mnt/ops1p-ren/l/access"
 
-def read_resampled_tbs(*,satellite,channel,orbit,dataroot='L:/access/',verbose=False):
+IMPLEMENTED_SATELLITES = ["amsr2"]
 
-    list_of_channels=['time','6V','6H','7V','7H','11V','11H','19V','19H',
-                     '24V','24H','37V','37H','89V','89H']
+AVAILABLE_CHANNELS = [
+    "time",
+    "6V",
+    "6H",
+    "7V",
+    "7H",
+    "11V",
+    "11H",
+    "19V",
+    "19H",
+    "24V",
+    "24H",
+    "37V",
+    "37H",
+    "89V",
+    "89H",
+]
 
-    list_of_implemented_satellites=['amsr2']
-    if satellite not in list_of_implemented_satellites:
-        raise ValueError(f'Sattelite {satellite} is not implemented')
+
+def get_orbit_range(orbit: int) -> tuple[int, int]:
+    """Return the lower/upper bounds to an orbit.
+
+    >>> get_orbit_range(1)
+    (1, 5000)
+    >>> get_orbit_range(5000)
+    (1, 5000)
+    >>> get_orbit_range(5001)
+    (5001, 10000)
+    """
+    BIN_WIDTH = 5000
+    j = int((orbit - 1) / BIN_WIDTH)
+    orbit_lower = 1 + j * BIN_WIDTH
+    orbit_upper = (j + 1) * BIN_WIDTH
+    return orbit_lower, orbit_upper
+
+
+def read_resampled_tbs(
+    *,
+    satellite: str,
+    channel: typing.Union[str, int],
+    orbit: int,
+    dataroot: Path = ACCESS_ROOT,
+    verbose: bool = False,
+) -> tuple[typing.Any, Path]:
+    if satellite not in IMPLEMENTED_SATELLITES:
+        raise ValueError(f"Satellite {satellite} is not implemented")
     if isinstance(channel, int):
-        if ((channel < 1) or (channel > 14)):
-            raise ValueError(f'channel {channel} is out of range')
-        channel_str = list_of_channels[channel]
+        if (channel < 1) or (channel > 14):
+            raise ValueError(f"channel {channel} is out of range")
+        channel_str = AVAILABLE_CHANNELS[channel]
     else:
-        if channel in list_of_channels:
+        if channel in AVAILABLE_CHANNELS:
             channel_str = channel
         else:
-            raise ValueError(f'Channel {channel} not valid')
-    orbit_lower,orbit_upper = get_orbit_range(orbit)
-    if channel_str == 'time':
-        filename = f'{dataroot}{satellite}_tb_orbits/r{orbit_lower:05d}_{orbit_upper:05d}/r{orbit:05d}.time.nc'
+            raise ValueError(f"Channel {channel} not valid")
+
+    orbit_lower, orbit_upper = get_orbit_range(orbit)
+    orbit_dir = dataroot.joinpath(
+        f"{satellite}_tb_orbits", f"r{orbit_lower:05d}_{orbit_upper:05d}"
+    )
+    if channel_str == "time":
+        filename = orbit_dir / f"r{orbit:05d}.time.nc"
     else:
-        filename = f'{dataroot}{satellite}_tb_orbits/r{orbit_lower:05d}_{orbit_upper:05d}/r{orbit:05d}.gridded_tbs.{channel_str}.nc'
+        filename = orbit_dir / f"r{orbit:05d}.gridded_tbs.{channel_str}.nc"
     if verbose:
         print(filename)
     ds = xr.open_dataset(filename)
-    return ds.Data.values,filename
-    print
-
-
-
-
-
-    
-
+    return ds.Data.values, filename
