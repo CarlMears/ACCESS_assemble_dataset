@@ -1,4 +1,6 @@
 import datetime
+import os
+from pathlib import Path
 import numpy as np
 import xarray as xr
 from netCDF4 import Dataset as netcdf_dataset
@@ -14,47 +16,34 @@ from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 def add_ERA5_single_level_variable_to_ACCESS_output(
     *,
-    year: int,
-    month: int,
-    day: int,
-    variable: tuple,
+    current_day: datetime.date,
+    variable: tuple[str, str],
     satellite: str,
     dataroot: str,
     verbose: bool = False,
 ):
+    # Get the maps of observation times from the existing output file that
+    # already contains times and Tbs
+    filename = get_access_output_filename(current_day, satellite, dataroot)
 
-    # Get the maps of observation times from the existing output file that already contains
-    # times and Tbs
+    with netcdf_dataset(filename, "r") as root_grp:
+        try:
+            times = root_grp.variables["second_since_midnight"][:, :, :].filled(
+                fill_value=-999
+            )
+        except KeyError:
+            raise ValueError(f'Error finding "second_since_midnight" in {filename}')
 
-    filename = get_access_output_filename(
-        datetime.date(year, month, day), satellite, dataroot
-    )
-
-    try:
-        root_grp = netcdf_dataset(filename, "r", format="NETCDF4")
-    except:
-        raise FileNotFoundError(f"{filename} not found")
-    try:
-        times = root_grp.variables["second_since_midnight"][:, :, :].filled(
-            fill_value=-999
-        )
-    except:
-        raise ValueError(f'Error finding "second_since_midnight" in {filename}')
-    finally:
-        root_grp.close()
-
-    # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour of the next day.
-
-    date_to_load = datetime.datetime(year, month, day)
-    next_day = date_to_load + datetime.timedelta(hours=24)
-
+    # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour
+    # of the next day.
+    next_day = current_day + datetime.timedelta(hours=24)
     try:
         file1 = era5_hourly_single_level_request(
-            year=date_to_load.year,
-            month=date_to_load.month,
-            day=date_to_load.day,
+            year=current_day.year,
+            month=current_day.month,
+            day=current_day.day,
             variable=variable[0],
-            target_path="L:/access/_temp/",
+            target_path=dataroot / "_temp",
             full_day=True,
         )
         file2 = era5_hourly_single_level_request(
@@ -62,7 +51,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             month=next_day.month,
             day=next_day.day,
             variable=variable[0],
-            target_path="L:/access/_temp/",
+            target_path=dataroot / "_temp",
             full_day=False,
         )
     except:
@@ -76,6 +65,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     skt = np.concatenate((skt_first_day, skt_next_day), axis=0)
 
     # ERA-5 files are upside down relative to RSS convention.
+    # TODO: I think you can just do skt = skt[:, ::-1, :] and avoid the loop
     for i in range(0, 25):
         skt[i, :, :] = np.flipud(skt[i, :, :])
 
@@ -87,7 +77,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     skt_times = np.arange(0.0, 86401.0, 3600.0)
 
     # create output array
-    skt_by_hour = np.zeros_like(times) * np.nan
+    skt_by_hour = np.full_like(times, np.nan)
 
     for hour_index in range(0, 24):
         time_map = times[:, :, hour_index]
@@ -98,9 +88,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
     # write the results to the existing output file
     append_var_to_daily_tb_netcdf(
-        year=year,
-        month=month,
-        day=day,
+        date=current_day,
         satellite=satellite,
         var=skt_by_hour,
         var_name="skt",
@@ -110,16 +98,13 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         valid_max=400.0,
         units="degrees kelvin",
         v_fill=-999.0,
-        dataroot="L:/access/",
+        dataroot=dataroot,
         overwrite=True,
     )
 
 
 if __name__ == "__main__":
-
-    year = 2012
-    month = 7
-    day = 11
+    date = datetime.date(2012, 7, 11)
     variable = (
         "Skin temperature",
         "skt",
@@ -128,12 +113,13 @@ if __name__ == "__main__":
     # that is provided/downloaded
     satellite = "AMSR2"
     verbose = True
-    dataroot = "L:/access/"
+    if os.name == "nt":
+        dataroot = Path("L:/access/")
+    elif os.name == "posix":
+        dataroot = Path("/mnt/ops1p-ren/l/access")
 
     add_ERA5_single_level_variable_to_ACCESS_output(
-        year=year,
-        month=month,
-        day=day,
+        current_day=date,
         variable=variable,
         satellite=satellite,
         dataroot=dataroot,

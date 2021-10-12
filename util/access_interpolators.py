@@ -1,11 +1,9 @@
+import numpy as np
+
+
 def time_interpolate_synoptic_maps_ACCESS(map_array, map_times, time_map):
-
-    import numpy as np
-    import datetime
-
-    """this routine interpolates an array of gridded data (map_array), assumed cover an entrire day, including both 0:00 and 24:00
-     time slots.  The map_times array is a 1-d array of the times for each map in seconds since midnight"""
-
+    """Interpolate an array of gridded data (map_array), assumed cover an entrire day, including both 0:00 and 24:00
+    time slots.  The map_times array is a 1-d array of the times for each map in seconds since midnight"""
     sz = map_array.shape
     num_maps = sz[0]
     num_maps2 = len(map_times)
@@ -20,9 +18,8 @@ def time_interpolate_synoptic_maps_ACCESS(map_array, map_times, time_map):
         time_map / 60.0
     )  # convert to hours after midnight ZZ without side effects
 
-    map_interp = (
-        np.zeros_like(map_array[0, :, :]) * np.nan
-    )  # output array -- initialize to be all NAN
+    # output array
+    map_interp = np.full_like(map_array[0, :, :], np.nan)
 
     for interval in range(0, num_steps_in_day):
         ok = np.all(

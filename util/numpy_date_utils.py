@@ -1,8 +1,10 @@
+import datetime
+
 import numpy as np
+from numpy.typing import NDArray
 
 
-def calendar_dates_from_datetime64(dt):
-
+def calendar_dates_from_datetime64(dt) -> dict[str, NDArray[np.uint32]]:
     """
     Convert array of datetime64 to a calendar array of year, month, day, hour,
     minute, seconds, microsecond with these quantites indexed on the last axis.
@@ -20,31 +22,28 @@ def calendar_dates_from_datetime64(dt):
             keys are the same of the datetime64 unit names except that
             I left out 'ms' and 'ns'
     """
-
-    # create the output dict
-
-    out = {}
     # decompose calendar floors
     Y, M, D, h, m, s = [dt.astype(f"M8[{x}]") for x in "YMDhms"]
-    out["Y"] = (Y + 1970).astype("u4")  # Gregorian Year
-    out["M"] = ((M - Y) + 1).astype("u4")  # month
-    out["D"] = ((D - M) + 1).astype("u4")  # dat
-    out["h"] = ((dt - D).astype("m8[h]")).astype("u4")  # hour
-    out["m"] = ((dt - h).astype("m8[m]")).astype("u4")  # minute
-    out["s"] = ((dt - m).astype("m8[s]")).astype("u4")  # second
-    out["us"] = ((dt - s).astype("m8[us]")).astype("u4")  # microsecond
-    return out
+    return {
+        "Y": (Y + 1970).astype("u4"),  # Gregorian Year
+        "M": ((M - Y) + 1).astype("u4"),  # month
+        "D": ((D - M) + 1).astype("u4"),  # dat
+        "h": ((dt - D).astype("m8[h]")).astype("u4"),  # hour
+        "m": ((dt - h).astype("m8[m]")).astype("u4"),  # minute
+        "s": ((dt - m).astype("m8[s]")).astype("u4"),  # second
+        "us": ((dt - s).astype("m8[us]")).astype("u4"),  # microsecond
+    }
 
 
-def convert_to_sec_in_day(ob_time, year, month, day, ref_year=2000):
-
-    """converts at time, in seconds since Jan 1, ref_year to
+def convert_to_sec_in_day(
+    ob_time, date: datetime.date, ref_year: int = 2000
+) -> NDArray[np.float32]:
+    """Converts at time, in seconds since Jan 1, ref_year to
     seconds in day.  Reference year defaults to 2000.  Not
     sure how leap seconds affect this, so DO NOT USE for
     geolocation"""
-
     date_jan1_2000 = np.datetime64(f"{ref_year:04d}-01-01T00:00:00")
-    start_of_day = np.datetime64(f"{year:04d}-{month:02d}-{day:02d}T00:00:00")
+    start_of_day = np.datetime64(f"{date:%Y-%m-%d}T00:00:00")
 
     bad = ob_time < 100.0
     ob_time = ob_time.astype(np.int64)
@@ -56,13 +55,11 @@ def convert_to_sec_in_day(ob_time, year, month, day, ref_year=2000):
     return obtime_in_day
 
 
-def convert_to_np_datetime64(ob_time, ref_year=2000):
-
+def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> NDArray[np.timedelta64]:
     """converts at time, in seconds since Jan 1, ref_year to
     seconds in day.  Reference year defaults to 2000, the value
     used for the AMSR2 file.  I am not sure what this does about leap seconds,
     so DO NOT USE for geolocation until we check it out"""
-
     date_jan1_2000 = np.datetime64(f"{ref_year:04d}-01-01T00:00:00")
     bad = ob_time < 0.00001  # ad data is often stored as zero
 

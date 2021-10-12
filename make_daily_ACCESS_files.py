@@ -1,6 +1,6 @@
 import os
 from collections.abc import Collection
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -78,9 +78,7 @@ def make_daily_ACCESS_tb_file(
             continue
 
         file_list.append(filename)
-        obtime_in_day = convert_to_sec_in_day(
-            ob_time, current_day.year, current_day.month, current_day.day
-        )
+        obtime_in_day = convert_to_sec_in_day(ob_time, current_day)
         for hour in range(0, 24):
             time_slice = time_array_by_hour[:, :, hour]
             start_time_sec = hour * 3600.0
@@ -128,16 +126,12 @@ def make_daily_ACCESS_tb_file(
         if plot_example_map:
             global_map(tb_array_by_hour[:, :, 0, 5], vmin=0.0, vmax=330)
 
-        # TODO: once this function accepts a list of `Path`s then remove the
-        # list comprehension
         write_daily_tb_netcdf(
-            year=current_day.year,
-            month=current_day.month,
-            day=current_day.day,
+            date=current_day,
             satellite=satellite,
             tb_array_by_hour=tb_array_by_hour,
             time_array_by_hour=time_array_by_hour,
-            file_list=[str(p) for p in file_list],
+            file_list=file_list,
             dataroot=dataroot,
         )
 

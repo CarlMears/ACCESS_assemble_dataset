@@ -1,46 +1,51 @@
+import os
+from pathlib import Path
+
 import numpy as np
+from numpy.typing import NDArray
 
-land_fraction_path = "//ops1p-to-be-renamed/M/Module_Data/Land_Fraction/"
+if os.name == "nt":
+    LAND_FRACTION_PATH = Path("//ops1p-to-be-renamed/M/Module_Data/Land_Fraction/")
+    SEA_ICE_LAND_FRACTION_DIR = Path("l:/sea_ice/land_fraction/")
+elif os.name == "posix":
+    LAND_FRACTION_PATH = Path("/mnt/ops1p-ren/m/Module_Data/Land_Fraction/")
+    SEA_ICE_LAND_FRACTION_DIR = Path("/mnt/ops1p-ren/l/sea_ice/land_fraction/")
 
 
-def read_land_fraction_1440_720(path=land_fraction_path):
+def read_land_fraction_1440_720(path: Path = LAND_FRACTION_PATH) -> NDArray[np.float32]:
+    bin_file = LAND_FRACTION_PATH / "land_fraction_1440x720.dat"
 
-    bin_file = land_fraction_path + "land_fraction_1440x720.dat"
-
-    with open(bin_file, mode="rb") as file:
+    with bin_file.open(mode="rb") as file:
         land_frac_raw = np.fromfile(file, dtype=np.float32)
 
-    land_frac_raw.shape
     land_frac = np.reshape(land_frac_raw, (720, 1440))
     return land_frac
 
 
-def read_land_fraction_polar_stereographic(pole="north"):
+def read_land_fraction_polar_stereographic(pole: str = "north") -> NDArray[np.float64]:
     if pole == "north":
         return read_land_fraction_polar_stereographic_NP()
-    if pole == "south":
+    elif pole == "south":
         return read_land_fraction_polar_stereographic_SP()
+    else:
+        raise ValueError('arg "pole" should be "north" or "south"')
 
-    raise ValueError('arg "pole" should be "north" or "south"')
 
-
-def read_land_fraction_polar_stereographic_NP():
-
-    import numpy as np
-
-    land_fraction_file = "l:/sea_ice/land_fraction/nsidc_polar_stereographic_land_fraction_north_pole.dat"
-
+def read_land_fraction_polar_stereographic_NP() -> NDArray[np.float64]:
+    land_fraction_file = (
+        SEA_ICE_LAND_FRACTION_DIR
+        / "nsidc_polar_stereographic_land_fraction_north_pole.dat"
+    )
     lf = np.fromfile(land_fraction_file, dtype="float64")
     lf = np.reshape(lf, (448, 304))
-
     return lf
 
 
-def read_land_fraction_polar_stereographic_SP():
-    import numpy as np
-
-    land_fraction_file = "l:/sea_ice/land_fraction/nsidc_polar_stereographic_land_fraction_south_pole.dat"
-
+def read_land_fraction_polar_stereographic_SP() -> NDArray[np.float64]:
+    land_fraction_file = (
+        SEA_ICE_LAND_FRACTION_DIR
+        / "nsidc_polar_stereographic_land_fraction_south_pole.dat"
+    )
     lf = np.fromfile(land_fraction_file, dtype="float64")
     lf = np.reshape(lf, (332, 316))
     return lf

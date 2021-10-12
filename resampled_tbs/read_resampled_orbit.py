@@ -1,26 +1,13 @@
+import os
 import typing
 from pathlib import Path
-import os
 
 import xarray as xr
 
-
-def get_orbit_range(orbit: int) -> tuple[int, int]:
-    """Return the lower/upper bounds to an orbit.
-
-    >>> get_orbit_range(1)
-    (1, 5000)
-    >>> get_orbit_range(5000)
-    (1, 5000)
-    >>> get_orbit_range(5001)
-    (5001, 10000)
-    """
-    BIN_WIDTH = 5000
-    j = int((orbit - 1) / BIN_WIDTH)
-    orbit_lower = 1 + j * BIN_WIDTH
-    orbit_upper = (j + 1) * BIN_WIDTH
-    return orbit_lower, orbit_upper
-
+if os.name == "nt":
+    ACCESS_ROOT = "L:/access"
+elif os.name == "posix":
+    ACCESS_ROOT = "/mnt/ops1p-ren/l/access"
 
 IMPLEMENTED_SATELLITES = ["amsr2"]
 
@@ -42,10 +29,22 @@ AVAILABLE_CHANNELS = [
     "89H",
 ]
 
-if os.name == "nt":
-    ACCESS_ROOT = "L:/access"
-elif os.name == "posix":
-    ACCESS_ROOT = "/mnt/ops1p-ren/l/access"
+
+def get_orbit_range(orbit: int) -> tuple[int, int]:
+    """Return the lower/upper bounds to an orbit.
+
+    >>> get_orbit_range(1)
+    (1, 5000)
+    >>> get_orbit_range(5000)
+    (1, 5000)
+    >>> get_orbit_range(5001)
+    (5001, 10000)
+    """
+    BIN_WIDTH = 5000
+    j = int((orbit - 1) / BIN_WIDTH)
+    orbit_lower = 1 + j * BIN_WIDTH
+    orbit_upper = (j + 1) * BIN_WIDTH
+    return orbit_lower, orbit_upper
 
 
 def read_resampled_tbs(

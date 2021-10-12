@@ -1,16 +1,16 @@
 import datetime
-import numpy as np
-import xarray as xr
-from netCDF4 import Dataset as netcdf_dataset
+import os
+from pathlib import Path
 
-from util.land_fraction import read_land_fraction_1440_720
+import numpy as np
+
 from access_io.access_output import append_const_var_to_daily_tb_netcdf
+from util.land_fraction import read_land_fraction_1440_720
 
 
 def add_land_fraction_to_ACCESS_output(
-    *, year, month, day, satellite, dataroot, overwrite
-):
-
+    *, date: datetime.date, satellite: str, dataroot: Path, overwrite: bool
+) -> None:
     # This a temporary kludge until the more accurate land mask is available
     lf_1440_720 = read_land_fraction_1440_720()
     lf_1440_721 = np.zeros((721, 1440))
@@ -26,9 +26,7 @@ def add_land_fraction_to_ACCESS_output(
     lf_1440_721[720, :] = lf_1440_721[719, :]
 
     append_const_var_to_daily_tb_netcdf(
-        year=year,
-        month=month,
-        day=day,
+        date=date,
         satellite=satellite,
         var=lf_1440_721,
         var_name="land_area_fraction",
@@ -44,17 +42,16 @@ def add_land_fraction_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    year = 2012
-    month = 7
-    day = 11
+    date = datetime.date(2012, 7, 11)
     satellite = "AMSR2"
     verbose = True
-    dataroot = "L:/access/"
+    if os.name == "nt":
+        dataroot = Path("L:/access/")
+    elif os.name == "posix":
+        dataroot = Path("/mnt/ops1p-ren/l/access")
 
     add_land_fraction_to_ACCESS_output(
-        year=year,
-        month=month,
-        day=day,
+        date=date,
         satellite=satellite,
         dataroot=dataroot,
         overwrite=True,
