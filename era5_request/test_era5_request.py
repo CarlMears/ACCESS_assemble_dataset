@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Created on Mon Dec 04 09:18:09 2018
 
@@ -10,7 +11,6 @@ see https://cds.climate.copernicus.eu/api-how-to
 @author: mears
 """
 
-# !/usr/bin/env python
 import calendar
 import os.path
 import os, errno
