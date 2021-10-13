@@ -19,7 +19,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     current_day: datetime.date,
     variable: tuple[str, str],
     satellite: str,
-    dataroot: str,
+    dataroot: Path,
     verbose: bool = False,
 ):
     # Get the maps of observation times from the existing output file that
@@ -54,7 +54,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             target_path=dataroot / "_temp",
             full_day=False,
         )
-    except:
+    except Exception:
         raise RuntimeError("Problem downloading ERA5 data using cdsapi")
 
     # open the files, and combine the two files into a 25-map array

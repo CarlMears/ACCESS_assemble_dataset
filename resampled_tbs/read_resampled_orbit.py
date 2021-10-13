@@ -5,9 +5,9 @@ from pathlib import Path
 import xarray as xr
 
 if os.name == "nt":
-    ACCESS_ROOT = "L:/access"
+    ACCESS_ROOT = Path("L:/access")
 elif os.name == "posix":
-    ACCESS_ROOT = "/mnt/ops1p-ren/l/access"
+    ACCESS_ROOT = Path("/mnt/ops1p-ren/l/access")
 
 IMPLEMENTED_SATELLITES = ["amsr2"]
 

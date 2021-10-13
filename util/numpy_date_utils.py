@@ -55,13 +55,13 @@ def convert_to_sec_in_day(
     return obtime_in_day
 
 
-def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> NDArray[np.timedelta64]:
+def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> NDArray[np.datetime64]:
     """converts at time, in seconds since Jan 1, ref_year to
     seconds in day.  Reference year defaults to 2000, the value
     used for the AMSR2 file.  I am not sure what this does about leap seconds,
     so DO NOT USE for geolocation until we check it out"""
     date_jan1_2000 = np.datetime64(f"{ref_year:04d}-01-01T00:00:00")
-    bad = ob_time < 0.00001  # ad data is often stored as zero
+    # bad = ob_time < 0.00001  # ad data is often stored as zero
 
     ob_time = ob_time.astype(np.int64)
     dt_obs = ob_time.astype("timedelta64[s]")
