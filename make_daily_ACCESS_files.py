@@ -1,7 +1,7 @@
 import os
-from collections.abc import Collection
 from datetime import date
 from pathlib import Path
+from typing import Collection
 
 import matplotlib.pyplot as plt
 import numpy as np

@@ -13,10 +13,9 @@ folder.
 """
 
 import datetime
-from collections.abc import Sequence
 import os
-import os.path
 from pathlib import Path
+from typing import Sequence
 
 import cdsapi
 

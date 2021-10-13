@@ -1,8 +1,7 @@
 import datetime
 import os
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
