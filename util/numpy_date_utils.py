@@ -1,10 +1,11 @@
 import datetime
+from typing import Dict
 
 import numpy as np
 from numpy.typing import NDArray
 
 
-def calendar_dates_from_datetime64(dt) -> dict[str, NDArray[np.uint32]]:
+def calendar_dates_from_datetime64(dt) -> Dict[str, NDArray[np.uint32]]:
     """
     Convert array of datetime64 to a calendar array of year, month, day, hour,
     minute, seconds, microsecond with these quantites indexed on the last axis.

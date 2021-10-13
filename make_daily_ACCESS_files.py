@@ -1,7 +1,7 @@
 import os
 from datetime import date
 from pathlib import Path
-from typing import Collection
+from typing import Collection, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,7 +45,7 @@ def make_daily_ACCESS_tb_file(
     channels: Collection[int],
     verbose: bool = False,
     plot_example_map: bool = True,
-) -> list[Path]:
+) -> List[Path]:
     if satellite == "amsr2":
         orbit_times = read_amsr2_orbit_times()
     else:
