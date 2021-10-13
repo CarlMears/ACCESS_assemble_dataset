@@ -66,7 +66,9 @@ import:
   needs: []
   parallel:
     matrix:
-      - PY_VERSION: ["3.7", "3.8", "3.9", "3.10"]
+      # TODO: Python 3.10 isn't added yet since there aren't many PyPI wheels
+      # available for it (e.g., matplotlib and netCDF4)
+      - PY_VERSION: ["3.7", "3.8", "3.9"]
   image: docker.io/library/python:$PY_VERSION
   before_script:
     - python --version
