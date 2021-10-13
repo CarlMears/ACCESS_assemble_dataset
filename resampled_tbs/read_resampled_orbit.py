@@ -52,7 +52,7 @@ def read_resampled_tbs(
     satellite: str,
     channel: Union[str, int],
     orbit: int,
-    dataroot: Path = Path(ACCESS_ROOT),
+    dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
 ) -> Tuple[Any, Path]:
     if satellite not in IMPLEMENTED_SATELLITES:
