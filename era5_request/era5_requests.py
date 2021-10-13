@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""
-This a collection of subroutines that download one day for ERA5 data (including the first hour of the
-next day).
-In order to use it, the Copernicus Data Server (cdsapi) needs to be installed in your version of python.
+"""Download one day for ERA5 data (including the first hour of the next day).
 
-see https://cds.climate.copernicus.eu/api-how-to
+In order to use it, the Copernicus Data Server (cdsapi) needs to be installed in
+your version of python.
 
-If you use conda:
-conda install -c conda-forge cdsapi
+See https://cds.climate.copernicus.eu/api-how-to
 
-Then you need to get a key from ECMWF and put in a .cdsapirc file in your {user} folder
+If you use conda: conda install -c conda-forge cdsapi
+
+Then you need to get a key from ECMWF and put in a .cdsapirc file in your {user}
+folder.
 """
 
 import datetime

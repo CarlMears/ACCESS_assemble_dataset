@@ -61,7 +61,7 @@ def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> NDArray[np.timede
     used for the AMSR2 file.  I am not sure what this does about leap seconds,
     so DO NOT USE for geolocation until we check it out"""
     date_jan1_2000 = np.datetime64(f"{ref_year:04d}-01-01T00:00:00")
-    bad = ob_time < 0.00001  # ad data is often stored as zero
+    # bad = ob_time < 0.00001  # ad data is often stored as zero
 
     ob_time = ob_time.astype(np.int64)
     dt_obs = ob_time.astype("timedelta64[s]")
