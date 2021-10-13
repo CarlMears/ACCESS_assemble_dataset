@@ -59,10 +59,7 @@ def make_daily_ACCESS_tb_file(
     time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
     file_list = []
-    orbits_to_do = find_orbits_in_day(
-        times_np64=orbit_times,
-        date=current_day
-    )
+    orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
         print(f"{orbit} ", end="")
