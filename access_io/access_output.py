@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike
 
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
@@ -48,7 +48,7 @@ def append_var_to_daily_tb_netcdf(
     *,
     date: datetime.date,
     satellite: str,
-    var: NDArray[np.float32],
+    var: ArrayLike,
     var_name: str,
     standard_name: Optional[str] = None,
     long_name: Optional[str] = None,
@@ -107,7 +107,7 @@ def append_const_var_to_daily_tb_netcdf(
     *,
     date: datetime.date,
     satellite: str,
-    var: NDArray[np.float32],
+    var: ArrayLike,
     var_name: str,
     standard_name: Optional[str] = None,
     long_name: Optional[str] = None,
@@ -164,7 +164,7 @@ def append_lf_daily_tb_netcdf(
     *,
     date: datetime.date,
     satellite: str,
-    land_fraction: NDArray[np.float32],
+    land_fraction: ArrayLike,
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
     lf_fill = -999.0
@@ -196,8 +196,8 @@ def write_daily_tb_netcdf(
     *,
     date: datetime.date,
     satellite: str,
-    tb_array_by_hour: NDArray[np.float32],
-    time_array_by_hour: NDArray[np.float32],
+    tb_array_by_hour: ArrayLike,
+    time_array_by_hour: ArrayLike,
     dataroot: Path = ACCESS_ROOT,
     file_list: Optional[Sequence[Path]],
 ) -> None:
