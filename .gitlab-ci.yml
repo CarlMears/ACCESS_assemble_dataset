@@ -77,7 +77,7 @@ import:
   script:
     # Comment out the global_map import for now
     - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py
-    - python -m compileall
+    - python -m compileall .
     - python -c 'import make_daily_ACCESS_files'
     - python -c 'import add_land_fraction_to_ACCESS_output'
     - python -c 'import add_ERA5_surface_temperature_to_ACCESS_output'
