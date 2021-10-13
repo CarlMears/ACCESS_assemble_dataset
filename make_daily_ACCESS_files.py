@@ -61,9 +61,7 @@ def make_daily_ACCESS_tb_file(
     file_list = []
     orbits_to_do = find_orbits_in_day(
         times_np64=orbit_times,
-        year=current_day.year,
-        month=current_day.month,
-        day=current_day.day,
+        date=current_day
     )
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
@@ -144,11 +142,11 @@ if __name__ == "__main__":
     channels = list(range(5, 13))
     satellite = "amsr2"
     if os.name == "nt":
-        dataroot = Path("L:/access/")
+        dataroot = Path("L:/access")
     elif os.name == "posix":
         dataroot = Path("/mnt/ops1p-ren/l/access")
 
-    for day in range(13, 17):
+    for day in range(13, 14):
         make_daily_ACCESS_tb_file(
             current_day=date(year, month, day),
             satellite=satellite,
