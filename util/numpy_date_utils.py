@@ -55,7 +55,7 @@ def convert_to_sec_in_day(
     return obtime_in_day
 
 
-def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> NDArray[np.timedelta64]:
+def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> NDArray[np.datetime64]:
     """converts at time, in seconds since Jan 1, ref_year to
     seconds in day.  Reference year defaults to 2000, the value
     used for the AMSR2 file.  I am not sure what this does about leap seconds,

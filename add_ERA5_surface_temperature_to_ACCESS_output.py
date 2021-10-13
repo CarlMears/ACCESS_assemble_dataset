@@ -19,7 +19,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     current_day: datetime.date,
     variable: tuple[str, str],
     satellite: str,
-    dataroot: str,
+    dataroot: Path,
     verbose: bool = False,
 ):
     # Get the maps of observation times from the existing output file that

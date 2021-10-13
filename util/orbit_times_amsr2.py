@@ -14,13 +14,13 @@ elif os.name == "posix":
 
 def read_amsr2_orbit_times(
     filename_orb: Path = AMSR2_ORBIT_FILE,
-) -> NDArray[np.float64]:
+) -> NDArray[np.datetime64]:
     times = np.fromfile(filename_orb, dtype=np.float64)
     return convert_to_np_datetime64(times, ref_year=1993)
 
 
 def find_orbits_in_day(
-    *, times_np64: NDArray[np.float64], date: datetime.date, verbose: bool = False
+    *, times_np64: NDArray[np.datetime64], date: datetime.date, verbose: bool = False
 ) -> NDArray[np.intp]:
     target_day_begin_np64 = np.datetime64(f"{date:%Y-%m-%d}T00:00")
     target_day_end_np64 = target_day_begin_np64 + np.timedelta64(24, "h")
