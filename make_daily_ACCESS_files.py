@@ -1,7 +1,7 @@
 import os
-from collections.abc import Collection
 from datetime import date
 from pathlib import Path
+from typing import Collection, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,7 +45,7 @@ def make_daily_ACCESS_tb_file(
     channels: Collection[int],
     verbose: bool = False,
     plot_example_map: bool = True,
-) -> list[Path]:
+) -> List[Path]:
     if satellite == "amsr2":
         orbit_times = read_amsr2_orbit_times()
     else:
@@ -59,12 +59,7 @@ def make_daily_ACCESS_tb_file(
     time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
     file_list = []
-    orbits_to_do = find_orbits_in_day(
-        times_np64=orbit_times,
-        year=current_day.year,
-        month=current_day.month,
-        day=current_day.day,
-    )
+    orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
         print(f"{orbit} ", end="")
@@ -144,11 +139,11 @@ if __name__ == "__main__":
     channels = list(range(5, 13))
     satellite = "amsr2"
     if os.name == "nt":
-        dataroot = Path("L:/access/")
+        dataroot = Path("L:/access")
     elif os.name == "posix":
         dataroot = Path("/mnt/ops1p-ren/l/access")
 
-    for day in range(13, 17):
+    for day in range(13, 14):
         make_daily_ACCESS_tb_file(
             current_day=date(year, month, day),
             satellite=satellite,

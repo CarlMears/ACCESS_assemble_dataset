@@ -1,6 +1,8 @@
 import datetime
 import os
 from pathlib import Path
+from typing import Tuple
+
 import numpy as np
 import xarray as xr
 from netCDF4 import Dataset as netcdf_dataset
@@ -17,7 +19,7 @@ from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 def add_ERA5_single_level_variable_to_ACCESS_output(
     *,
     current_day: datetime.date,
-    variable: tuple[str, str],
+    variable: Tuple[str, str],
     satellite: str,
     dataroot: Path,
     verbose: bool = False,

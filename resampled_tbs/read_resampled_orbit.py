@@ -1,5 +1,5 @@
 import os
-import typing
+from typing import Tuple, Union, Any
 from pathlib import Path
 
 import xarray as xr
@@ -30,7 +30,7 @@ AVAILABLE_CHANNELS = [
 ]
 
 
-def get_orbit_range(orbit: int) -> tuple[int, int]:
+def get_orbit_range(orbit: int) -> Tuple[int, int]:
     """Return the lower/upper bounds to an orbit.
 
     >>> get_orbit_range(1)
@@ -50,11 +50,11 @@ def get_orbit_range(orbit: int) -> tuple[int, int]:
 def read_resampled_tbs(
     *,
     satellite: str,
-    channel: typing.Union[str, int],
+    channel: Union[str, int],
     orbit: int,
     dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
-) -> tuple[typing.Any, Path]:
+) -> Tuple[Any, Path]:
     if satellite not in IMPLEMENTED_SATELLITES:
         raise ValueError(f"Satellite {satellite} is not implemented")
     if isinstance(channel, int):

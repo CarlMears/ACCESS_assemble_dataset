@@ -60,3 +60,24 @@ mypy:
     reports:
       junit: mypy.junit.xml
       cobertura: cobertura.xml
+
+import:
+  stage: test
+  needs: []
+  parallel:
+    matrix:
+      # TODO: Python 3.10 isn't added yet since there aren't many PyPI wheels
+      # available for it (e.g., matplotlib and netCDF4)
+      - PY_VERSION: ["3.7", "3.8", "3.9"]
+  image: docker.io/library/python:$PY_VERSION
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install --progress-bar=off numpy netCDF4 matplotlib cdsapi xarray
+  script:
+    # Comment out the global_map import for now
+    - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py
+    - python -m compileall .
+    - python -c 'import make_daily_ACCESS_files'
+    - python -c 'import add_land_fraction_to_ACCESS_output'
+    - python -c 'import add_ERA5_surface_temperature_to_ACCESS_output'

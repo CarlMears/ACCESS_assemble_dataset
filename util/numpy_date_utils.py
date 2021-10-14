@@ -1,10 +1,11 @@
 import datetime
+from typing import Dict
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike
 
 
-def calendar_dates_from_datetime64(dt) -> dict[str, NDArray[np.uint32]]:
+def calendar_dates_from_datetime64(dt) -> Dict[str, ArrayLike]:
     """
     Convert array of datetime64 to a calendar array of year, month, day, hour,
     minute, seconds, microsecond with these quantites indexed on the last axis.
@@ -37,7 +38,7 @@ def calendar_dates_from_datetime64(dt) -> dict[str, NDArray[np.uint32]]:
 
 def convert_to_sec_in_day(
     ob_time, date: datetime.date, ref_year: int = 2000
-) -> NDArray[np.float32]:
+) -> ArrayLike:
     """Converts at time, in seconds since Jan 1, ref_year to
     seconds in day.  Reference year defaults to 2000.  Not
     sure how leap seconds affect this, so DO NOT USE for
@@ -55,7 +56,7 @@ def convert_to_sec_in_day(
     return obtime_in_day
 
 
-def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> NDArray[np.datetime64]:
+def convert_to_np_datetime64(ob_time, ref_year: int = 2000) -> ArrayLike:
     """converts at time, in seconds since Jan 1, ref_year to
     seconds in day.  Reference year defaults to 2000, the value
     used for the AMSR2 file.  I am not sure what this does about leap seconds,
