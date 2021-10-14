@@ -7,7 +7,7 @@ http://gitlab.remss.com/access/atmospheric-rtm
 import os
 from datetime import date
 from pathlib import Path
-from typing import Sequence, NamedTuple
+from typing import Sequence, NamedTuple, Union, SupportsIndex
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -202,17 +202,27 @@ def append_atmosphere_to_daily_ACCESS(
 
     downloader.download_day(current_day, verbose)
     era5_path = downloader.out_dir
-    era5_data = read_era5_data(
-        era5_path / f"era5_surface_{current_day.isoformat()}.nc",
-        era5_path / f"era5_levels_{current_day.isoformat()}.nc",
-        verbose,
-    )
 
-    atmosphere_results = daily_data.compute_atmosphere(era5_data)
-    daily_data.append_results(atmosphere_results)
+    # Process only one hour at a time. This assumes there are 24 hours in the
+    # file...but that may not be correct.
+    for hour in range(24):
+        if verbose:
+            print(f"Processing hour {hour+1}/24")
+
+        era5_data = read_era5_data(
+            era5_path / f"era5_surface_{current_day.isoformat()}.nc",
+            era5_path / f"era5_levels_{current_day.isoformat()}.nc",
+            hour,
+            verbose,
+        )
+
+        atmosphere_results = daily_data.compute_atmosphere(era5_data)
+        daily_data.append_results(hour, atmosphere_results)
 
 
 if __name__ == "__main__":
+    # TODO: use argparse
+
     if os.name == "nt":
         ACCESS_ROOT = Path("L:/access/")
     elif os.name == "posix":
