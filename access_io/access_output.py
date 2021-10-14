@@ -160,7 +160,6 @@ def append_const_var_to_daily_tb_netcdf(
         else:
             v.standard_name = var_name
 
-
         if long_name is not None:
             v.long_name = long_name
 
@@ -178,6 +177,7 @@ def append_const_var_to_daily_tb_netcdf(
         v.coordinates = "latitude longitude"
 
         v[:, :] = var
+
 
 def append_lf_daily_tb_netcdf(
     *,
