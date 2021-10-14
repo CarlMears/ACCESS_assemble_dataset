@@ -19,6 +19,12 @@ from access_atmosphere.era5 import Era5DailyData, read_era5_data
 
 # from resampled_tbs.read_resampled_orbit import read_resampled_tbs
 
+# Reference frequencies (in GHz) to use
+REF_FREQ = np.array([6.8, 10.7, 18.7, 23.8, 37.0, 89.0], np.float32)
+
+# Reference Earth incidence angle to use for each reference frequency (in degrees)
+REF_EIA = np.array([53.0, 53.0, 53.0, 53.0, 53.0, 53.0], np.float32)
+
 
 # NUM_LATS = 721
 # NUM_LONS = 1440
@@ -91,10 +97,76 @@ class DailyAccessData:
     def compute_atmosphere(self, era5_data: Era5DailyData) -> RtmResults:
         raise NotImplementedError
 
-    def append_results(self, atmosphere_results: RtmResults) -> None:
+    def append_results(
+        self, hours: Union[SupportsIndex, slice], atmosphere_results: RtmResults
+    ) -> None:
         with Dataset(self.tb_path, "a") as f:
+            _ensure_rtm_vars(f)
+            # TODO: write variables
             ...
         raise NotImplementedError
+
+
+def _ensure_rtm_vars(f: Dataset) -> None:
+    """Ensure RTM output variables are defined in the output file."""
+    if "frequency" not in f.dimensions:
+        f.createDimension("frequency", len(REF_FREQ))
+        v = f.createVariable("frequency", np.float32, ("frequency",))
+        v[:] = REF_FREQ
+        v.setncatts(
+            {
+                "standard_name": "sensor_band_central_radiation_frequency",
+                "long_name": "frequency",
+                "units": "GHz",
+            }
+        )
+
+    for varname, std_name, long_name in [
+        (
+            "columnar_water_vapor",
+            "atmosphere_mass_content_of_water_vapor",
+            "columnar water vapor",
+        ),
+        (
+            "columnar_cloud_liquid",
+            "atmosphere_mass_content_of_cloud_liquid_water",
+            "columnar liquid cloud content",
+        ),
+    ]:
+        if varname not in f.variables:
+            v = f.createVariable(
+                varname,
+                np.float32,
+                ("latitude", "longitude", "hours"),
+                zlib=True,
+            )
+            v.setncatts(
+                {
+                    "standard_name": std_name,
+                    "long_name": long_name,
+                    "units": "kg m-2",
+                }
+            )
+
+    for varname, long_name, units in [
+        ("transmissivity", "atmospheric transmissivity", None),
+        ("upwelling_tb", "upwelling brightness temperature", "kelvin"),
+        ("downwelling_tb", "downwelling brightness temperature", "kelvin"),
+    ]:
+        if varname not in f.variables:
+            v = f.createVariable(
+                varname,
+                np.float32,
+                ("latitude", "longitude", "hours", "frequency"),
+                zlib=True,
+            )
+            v.setncattr("long_name", long_name)
+            if units is not None:
+                v.setncattr("units", units)
+            v.setncattr(
+                "reference_incidence_angle",
+                f"{REF_EIA[0]} degrees",
+            )
 
 
 def append_atmosphere_to_daily_ACCESS(
