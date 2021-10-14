@@ -7,15 +7,15 @@ http://gitlab.remss.com/access/atmospheric-rtm
 import os
 from datetime import date
 from pathlib import Path
-from typing import Sequence, NamedTuple, Union, SupportsIndex
+from typing import Sequence, NamedTuple, cast
 
 import numpy as np
-from numpy.typing import ArrayLike
 from netCDF4 import Dataset
 
-from access_io.access_output import get_access_output_filename, write_daily_tb_netcdf
+from access_io.access_output import get_access_output_filename
 from access_atmosphere.download import Era5Downloader
 from access_atmosphere.era5 import Era5DailyData, read_era5_data
+from access_atmosphere import rtm
 
 # from resampled_tbs.read_resampled_orbit import read_resampled_tbs
 
@@ -26,50 +26,37 @@ REF_FREQ = np.array([6.8, 10.7, 18.7, 23.8, 37.0, 89.0], np.float32)
 REF_EIA = np.array([53.0, 53.0, 53.0, 53.0, 53.0, 53.0], np.float32)
 
 
-# NUM_LATS = 721
-# NUM_LONS = 1440
-# NUM_HOURS = 24
-# NUM_CHANNELS = 14  # all possible AMSR2 channels
-# AVAILABLE_CHANNELS = [
-#     "time",
-#     "6V",
-#     "6H",
-#     "7V",
-#     "7H",
-#     "11V",
-#     "11H",
-#     "19V",
-#     "19H",
-#     "24V",
-#     "24H",
-#     "37V",
-#     "37H",
-#     "89V",
-#     "89H",
-# ]
-
-
-class RtmResults(NamedTuple):
-    """Results after running the atmospheric RTM."""
+class HourlyRtm(NamedTuple):
+    """RTM results for some number of hour inputs."""
 
     # Note, the type annotations here are sub-optimal until numpy has better
-    # typing support. They are all 1d or 2d numpy arrays.
+    # typing support. They are all ndarrays.
 
-    # Total column water vapor in kg/m^2, dimensioned as (num_points, ).
+    # Latitudes dimensioned as (lat, ).
+    lat: Sequence[np.float32]
+
+    # Longitudes dimensioned as (lon, ).
+    lon: Sequence[np.float32]
+
+    # Hours since midnight, dimensioned as (time, ).
+    hours: Sequence[int]
+
+    # Total column water vapor in kg/m^2, dimensioned as (lat, lon, time).
     columnar_water_vapor: Sequence[np.float32]
 
-    # Total column cloud liquid water in kg/m^2, dimensioned as (num_points, )
+    # Total column cloud liquid water in kg/m^2, dimensioned as (lat, lon,
+    # time).
     columnar_cloud_liquid: Sequence[np.float32]
 
-    # Atmospheric transmissivity, unitless, dimensioned as (num_points, freq).
+    # Atmospheric transmissivity, unitless, dimensioned as (lat, lon, time, freq).
     transmissivity: Sequence[np.float32]
 
     # Atmospheric upwelling brightness temperature in K, dimensioned as
-    # (num_points, freq).
+    # (lat, lon, time, freq).
     tb_up: Sequence[np.float32]
 
     # Atmospheric downwelling brightness temperature in K, dimensioned as
-    # (num_points, freq).
+    # (lat, lon, time, freq).
     tb_down: Sequence[np.float32]
 
 
@@ -86,25 +73,79 @@ class DailyAccessData:
             # Dimensioned as (lat, lon, time, channel)
             tb = f["brightness_temperature"][...]
 
-        # This boolean array is True whereever there is valid data
-        self.valid_data = ~np.ma.getmaskarray(tb)
+        # This boolean array is True whereever there is valid data. The channel
+        # dimension is collapsed so if there is any valid data in that axis the
+        # valid mask is set. Thus the resulting shape is (lat, lon, time).
+        self.valid_data = np.any(~np.ma.getmaskarray(tb), axis=3)
 
     @property
     def num_points(self) -> int:
         """Return the number of valid points."""
         return np.count_nonzero(self.valid_data)
 
-    def compute_atmosphere(self, era5_data: Era5DailyData) -> RtmResults:
-        raise NotImplementedError
+    def compute_atmosphere(
+        self, times: Sequence[int], era5_data: Era5DailyData
+    ) -> HourlyRtm:
+        """Compute the atmospheric RTM for the input ERA5 data."""
+        # Extract the ERA5 data corresponding to the valid data mask. Note that
+        # the ERA5 profile data is dimensioned as (time, lats, lons, levels),
+        # but the valid_mask has dimensions (lats, lons, time). So the
+        # valid_mask is reshaped to match the ERA5 data.
+        valid_at_times = np.moveaxis(self.valid_data[:, :, times], 2, 0)
+        atmo_results = rtm.compute(
+            era5_data.levels,
+            era5_data.temperature[valid_at_times],
+            era5_data.height[valid_at_times],
+            era5_data.relative_humidity[valid_at_times],
+            era5_data.liquid_content[valid_at_times],
+            era5_data.surface_temperature[valid_at_times],
+            era5_data.surface_height[valid_at_times],
+            era5_data.surface_relative_humidity[valid_at_times],
+            era5_data.surface_pressure[valid_at_times],
+            REF_EIA,
+            REF_FREQ,
+        )
 
-    def append_results(
-        self, hours: Union[SupportsIndex, slice], atmosphere_results: RtmResults
-    ) -> None:
+        # Reshape the vectorized RTM outputs to full arrays, filling in missing
+        # values with NaNs
+        num_lat = len(self.lat)
+        num_lon = len(self.lon)
+        num_time = len(times)
+        num_freq = len(REF_FREQ)
+        valid_out = self.valid_data[:, :, times]
+        col_water_vapor = np.full((num_lat, num_lon, num_time), np.nan)
+        col_cloud_liquid = np.full((num_lat, num_lon, num_time), np.nan)
+        transmissivity = np.full((num_lat, num_lon, num_time, num_freq), np.nan)
+        tb_up = np.full((num_lat, num_lon, num_time, num_freq), np.nan)
+        tb_down = np.full((num_lat, num_lon, num_time, num_freq), np.nan)
+
+        col_water_vapor[valid_out] = era5_data.columnar_water_vapor[valid_at_times]
+        col_cloud_liquid[valid_out] = era5_data.columnar_cloud_liquid[valid_at_times]
+        transmissivity[valid_out] = atmo_results.tran
+        tb_up[valid_out] = atmo_results.tb_up
+        tb_down[valid_out] = atmo_results.tb_down
+        return HourlyRtm(
+            self.lat,
+            self.lon,
+            times,
+            cast(Sequence[np.float32], col_water_vapor),
+            cast(Sequence[np.float32], col_cloud_liquid),
+            cast(Sequence[np.float32], transmissivity),
+            cast(Sequence[np.float32], tb_up),
+            cast(Sequence[np.float32], tb_down),
+        )
+
+    def append_results(self, hours: Sequence[int], data: HourlyRtm) -> None:
+        """Update the daily TB file in-place with the RTM results."""
         with Dataset(self.tb_path, "a") as f:
             _ensure_rtm_vars(f)
-            # TODO: write variables
-            ...
-        raise NotImplementedError
+            s_3d = np.s_[:, :, hours]
+            s_4d = np.s_[:, :, hours, :]
+            f.variables["columnar_water_vapor"][s_3d] = data.columnar_water_vapor
+            f.variables["columnar_cloud_liquid"][s_3d] = data.columnar_cloud_liquid
+            f.variables["transmissivity"][s_4d] = data.transmissivity
+            f.variables["upwelling_tb"][s_4d] = data.tb_up
+            f.variables["downwelling_tb"][s_4d] = data.tb_down
 
 
 def _ensure_rtm_vars(f: Dataset) -> None:
@@ -212,12 +253,17 @@ def append_atmosphere_to_daily_ACCESS(
         era5_data = read_era5_data(
             era5_path / f"era5_surface_{current_day.isoformat()}.nc",
             era5_path / f"era5_levels_{current_day.isoformat()}.nc",
-            hour,
+            (hour,),
             verbose,
         )
 
-        atmosphere_results = daily_data.compute_atmosphere(era5_data)
-        daily_data.append_results(hour, atmosphere_results)
+        if verbose:
+            print("Computing RTM")
+        atmosphere_results = daily_data.compute_atmosphere((hour,), era5_data)
+
+        if verbose:
+            print(f"Appending results to: {daily_data.tb_path}")
+        daily_data.append_results((hour,), atmosphere_results)
 
 
 if __name__ == "__main__":
