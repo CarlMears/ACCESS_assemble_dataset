@@ -47,7 +47,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             full_day=True,
         )
         file2 = era5_hourly_single_level_request(
-            date=current_day,
+            date=next_day,
             variable=variable[0],
             target_path=dataroot / "_temp",
             full_day=False,
