@@ -94,7 +94,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         long_name="skin temperature interpolated from ERA5",
         valid_min=150.0,
         valid_max=400.0,
-        units="Kelvin",
+        units="kelvin",
         v_fill=-999.0,
         dataroot=dataroot,
         overwrite=True,
