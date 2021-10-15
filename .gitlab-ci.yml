@@ -74,6 +74,7 @@ import:
     - python --version
     - pip install --upgrade pip
     - pip install --progress-bar=off numpy netCDF4 matplotlib cdsapi xarray
+    - pip install --progress-bar=off access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple
   script:
     # Comment out the global_map import for now
     - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py
@@ -81,3 +82,4 @@ import:
     - python -c 'import make_daily_ACCESS_files'
     - python -c 'import add_land_fraction_to_ACCESS_output'
     - python -c 'import add_ERA5_surface_temperature_to_ACCESS_output'
+    - python -c 'import add_atmosphere_to_ACCESS_output'
