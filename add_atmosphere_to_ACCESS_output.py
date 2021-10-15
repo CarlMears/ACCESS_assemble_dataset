@@ -248,8 +248,17 @@ def append_atmosphere_to_daily_ACCESS(
 
 
 if __name__ == "__main__":
+    cds_help = (
+        "For downloading ERA5 data from CDS, the UID and API key "
+        "must be set as arguments or in the 'CDS_UID' and 'CDS_API_KEY` "
+        "environment variables"
+    )
     parser = argparse.ArgumentParser(
-        description="Compute and append atmospheric RTM terms to ACCESS output file"
+        description=(
+            "Compute and append atmospheric RTM terms to ACCESS output file. "
+            "ERA5 data is downloaded if required."
+        ),
+        epilog=cds_help,
     )
     parser.add_argument(
         "access_root", type=Path, help="Root directory to ACCESS project"
@@ -258,14 +267,33 @@ if __name__ == "__main__":
         "date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
-    parser.add_argument()
+    parser.add_argument(
+        "--user",
+        metavar="UID",
+        help="CDS UID (overrides CDS_UID environment variable)",
+    )
+    parser.add_argument(
+        "--key",
+        metavar="API_KEY",
+        help="CDS API key (overrides CDS_API_KEY environment variable)",
+    )
     args = parser.parse_args()
 
-    try:
-        cds_uid = os.environ["CDS_UID"]
-        cds_api_key = os.environ["CDS_API_KEY"]
-    except KeyError:
-        print("CDS_UID and CDS_API_KEY environment variables need to be set")
+    if args.user is not None:
+        cds_uid = args.user
+    else:
+        try:
+            cds_uid = os.environ["CDS_UID"]
+        except KeyError:
+            parser.error(cds_help)
+
+    if args.key is not None:
+        cds_api_key = args.key
+    else:
+        try:
+            cds_api_key = os.environ["CDS_API_KEY"]
+        except KeyError:
+            parser.error(cds_help)
 
     access_root: Path = args.access_root
     era5_dir = access_root / "era5"
