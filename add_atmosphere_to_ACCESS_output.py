@@ -82,13 +82,10 @@ class DailyRtm:
             REF_FREQ,
         )
 
-        # Reshape the vectorized RTM outputs to full arrays, filling in missing
-        # values with NaNs
-        valid_out = valid_data.copy()
-        # TODO: terrible hack but see if this even works
-        for t in range(24):
-            if t not in times:
-                valid_out[:, :, t] = False
+        # Store the vectorized RTM outputs into the corresponding valid values
+        # in the full output arrays
+        valid_out = np.full_like(valid_data, False)
+        valid_out[:, :, times] = valid_data[:, :, times]
 
         self.col_water_vapor[valid_out] = era5_data.columnar_water_vapor[valid_in]
         self.col_cloud_liquid[valid_out] = era5_data.columnar_cloud_liquid[valid_in]
