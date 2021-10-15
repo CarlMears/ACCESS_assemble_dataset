@@ -4,20 +4,19 @@ This depends on the atmospheric RTM package, access-atmosphere:
 http://gitlab.remss.com/access/atmospheric-rtm
 """
 
+import argparse
 import os
 from datetime import date
 from pathlib import Path
 from typing import Any, Sequence
 
 import numpy as np
+from access_atmosphere import rtm
+from access_atmosphere.download import Era5Downloader
+from access_atmosphere.era5 import Era5DailyData, read_era5_data
 from netCDF4 import Dataset
 
 from access_io.access_output import get_access_output_filename
-from access_atmosphere.download import Era5Downloader
-from access_atmosphere.era5 import Era5DailyData, read_era5_data
-from access_atmosphere import rtm
-
-# from resampled_tbs.read_resampled_orbit import read_resampled_tbs
 
 # Reference frequencies (in GHz) to use
 REF_FREQ = np.array([6.8, 10.7, 18.7, 23.8, 37.0, 89.0], np.float32)
@@ -249,13 +248,18 @@ def append_atmosphere_to_daily_ACCESS(
 
 
 if __name__ == "__main__":
-    # TODO: use argparse
-
-    if os.name == "nt":
-        ACCESS_ROOT = Path("L:/access/")
-    elif os.name == "posix":
-        # ACCESS_ROOT = Path("/mnt/ops1p-ren/l/access")
-        ACCESS_ROOT = Path("/mnt/wunda/access")
+    parser = argparse.ArgumentParser(
+        description="Compute and append atmospheric RTM terms to ACCESS output file"
+    )
+    parser.add_argument(
+        "access_root", type=Path, help="Root directory to ACCESS project"
+    )
+    parser.add_argument(
+        "date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
+    )
+    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument()
+    args = parser.parse_args()
 
     try:
         cds_uid = os.environ["CDS_UID"]
@@ -263,9 +267,10 @@ if __name__ == "__main__":
     except KeyError:
         print("CDS_UID and CDS_API_KEY environment variables need to be set")
 
-    era5_dir = ACCESS_ROOT / "era5"
+    access_root: Path = args.access_root
+    era5_dir = access_root / "era5"
     downloader = Era5Downloader(cds_uid, cds_api_key, era5_dir)
 
     append_atmosphere_to_daily_ACCESS(
-        date(2012, 7, 11), "amsr2", ACCESS_ROOT, downloader, verbose=True
+        args.date, args.sensor, access_root, downloader, verbose=True
     )
