@@ -1,7 +1,6 @@
 """Run the RTM and add the atmospheric terms to the resampled TB file.
 
-This depends on the atmospheric RTM package, access-atmosphere:
-http://gitlab.remss.com/access/atmospheric-rtm
+ERA5 data is downloaded if missing.
 """
 
 import argparse
