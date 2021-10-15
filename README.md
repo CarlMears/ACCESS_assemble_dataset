@@ -31,8 +31,10 @@ The ERA5 downloading and RTM calculations are contained in a dependent package,
 installed using:
 
 ```
-pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple
+pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
 ```
+
+(The `--trusted-host` permits pip to use HTTP instead of HTTPS and is required until we get a TLS certificate for `gitlab.remss.com`...)
 
 To install the other required packages:
 ```
