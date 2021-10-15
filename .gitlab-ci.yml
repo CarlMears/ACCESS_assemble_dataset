@@ -69,7 +69,7 @@ import:
       # TODO: Python 3.10 isn't added yet since there aren't many PyPI wheels
       # available for it (e.g., matplotlib and netCDF4)
       - PY_VERSION: ["3.7", "3.8", "3.9"]
-  image: docker.io/library/python:$PY_VERSION
+  image: docker.io/library/python:${PY_VERSION}-slim
   before_script:
     - python --version
     - pip install --upgrade pip
