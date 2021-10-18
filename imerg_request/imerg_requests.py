@@ -12,66 +12,122 @@
 import requests
 import datetime
 from pathlib import Path
-import numpy as np
-import math
-import sys
 
-def imerg_half_hourly_request(
-    *, date: datetime.date, target_path: Path
-    ) -> Path:
 
-    jday = date.strftime('%j')
-    year = date.strftime('%Y')
-    month = date.strftime('%m')
-    day = date.strftime('%d')
+def try_download(
+    *,
+    date: datetime.date,
+    url: str,
+    target_path: Path,
+    start_time: str,
+    end_time: str,
+    time: str,
+) -> Path:
+    """
+        Trying multiple IMERG file types to see if any
+        have data for a given time.
+    """
 
-    url_final = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHH.06/{year}/{jday}/' # this is the URL we want to check first
-    url_late = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHL.06/{year}/{jday}/' # this is the URL we want to check second
-    url_early = f'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.06/{year}/{jday}/'# last URL we want to check
+    year = date.strftime("%Y")
+    month = date.strftime("%m")
+    day = date.strftime("%d")
+
+    if "HHL" in url:
+        filename = f"3B-HHR-L.MS.MRG.3IMERG.{year}{month}{day}-S{start_time}-E{end_time}.{time}.V06B.HDF5"
+    elif "HHE" in url:
+        filename = f"3B-HHR-E.MS.MRG.3IMERG.{year}{month}{day}-S{start_time}-E{end_time}.{time}.V06B.HDF5"
+    else:
+        filename = f"3B-HHR.MS.MRG.3IMERG.{year}{month}{day}-S{start_time}-E{end_time}.{time}.V06B.HDF5"
+
+    target = target_path / filename
+
+    if target.exists():
+        print(f"File: {target} already exists, skipping")
+        return target
+    else:
+        print(f"Getting: {target}")
+        print(url + filename)
+
+        result = requests.get(url + filename)
+        try:
+            result.raise_for_status()
+            f = open(target, "wb")
+            f.write(result.content)
+            f.close()
+            print(f"contents of URL written to {target}")
+            return target
+        except:
+            error = f"{str(result.status_code)}"
+            print(f"requests.get() returned an error code {error}")
+            return error
+
+
+def imerg_half_hourly_request(*, date: datetime.date, target_path: Path) -> Path:
+
+    first_time = datetime.datetime.combine(
+        date - datetime.timedelta(days=1), datetime.time(23, 30)
+    )
+    start_times = [
+        first_time + datetime.timedelta(minutes=x) for x in range(0, 1500, 30)
+    ]
+    end_times = [
+        first_time + datetime.timedelta(minutes=x) for x in range(29, 1529, 30)
+    ]
 
     times = [f"{h:02d}".zfill(4) for h in range(0, 1440, 30)]
-  
-    for time in times:
-        hour = int(time)/60
+    times.insert(0, "1410")
+    times.append("0000")
+    files_in_day = []
+    # times = [f"{h:02d}".zfill(4) for h in range(0, 60, 30)]
 
-        # Might be a nicer way to do this part
-        if str(hour).endswith('.5'):
-            hourmin = f"{math.floor(hour)}".zfill(2)+"30"
-        else:
-            hourmin = f"{math.floor(hour)}".zfill(2)+"00"
+    for t in range(len(times)):
 
-        filename =f'3B-HHR.MS.MRG.3IMERG.{year}{month}{day}-S{hourmin}00-E002959.{time}.V06B.HDF5'
- 
-        target = target_path/filename
+        start_time = start_times[t].strftime("%H%M00")
+        end_time = end_times[t].strftime("%H%M59")
+        time = times[t]
 
-        if target.exists():
-            print(f"File: {target} already exists, skipping")
-        else:
-            print(f"Getting: {target}")
-            print(url_final + filename)
-            result = requests.get(url_final+filename)
+        jday = start_times[t].strftime("%j")
+        yr = start_times[t].strftime("%Y")
 
-            try:
-                result.raise_for_status()
-                f = open(target, 'wb')
-                f.write(result.content)
-                f.close()
-                print(f'contents of URL written to {target}')
-            except:
-                print(f'requests.get() returned an error code {str(result.status_code)}')
+        url_final = f"https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHH.06/{yr}/{jday}/"  # this is the URL we want to check first
+        url_late = f"https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHL.06/{yr}/{jday}/"  # this is the URL we want to check second
+        url_early = f"https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.06/{yr}/{jday}/"  # last URL we want to check
+        urls = [url_final, url_late, url_early]
+        file_exist_flag = False
 
+        for url in urls:  # loop through all possible URLs to find IMERG file
+            if file_exist_flag:
+                continue
 
-    return filename
+            result = try_download(
+                date=start_times[t],
+                url=url,
+                target_path=target_path,
+                start_time=start_time,
+                end_time=end_time,
+                time=time,
+            )
+
+            if isinstance(result, Path):
+                files_in_day.append(result)
+                file_exist_flag = True
+            else:
+                continue
+
+    return files_in_day
+
 
 if __name__ == "__main__":
+    # date = datetime.date(2021, 10, 18)
     date = datetime.date(2012, 7, 11)
 
     target_path = Path("C:/ACCESS/output_files/_temp")
 
-    file = imerg_half_hourly_request(
-        date=date,
-        target_path=target_path,
-    )
+    files = imerg_half_hourly_request(date=date, target_path=target_path,)
 
-    print(file)
-
+    print(files)
+    # hr1 = xr.open_dataset(files[0], group='Grid')
+    # rain = hr1["precipitationCal"].values
+    # lat = hr1["lat"].values
+    # lon = hr1["lon"].values
+    # hr1.close()
