@@ -90,7 +90,6 @@ def append_var_to_daily_tb_netcdf(
         if long_name is not None:
             v.long_name = long_name
 
-        v.missing = v_fill
 
         if valid_min is not None:
             v.valid_min = valid_min
