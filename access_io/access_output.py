@@ -257,8 +257,8 @@ def write_daily_tb_netcdf(
         root_grp.geospatial_lon_units = "degrees_east"
         root_grp.spatial_resolution = "30 km X 30 km"
         day_boundary = datetime.datetime.combine(date, datetime.time())
-        start_date = day_boundary - datetime.timedelta(minutes=30)
-        end_date = day_boundary + datetime.timedelta(minutes=1410.0)
+        start_date = day_boundary
+        end_date = day_boundary + datetime.timedelta(minutes=1440.0)
         root_grp.time_coverage_start = start_date.isoformat()
         root_grp.time_coverage_end = end_date.isoformat()
         root_grp.time_coverage_duration = "P24H"
@@ -328,8 +328,8 @@ def write_daily_tb_netcdf(
         time.standard_name = "seconds_since_midnight"
         time.long_name = "seconds_since_midnight"
         time.missing = -999999
-        time.valid_min = -1800
-        time.valid_max = 84600  # not 86400 because last 1/2 hour is in the next day.
+        time.valid_min = 0
+        time.valid_max = 86400
         time.coordinates = "latitude longitude"
 
         tbs.standard_name = "brightness_temperature"

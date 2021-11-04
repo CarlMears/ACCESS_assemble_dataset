@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # must be installed from rss_plotting package
-from global_map import global_map
+from rss_plotting.global_map import global_map
 
 from access_io.access_output import write_daily_tb_netcdf
 from resampled_tbs.read_resampled_orbit import read_resampled_tbs
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     elif os.name == "posix":
         dataroot = Path("/mnt/ops1p-ren/l/access")
 
-    for day in range(13, 14):
+    for day in range(12, 32):
         make_daily_ACCESS_tb_file(
             current_day=date(year, month, day),
             satellite=satellite,
