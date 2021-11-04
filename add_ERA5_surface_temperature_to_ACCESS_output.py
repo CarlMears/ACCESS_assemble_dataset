@@ -41,17 +41,13 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     next_day = current_day + datetime.timedelta(hours=24)
     try:
         file1 = era5_hourly_single_level_request(
-            year=current_day.year,
-            month=current_day.month,
-            day=current_day.day,
+            date=current_day,
             variable=variable[0],
             target_path=dataroot / "_temp",
             full_day=True,
         )
         file2 = era5_hourly_single_level_request(
-            year=next_day.year,
-            month=next_day.month,
-            day=next_day.day,
+            date=next_day,
             variable=variable[0],
             target_path=dataroot / "_temp",
             full_day=False,
@@ -98,7 +94,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         long_name="skin temperature interpolated from ERA5",
         valid_min=150.0,
         valid_max=400.0,
-        units="degrees kelvin",
+        units="kelvin",
         v_fill=-999.0,
         dataroot=dataroot,
         overwrite=True,
