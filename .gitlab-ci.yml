@@ -75,6 +75,7 @@ import:
     - pip install --upgrade pip
     - pip install --progress-bar=off numpy netCDF4 matplotlib cdsapi xarray
     - pip install --progress-bar=off access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
+    - pip install --progress-bar=off git+http://gitlab.remss.com/Carl/plotting.git@4ed252ec8d635dba0ccfdd2e6c017ac5eb154b77
   script:
     # Comment out the global_map import for now
     - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py
