@@ -1,5 +1,5 @@
 default:
-  image: python:3.9-slim
+  image: python:3.10-slim
   cache:
     paths:
       - .cache/pip
@@ -66,9 +66,7 @@ import:
   needs: []
   parallel:
     matrix:
-      # TODO: Python 3.10 isn't added yet since there aren't many PyPI wheels
-      # available for it (e.g., matplotlib)
-      - PY_VERSION: ["3.8", "3.9"]
+      - PY_VERSION: ["3.8", "3.9", "3.10"]
   image: docker.io/library/python:${PY_VERSION}
   before_script:
     - apt-get update
