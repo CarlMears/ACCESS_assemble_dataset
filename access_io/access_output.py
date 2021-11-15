@@ -55,6 +55,8 @@ def append_var_to_daily_tb_netcdf(
     valid_min: Optional[float] = None,
     valid_max: Optional[float] = None,
     units: Optional[str] = None,
+    source: Optional[str] = None,
+    cell_method: Optional[str] = None,
     v_fill: float = -999.0,
     dataroot: Path = ACCESS_ROOT,
     overwrite: bool = False,
@@ -96,6 +98,10 @@ def append_var_to_daily_tb_netcdf(
             v.valid_max = valid_max
         if units is not None:
             v.units = units
+        if source is not None:
+            v.source = source
+        if cell_method is not None:
+            v.cell_method = cell_method
         v.coordinates = "latitude longitude hours"
 
         v[:, :, :] = var
@@ -112,6 +118,8 @@ def append_const_var_to_daily_tb_netcdf(
     valid_min: Optional[float] = None,
     valid_max: Optional[float] = None,
     units: Optional[str] = None,
+    source: Optional[str] = None,
+    cell_method: Optional[str] = None,
     v_fill: float = -999.0,
     dataroot: Path = ACCESS_ROOT,
     overwrite: bool = False,
@@ -145,14 +153,17 @@ def append_const_var_to_daily_tb_netcdf(
         if long_name is not None:
             v.long_name = long_name
 
-        v.missing = v_fill
-
         if valid_min is not None:
             v.valid_min = valid_min
         if valid_max is not None:
             v.valid_max = valid_max
         if units is not None:
             v.units = units
+        if source is not None:
+            v.source = source
+        if cell_method is not None:
+            v.cell_method = cell_method
+
         v.coordinates = "latitude longitude"
 
         v[:, :] = var
