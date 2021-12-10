@@ -24,8 +24,8 @@ def try_download(
     time: str,
 ) -> Path:
     """
-        Trying multiple IMERG file types to see if any
-        have data for a given time.
+    Trying multiple IMERG file types to see if any
+    have data for a given time.
     """
 
     year = date.strftime("%Y")
@@ -78,7 +78,6 @@ def imerg_half_hourly_request(*, date: datetime.date, target_path: Path) -> Path
     times.insert(0, "1410")
     times.append("0000")
     files_in_day = []
-    # times = [f"{h:02d}".zfill(4) for h in range(0, 60, 30)]
 
     for t in range(len(times)):
 
@@ -118,16 +117,13 @@ def imerg_half_hourly_request(*, date: datetime.date, target_path: Path) -> Path
 
 
 if __name__ == "__main__":
-    # date = datetime.date(2021, 10, 18)
     date = datetime.date(2012, 7, 11)
 
     target_path = Path("C:/ACCESS/output_files/_temp")
 
-    files = imerg_half_hourly_request(date=date, target_path=target_path,)
+    files = imerg_half_hourly_request(
+        date=date,
+        target_path=target_path,
+    )
 
     print(files)
-    # hr1 = xr.open_dataset(files[0], group='Grid')
-    # rain = hr1["precipitationCal"].values
-    # lat = hr1["lat"].values
-    # lon = hr1["lon"].values
-    # hr1.close()
