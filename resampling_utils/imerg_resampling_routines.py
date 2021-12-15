@@ -8,10 +8,6 @@ from pathlib import Path
 import multiprocessing
 import signal
 
-import warnings
-
-warnings.simplefilter(action="ignore", category=FutureWarning)
-
 
 NUM_LATS = 721
 NUM_LONS = 1440
@@ -71,7 +67,7 @@ def initialize_wgs84():
     Initializing WGS84 projection that we wish to project onto.
     Using this function to initialize this once saves us run time.
     """
-    crs_wgs = proj.crs.CRS(init="epsg:4326")  # assuming you're using WGS84 geographic
+    crs_wgs = proj.crs.CRS("epsg:4326")  # assuming you're using WGS84 geographic
 
     return crs_wgs
 
@@ -92,7 +88,7 @@ def get_distance(latitude0, longitude0, ilat_submask, ilon_submask, crs_wgs):
     latv, lonv = np.meshgrid(ilat_submask, ilon_submask, indexing="ij")
 
     # apply the local projection to obtain the mesh points in meters from the center specified by  latitude0,longitude0
-    transformer = proj.Transformer.from_crs(crs_wgs, cust)
+    transformer = proj.Transformer.from_crs(crs_wgs, cust, always_xy=True)
     xv, yv = transformer.transform(lonv, latv)
 
     return xv, yv
