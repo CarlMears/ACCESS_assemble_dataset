@@ -1,129 +1,208 @@
 """
     Code designed to download 30 minute IMERG data for a given day
     along with the IMERG data from 23:30 UTC on the previous day
-    and 00:30 UTC on the following day (for interpolation purposes).
+    and 00:30 UTC on the following day.
 
-    An EarthData login is required.  Details on how make a login as well
-    as how to set up a required .netrc file which works with Python requests is
+    The IMERG data are queried using the CMR EarthData API and subsequently downloaded.
+    The CMR API is documented at the following URL: https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html.
+    No login information is required to query the data however, an EarthData login is required to download the data.
+    Details on how make a login as well as how to set up a required .netrc file which works with Python requests is
     found at the following URL: https://disc.gsfc.nasa.gov/data-access#python-requests.
-
+    Written by AManaster
 """
 
 import requests
 import datetime
 from pathlib import Path
+import time
+
+
+def get_ids():
+    # Function to obtain the 'concept-ids' for the three half-hourly IMERG products (final, late, and early).
+    # This prevents us from having to hard-code 'concept-ids' for the different products since these IDs can potentially
+    # change as new IMERG version are released.
+    collection_url = "https://cmr.earthdata.nasa.gov/search/collections"
+
+    params = {"keyword": "imerg"}
+    headers = {
+        "Accept": "application/vnd.nasa.cmr.umm_results+json"
+    }  # this search does not like defining the json version as 1.6.4
+    first_response = requests.get(collection_url, headers=headers, params=params)
+    response_list = first_response.json()
+
+    ids = {}
+    for item in response_list["items"]:
+        granule_meta = item["meta"]
+        granule_umm = item["umm"]
+
+        # We can expect that, even as versions of half-hourly IMERG change,
+        # their native IDs will all still contain 'GPM_3IMERGHH'.
+        # Similarly, the conditional statements below operate under the assumption
+        # that the 'Final', 'Late', and 'Early' keywords will be present in the different
+        # half-hourly IMERG products and will not change from version to version.
+        # While it's possible that these things could change, it remains safer
+        # than assuming that the 'concept-ids' of these products will
+        # remain consistent from version to version.
+        if "GPM_3IMERGHH" in granule_meta["native-id"]:
+            if "Final" in granule_umm["EntryTitle"]:
+                ids["final"] = granule_meta["concept-id"]
+            elif "Late" in granule_umm["EntryTitle"]:
+                ids["late"] = granule_meta["concept-id"]
+            elif "Early" in granule_umm["EntryTitle"]:
+                ids["early"] = granule_meta["concept-id"]
+            else:
+                raise Exception("GPM IMERG Half Hourly Product not recognized")
+
+    return ids
+
+
+def _parse_umm(granule_umm: dict):
+    # Simple function to parse the data download URL
+    # from the .json.umm file
+
+    for url in granule_umm["RelatedUrls"]:
+        if url["Type"] == "GET DATA":
+            hdf5_url = url["URL"]
+            break
+        else:
+            raise Exception("Didn't find a granule download URL in the metadata")
+
+    return hdf5_url
+
+
+def query_one_day_imerg(*, date: datetime.date):
+
+    # Collection IDs for the three IMERG datasets of interest
+    ids = get_ids()
+    final_id = ids["final"]
+    early_id = ids["early"]
+    late_id = ids["late"]
+    id_list = [final_id, late_id, early_id]
+
+    # Base URL for CMR API query
+    url = "https://cmr.earthdata.nasa.gov/search/granules"
+
+    # Since we want data from the last half hourly file of the day prior and the first half hourly file of the day after the current day
+    day_before = date - datetime.timedelta(days=1)
+    day_after = date + datetime.timedelta(days=1)
+
+    for (
+        id
+    ) in (
+        id_list
+    ):  # check availability of all IMERG half-hourly products.  Should only be relevant for NRT ACCESS applications
+        params = {
+            "collection_concept_id": id,
+            "temporal": f"{day_before}T23:30:00Z,{day_after}T00:30:00Z",
+            "sort_key": "start_date",
+            "page_size": "50",
+        }
+
+        headers = {
+            "Accept": "application/vnd.nasa.cmr.umm_results+json; version=1.6.4"
+        }  # does the version need to stay as '1.6.4'?
+        response = requests.get(url, headers=headers, params=params)
+
+        # Sometimes this query will return an empty response body which leads to an error.
+        # I believe this is an issue on CMR's end since waiting 30s-60s and trying again will often rectify the issue.
+        # If this happens, the following block of code waits 30 seconds and tries again until we receive a successful API response w/ body (i.e., status code 200).
+        # I imagine there is a more elegant way to do this since this has the potential to get caught if the response.status_code remains != 200.
+        while response.status_code != 200:
+            try:
+                response = requests.get(url, headers=headers, params=params)
+            except requests.HTTPError:
+                error = f"{str(response.status_code)}"
+                print(f"API Query returned an error code {error}. Trying again in 30s")
+                time.sleep(30)
+
+        response_list = response.json()
+
+        # We want to look for the 'final' versions of IMERG data first
+        # The following checks to see if any 'final' data exists for a day.
+        # If not, it queries the next type of data (late) to see if a full day has been
+        # processed.  If not, the code looks for 'early' data since it will
+        # almost always have more data than the 'late' product.
+        # This will likely only be relevant for NRT applications.
+        if response_list["hits"] == 0:
+            print(f"No data for ID {id}; Checking next")
+            continue
+        elif (
+            response_list["hits"] > 0 and response_list["hits"] < 51
+        ):  # Should have maximum 51 'hits' in a day
+            print(f"Some data, but not full day")
+            if id != early_id:
+                continue
+            break
+        else:
+            break
+
+    files = []
+    for item in response_list["items"]:
+        if item["meta"]["concept-type"] != "granule":
+            raise Exception("Unexpected concept type for granule")
+        granule_umm = item["umm"]
+        hdf5_file = _parse_umm(granule_umm)
+        files.append(hdf5_file)
+
+    return files  # a list of URLs for the daily data we want to download
 
 
 def try_download(
-    *,
-    date: datetime.date,
-    url: str,
+    file_url: str,
     target_path: Path,
-    start_time: str,
-    end_time: str,
-    time: str,
-) -> Path:
+):
     """
-    Trying multiple IMERG file types to see if any
-    have data for a given time.
+    Download IMERG files
     """
 
-    year = date.strftime("%Y")
-    month = date.strftime("%m")
-    day = date.strftime("%d")
-
-    if "HHL" in url:
-        filename = f"3B-HHR-L.MS.MRG.3IMERG.{year}{month}{day}-S{start_time}-E{end_time}.{time}.V06B.HDF5"
-    elif "HHE" in url:
-        filename = f"3B-HHR-E.MS.MRG.3IMERG.{year}{month}{day}-S{start_time}-E{end_time}.{time}.V06B.HDF5"
-    else:
-        filename = f"3B-HHR.MS.MRG.3IMERG.{year}{month}{day}-S{start_time}-E{end_time}.{time}.V06B.HDF5"
-
-    target = target_path / filename
+    file = file_url.split("/")[-1]
+    target = target_path / file
 
     if target.exists():
         print(f"File: {target} already exists, skipping")
         return target
     else:
         print(f"Getting: {target}")
-        print(url + filename)
+        print(file_url)
 
-        result = requests.get(url + filename)
+        result = requests.get(file_url)
+
         try:
             result.raise_for_status()
-            f = open(target, "wb")
-            f.write(result.content)
-            f.close()
+            with open(target, "wb") as f:
+                f.write(result.content)
+        except requests.HTTPError as e:
+            print(f"requests.get() returned an error code {result.status_code}")
+            raise e
+        else:
             print(f"contents of URL written to {target}")
             return target
-        except:
-            error = f"{str(result.status_code)}"
-            print(f"requests.get() returned an error code {error}")
-            return error
 
 
-def imerg_half_hourly_request(*, date: datetime.date, target_path: Path) -> Path:
-
-    first_time = datetime.datetime.combine(
-        date - datetime.timedelta(days=1), datetime.time(23, 30)
+def imerg_half_hourly_request(*, date: datetime.date, target_path: Path):
+    files = query_one_day_imerg(
+        date=date,
     )
-    start_times = [
-        first_time + datetime.timedelta(minutes=x) for x in range(0, 1500, 30)
-    ]
-    end_times = [
-        first_time + datetime.timedelta(minutes=x) for x in range(29, 1529, 30)
-    ]
 
-    times = [f"{h:02d}".zfill(4) for h in range(0, 1440, 30)]
-    times.insert(0, "1410")
-    times.append("0000")
     files_in_day = []
+    for file in files:  # loop through all files and download
 
-    for t in range(len(times)):
-
-        start_time = start_times[t].strftime("%H%M00")
-        end_time = end_times[t].strftime("%H%M59")
-        time = times[t]
-
-        jday = start_times[t].strftime("%j")
-        yr = start_times[t].strftime("%Y")
-
-        url_final = f"https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHH.06/{yr}/{jday}/"  # this is the URL we want to check first
-        url_late = f"https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHL.06/{yr}/{jday}/"  # this is the URL we want to check second
-        url_early = f"https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGHHE.06/{yr}/{jday}/"  # last URL we want to check
-        urls = [url_final, url_late, url_early]
-        file_exist_flag = False
-
-        for url in urls:  # loop through all possible URLs to find IMERG file
-            if file_exist_flag:
-                continue
-
+        try:
             result = try_download(
-                date=start_times[t],
-                url=url,
+                file_url=file,
                 target_path=target_path,
-                start_time=start_time,
-                end_time=end_time,
-                time=time,
             )
-
-            if isinstance(result, Path):
-                files_in_day.append(result)
-                file_exist_flag = True
-            else:
-                continue
+        except requests.HTTPError:
+            continue
+        else:
+            files_in_day.append(result)
 
     return files_in_day
 
 
 if __name__ == "__main__":
-    date = datetime.date(2012, 7, 11)
+    date = datetime.date(2021, 12, 15)
 
     target_path = Path("C:/ACCESS/output_files/_temp")
 
-    files = imerg_half_hourly_request(
-        date=date,
-        target_path=target_path,
-    )
-
-    print(files)
+    files = imerg_half_hourly_request(date=date, target_path=target_path)
