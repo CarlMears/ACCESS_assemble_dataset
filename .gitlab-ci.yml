@@ -1,5 +1,5 @@
 default:
-  image: python:3.9-slim
+  image: python:3.10-slim
   cache:
     paths:
       - .cache/pip
@@ -66,15 +66,20 @@ import:
   needs: []
   parallel:
     matrix:
-      # TODO: Python 3.10 isn't added yet since there aren't many PyPI wheels
-      # available for it (e.g., matplotlib and netCDF4)
-      - PY_VERSION: ["3.7", "3.8", "3.9"]
-  image: docker.io/library/python:${PY_VERSION}-slim
+      - PY_VERSION: ["3.8", "3.9", "3.10"]
+  image: docker.io/library/python:${PY_VERSION}
   before_script:
+    - apt-get update
+    # These are needed to build cartopy or its dependencies
+    - apt-get install -y libproj-dev libgeos-dev
     - python --version
     - pip install --upgrade pip
     - pip install --progress-bar=off numpy netCDF4 matplotlib cdsapi xarray
+    # This older version of cartopy is used since it requires a version of proj
+    # newer than what Debian packages
+    - pip install --progress-bar=off Cartopy==0.19.0.post1
     - pip install --progress-bar=off access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
+    - pip install --progress-bar=off git+http://gitlab.remss.com/Carl/plotting.git
   script:
     # Comment out the global_map import for now
     - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py
