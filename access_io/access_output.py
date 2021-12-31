@@ -41,7 +41,7 @@ NUM_HOURS = 24
 def get_access_output_filename(
     date: datetime.date, satellite: str, dataroot: Path
 ) -> Path:
-    return dataroot / f"{satellite}_out" / f"{satellite}_resamp_tbs_{date:%Y_%m_%d}.nc"
+    return dataroot / f"{satellite}_out" / f"Y{date:%Y}" / f"M{date:%m}" / f"{satellite}_resamp_tbs_{date:%Y_%m_%d}.nc"
 
 
 def append_var_to_daily_tb_netcdf(
@@ -203,6 +203,7 @@ def write_daily_tb_netcdf(
 ) -> None:
     tb_fill = -999.0
     filename = get_access_output_filename(date, satellite, dataroot)
+    os.makedirs(filename.parent,exist_ok=True)
 
     lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
     lons = np.arange(0, NUM_LONS) * 0.25
