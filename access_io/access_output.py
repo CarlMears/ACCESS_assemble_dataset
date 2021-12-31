@@ -43,13 +43,11 @@ def get_access_output_filename(
 ) -> Path:
     return (
         dataroot
-        / f"{satellite}_out"
         / f"Y{date:%Y}"
         / f"M{date:%m}"
         / f"{satellite}_resamp_tbs_{date:%Y_%m_%d}.nc"
-    )
-
-
+        )
+    
 def append_var_to_daily_tb_netcdf(
     *,
     date: datetime.date,

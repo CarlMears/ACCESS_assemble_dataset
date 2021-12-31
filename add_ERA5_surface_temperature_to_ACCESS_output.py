@@ -40,6 +40,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     # of the next day.
     next_day = current_day + datetime.timedelta(hours=24)
     try:
+        os.makedirs(dataroot / "_temp",exist_ok = True)
         file1 = era5_hourly_single_level_request(
             date=current_day,
             variable=variable[0],
@@ -102,24 +103,28 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    date = datetime.date(2012, 7, 11)
-    variable = (
-        "Skin temperature",
-        "skt",
-    )  # need this because var name for the ERA5 request is
-    # not that same as the variable name in the nc file
-    # that is provided/downloaded
-    satellite = "AMSR2"
-    verbose = True
-    if os.name == "nt":
-        dataroot = Path("L:/access/")
-    elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access")
 
-    add_ERA5_single_level_variable_to_ACCESS_output(
-        current_day=date,
-        variable=variable,
-        satellite=satellite,
-        dataroot=dataroot,
-        verbose=True,
-    )
+    year = 2016
+    month = 1
+    for day in range(1,32):
+        date = datetime.date(year, month, day)
+        variable = (
+            "Skin temperature",
+            "skt",
+        )  # need this because var name for the ERA5 request is
+        # not that same as the variable name in the nc file
+        # that is provided/downloaded
+        satellite = "AMSR2"
+        verbose = True
+        if os.name == "nt":
+            dataroot = Path("L:/access/amsr2_daily_test")
+        elif os.name == "posix":
+            dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
+
+        add_ERA5_single_level_variable_to_ACCESS_output(
+            current_day=date,
+            variable=variable,
+            satellite=satellite,
+            dataroot=dataroot,
+            verbose=True,
+        )

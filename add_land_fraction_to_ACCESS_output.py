@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+import xarray as xr
 
 from access_io.access_output import append_const_var_to_daily_tb_netcdf
 from util.land_fraction import read_land_fraction_1440_720
@@ -11,24 +12,16 @@ from util.land_fraction import read_land_fraction_1440_720
 def add_land_fraction_to_ACCESS_output(
     *, date: datetime.date, satellite: str, dataroot: Path, overwrite: bool
 ) -> None:
-    # This a temporary kludge until the more accurate land mask is available
-    lf_1440_720 = read_land_fraction_1440_720()
-    lf_1440_721 = np.zeros((721, 1440))
-    temp = np.zeros((719, 1440))
-    temp = 0.25 * (
-        lf_1440_720[0:719, :]
-        + lf_1440_720[1:720, :]
-        + np.roll(lf_1440_720[0:719, :], 1, axis=1)
-        + np.roll(lf_1440_720[1:720, :], 1, axis=1)
-    )
-    lf_1440_721[1:720, :] = temp
-    lf_1440_721[0, :] = lf_1440_721[1, :]
-    lf_1440_721[720, :] = lf_1440_721[719, :]
+    
+    land_path = land_path = Path('L:/access/land_water')
+    combined_land_file = land_path / 'land_fraction_1440_721_30km.combined_hansen_nsidc.nc'
+    land_fraction_xr = xr.open_dataset(combined_land_file)
+    land_fraction_np = land_fraction_xr['land_fraction'].values
 
     append_const_var_to_daily_tb_netcdf(
         date=date,
         satellite=satellite,
-        var=lf_1440_721,
+        var=land_fraction_np,
         var_name="land_area_fraction",
         standard_name="land_area_fraction",
         long_name="land fraction averaged over gaussian footprint",
@@ -42,13 +35,13 @@ def add_land_fraction_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    date = datetime.date(2012, 7, 11)
+    date = datetime.date(2016, 1, 1)
     satellite = "AMSR2"
     verbose = True
     if os.name == "nt":
-        dataroot = Path("L:/access/")
+        dataroot = Path("L:/access/amsr2_daily_test")
     elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access")
+        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
 
     add_land_fraction_to_ACCESS_output(
         date=date,

@@ -74,7 +74,7 @@ def read_resampled_tbs(
     if channel_str == "time":
         filename = orbit_dir / f"r{orbit:05d}.time.nc"
     else:
-        filename = orbit_dir / f"r{orbit:05d}.gridded_tbs.{channel_str}.nc"
+        filename = orbit_dir / f"r{orbit:05d}.grid.{channel:02d}.nc"
     if verbose:
         print(filename)
     ds = xr.open_dataset(filename)
