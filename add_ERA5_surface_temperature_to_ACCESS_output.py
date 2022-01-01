@@ -103,28 +103,30 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-
+    import calendar
     year = 2016
-    month = 7
-    for day in range(1,2):
-        date = datetime.date(year, month, day)
-        variable = (
-            "Skin temperature",
-            "skt",
-        )  # need this because var name for the ERA5 request is
-        # not that same as the variable name in the nc file
-        # that is provided/downloaded
-        satellite = "AMSR2"
-        verbose = True
-        if os.name == "nt":
-            dataroot = Path("L:/access/amsr2_daily_test")
-        elif os.name == "posix":
-            dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
+    for month in range(5,13):
+        for day in range(1,calendar.monthrange(year,month)[1]+1):
+            date = datetime.date(year,month,day)
+            print(f'{date}')
+        
+            variable = (
+                "Skin temperature",
+                "skt",
+            )  # need this because var name for the ERA5 request is
+            # not that same as the variable name in the nc file
+            # that is provided/downloaded
+            satellite = "AMSR2"
+            verbose = True
+            if os.name == "nt":
+                dataroot = Path("L:/access/amsr2_daily_test")
+            elif os.name == "posix":
+                dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
 
-        add_ERA5_single_level_variable_to_ACCESS_output(
-            current_day=date,
-            variable=variable,
-            satellite=satellite,
-            dataroot=dataroot,
-            verbose=True,
-        )
+            add_ERA5_single_level_variable_to_ACCESS_output(
+                current_day=date,
+                variable=variable,
+                satellite=satellite,
+                dataroot=dataroot,
+                verbose=True,
+            )

@@ -35,7 +35,8 @@ def add_land_fraction_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    date = datetime.date(2016, 7, 1)
+    import calendar
+    year = 2016
     satellite = "AMSR2"
     verbose = True
     if os.name == "nt":
@@ -43,9 +44,13 @@ if __name__ == "__main__":
     elif os.name == "posix":
         dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
 
-    add_land_fraction_to_ACCESS_output(
-        date=date,
-        satellite=satellite,
-        dataroot=dataroot,
-        overwrite=True,
-    )
+    for month in range(1,2):
+        for day in range(1,calendar.monthrange(year,month)[1]+1):
+            date = datetime.date(year,month,day)
+            print(f'{date}')
+            add_land_fraction_to_ACCESS_output(
+                date=date,
+                satellite=satellite,
+                dataroot=dataroot,
+                overwrite=True,
+            )

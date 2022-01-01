@@ -6,6 +6,12 @@ from typing import Optional, Sequence
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
 from numpy.typing import ArrayLike
+import time
+
+
+import sys
+sys.path.append('M:/job_access/python/dataset_assembly/access_io/')
+from locked_dataset import LockedDataset
 
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
@@ -67,8 +73,8 @@ def append_var_to_daily_tb_netcdf(
 ) -> None:
 
     filename = get_access_output_filename(date, satellite, dataroot)
-
-    with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
+    with LockedDataset(filename, "a",60) as root_grp:
+    #with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
         try:
             v = root_grp.createVariable(
                 var_name,
@@ -105,7 +111,7 @@ def append_var_to_daily_tb_netcdf(
         v.coordinates = "latitude longitude hours"
 
         v[:, :, :] = var
-
+        
 
 def append_const_var_to_daily_tb_netcdf(
     *,
@@ -125,8 +131,8 @@ def append_const_var_to_daily_tb_netcdf(
     overwrite: bool = False,
 ) -> None:
     filename = get_access_output_filename(date, satellite, dataroot)
-
-    with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
+    with LockedDataset(filename, "a",60) as root_grp:
+    #with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
         try:
             v = root_grp.createVariable(
                 var_name,
@@ -164,6 +170,7 @@ def append_const_var_to_daily_tb_netcdf(
         v.coordinates = "latitude longitude"
 
         v[:, :] = var
+     
 
 
 def append_lf_daily_tb_netcdf(
@@ -175,8 +182,8 @@ def append_lf_daily_tb_netcdf(
 ) -> None:
     lf_fill = -999.0
     filename = get_access_output_filename(date, satellite, dataroot)
-
-    with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
+    with LockedDataset(filename, "a",60) as root_grp:
+    #with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
         lf = root_grp.createVariable(
             "land_fraction",
             "f4",
@@ -211,7 +218,8 @@ def write_daily_tb_netcdf(
     lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
     lons = np.arange(0, NUM_LONS) * 0.25
 
-    with netcdf_dataset(filename, "w", format="NETCDF4") as root_grp:
+    #with netcdf_dataset(filename, "w", format="NETCDF4") as root_grp:
+    with LockedDataset(filename, "w",60) as root_grp:
         root_grp.Conventions = "CF-1.8"
         root_grp.standard_name_vocabulary = (
             "CF Standard Name Table (v78, 21 September 2021)"
