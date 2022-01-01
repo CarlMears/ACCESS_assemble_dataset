@@ -50,7 +50,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
 
     # Return resampled rain rate maps for each hour of the day
     rr_for_access = resample_imerg_day(
-        times, hourly_intervals, date, target_path=dataroot / "_temp"
+        np.roll(times,720,axis=1), hourly_intervals, date, target_path=dataroot / "_temp"
     )
     rr_for_access = np.roll(rr_for_access,720,axis=1)
     # write the results to the existing output file
