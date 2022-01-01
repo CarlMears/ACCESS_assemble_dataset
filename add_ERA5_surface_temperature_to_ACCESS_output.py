@@ -40,7 +40,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     # of the next day.
     next_day = current_day + datetime.timedelta(hours=24)
     try:
-        os.makedirs(dataroot / "_temp",exist_ok = True)
+        os.makedirs(dataroot / "_temp", exist_ok=True)
         file1 = era5_hourly_single_level_request(
             date=current_day,
             variable=variable[0],
@@ -104,12 +104,13 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 if __name__ == "__main__":
     import calendar
+
     year = 2016
-    for month in range(5,13):
-        for day in range(1,calendar.monthrange(year,month)[1]+1):
-            date = datetime.date(year,month,day)
-            print(f'{date}')
-        
+    for month in range(5, 13):
+        for day in range(1, calendar.monthrange(year, month)[1] + 1):
+            date = datetime.date(year, month, day)
+            print(f"{date}")
+
             variable = (
                 "Skin temperature",
                 "skt",

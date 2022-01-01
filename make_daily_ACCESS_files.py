@@ -10,7 +10,7 @@ import numpy as np
 # must be installed from rss_plotting package
 from rss_plotting.global_map import plot_global_map
 
-from access_io.access_output import write_daily_tb_netcdf,get_access_output_filename
+from access_io.access_output import write_daily_tb_netcdf, get_access_output_filename
 from resampled_tbs.read_resampled_orbit import read_resampled_tbs
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
@@ -46,7 +46,7 @@ def make_daily_ACCESS_tb_file(
     channels: Collection[int],
     verbose: bool = False,
     plot_example_map: bool = True,
-    overwrite: bool = False
+    overwrite: bool = False,
 ) -> List[Path]:
     if satellite == "amsr2":
         orbit_times = read_amsr2_orbit_times()
@@ -56,7 +56,7 @@ def make_daily_ACCESS_tb_file(
     filename = get_access_output_filename(current_day, satellite, dataroot)
     if os.path.isfile(filename):
         if overwrite is False:
-            print(f'daily file for {current_day} exists... skipping')
+            print(f"daily file for {current_day} exists... skipping")
             file_list = []
             return file_list
 
@@ -71,7 +71,7 @@ def make_daily_ACCESS_tb_file(
     try:
         orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
     except:
-        print(f'No orbits found for {current_day}')
+        print(f"No orbits found for {current_day}")
         file_list = []
         return file_list
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
@@ -152,14 +152,14 @@ if __name__ == "__main__":
     import sys
 
     overwrite = False
-    year_range = range(2013,2022)
-    for n,arg in enumerate(sys.argv):
-        if arg == '--year':
-            year_to_do = sys.argv[n+1]
+    year_range = range(2013, 2022)
+    for n, arg in enumerate(sys.argv):
+        if arg == "--year":
+            year_to_do = sys.argv[n + 1]
             year_to_do = int(year_to_do)
-        if arg == '--overwrite':
+        if arg == "--overwrite":
             overwrite = True
-    
+
     channels = list(range(5, 13))
     satellite = "amsr2"
     if os.name == "nt":
@@ -167,9 +167,9 @@ if __name__ == "__main__":
     elif os.name == "posix":
         dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out")
     for year in year_range:
-        for month in range(1,13):
-            days_in_month= calendar.monthrange(year,month)[1]
-            for day in range(1,days_in_month+1):
+        for month in range(1, 13):
+            days_in_month = calendar.monthrange(year, month)[1]
+            for day in range(1, days_in_month + 1):
                 make_daily_ACCESS_tb_file(
                     current_day=date(year, month, day),
                     satellite=satellite,
@@ -177,7 +177,7 @@ if __name__ == "__main__":
                     channels=channels,
                     verbose=False,
                     plot_example_map=False,
-                    overwrite = overwrite,
+                    overwrite=overwrite,
                 )
 
         plt.show()
