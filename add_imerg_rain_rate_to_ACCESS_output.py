@@ -52,7 +52,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
     rr_for_access = resample_imerg_day(
         times, hourly_intervals, date, target_path=dataroot / "_temp"
     )
-
+    rr_for_access = np.roll(rr_for_access,720,axis=1)
     # write the results to the existing output file
     today = datetime.date.today()
     append_var_to_daily_tb_netcdf(
@@ -75,13 +75,13 @@ def add_imerg_rain_rate_to_ACCESS_output(
 
 if __name__ == "__main__":
 
-    date = datetime.date(2012, 7, 15)
+    date = datetime.date(2016, 7, 1)
     satellite = "AMSR2"
     verbose = True
     if os.name == "nt":
-        dataroot = Path("C:/ACCESS/output_files")
+        dataroot = Path("L:/access/amsr2_daily_test")
     elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access")
+        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
 
     add_imerg_rain_rate_to_ACCESS_output(
         current_day=date,
