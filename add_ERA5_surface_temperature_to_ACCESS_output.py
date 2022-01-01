@@ -105,8 +105,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 if __name__ == "__main__":
 
     year = 2016
-    month = 1
-    for day in range(1,32):
+    month = 7
+    for day in range(1,2):
         date = datetime.date(year, month, day)
         variable = (
             "Skin temperature",

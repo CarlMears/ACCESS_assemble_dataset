@@ -35,7 +35,7 @@ def add_land_fraction_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    date = datetime.date(2016, 1, 1)
+    date = datetime.date(2016, 7, 1)
     satellite = "AMSR2"
     verbose = True
     if os.name == "nt":
