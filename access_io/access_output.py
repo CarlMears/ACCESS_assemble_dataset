@@ -77,7 +77,11 @@ def append_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude", "hours",),
+                (
+                    "latitude",
+                    "longitude",
+                    "hours",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -137,7 +141,10 @@ def append_const_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude",),
+                (
+                    "latitude",
+                    "longitude",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -186,7 +193,10 @@ def append_lf_daily_tb_netcdf(
         lf = root_grp.createVariable(
             "land_fraction",
             "f4",
-            ("latitude", "longitude",),
+            (
+                "latitude",
+                "longitude",
+            ),
             zlib=True,
             fill_value=lf_fill,
         )
@@ -299,14 +309,23 @@ def write_daily_tb_netcdf(
         time = root_grp.createVariable(
             "second_since_midnight",
             "i4",
-            ("latitude", "longitude", "hours",),
+            (
+                "latitude",
+                "longitude",
+                "hours",
+            ),
             zlib=True,
             fill_value=-999999,
         )
         tbs = root_grp.createVariable(
             "brightness_temperature",
             "f4",
-            ("latitude", "longitude", "hours", "channels",),
+            (
+                "latitude",
+                "longitude",
+                "hours",
+                "channels",
+            ),
             zlib=True,
             fill_value=tb_fill,
             least_significant_digit=2,
