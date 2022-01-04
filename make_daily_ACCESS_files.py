@@ -70,7 +70,8 @@ def make_daily_ACCESS_tb_file(
     file_list = []
     try:
         orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
-    except:
+    # TODO: what is the actual exception expected? AssertionError?
+    except Exception:
         print(f"No orbits found for {current_day}")
         file_list = []
         return file_list
