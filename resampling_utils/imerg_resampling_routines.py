@@ -156,12 +156,8 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
                 resampled_map[j, i] = np.nan
                 continue
 
-            if np.all(
-                np.isnan(rain)
-            ):  # if no IMERG data in window, set 0.25 deg pixel to NaN
-                resampled_map[j, i] = np.nan
-            elif (
-                np.all(rain) == 0.0
+            if (
+                ~np.any(rain != 0.0)
             ):  # no need to do a weighted average calculation if all rain rates in window are zero
                 resampled_map[j, i] = 0.0
             else:
@@ -193,40 +189,28 @@ def resample_imerg_day(times, time_intervals, date, target_path=""):
     for idx in range(0, 24):
         sat_time = times[:, :, idx]
 
-        hour_beg = np.all(  # from beginning of hour to 15 minutes past the hour
+        hour_beg = np.all(  # from beginning of hour to 30 minutes past the hour
             [
                 (sat_time >= time_intervals[idx]),
-                (sat_time < (time_intervals[idx + 1] - 2400)),
+                (sat_time < (time_intervals[idx + 1] - 1800)),
             ],
             axis=(0),
         )
 
-        hour_mid = np.all(  # from 15 minutes past the hour to 45 minutes past the hour
+        hour_end = np.all(  # from 30 minutes past the hour to the following hour
             [
-                (sat_time >= (time_intervals[idx + 1] - 2400)),
-                (sat_time < (time_intervals[idx + 1] - 1200)),
-            ],
-            axis=(0),
-        )
-
-        hour_end = np.all(  # from 45 minutes past the hour to the following hour
-            [
-                (sat_time >= (time_intervals[idx + 1] - 1200)),
+                (sat_time >= (time_intervals[idx + 1] - 1800)),
                 (sat_time < time_intervals[idx + 1]),
             ],
             axis=(0),
         )
 
-        # Opening all files needed to perform resampling for given hour (need 3 IMERG files)
+        # Opening all files needed to perform resampling for given hour (need two IMERG files)
         minutes_of_day_beg = int(time_intervals[idx] / 60)
-        minutes_of_day_mid = int((time_intervals[idx + 1] - 1800) / 60)
-        minutes_of_day_end = int(time_intervals[idx + 1] / 60)
+        minutes_of_day_end = int((time_intervals[idx + 1] / 60) - 30)
 
         lat_beg, lon_beg, rain_beg = read_imerg_half_hourly(
             minutes_of_day=minutes_of_day_beg, date=date, target_path=target_path
-        )
-        lat_mid, lon_mid, rain_mid = read_imerg_half_hourly(
-            minutes_of_day=minutes_of_day_mid, date=date, target_path=target_path
         )
         lat_end, lon_end, rain_end = read_imerg_half_hourly(
             minutes_of_day=minutes_of_day_end, date=date, target_path=target_path
@@ -234,14 +218,13 @@ def resample_imerg_day(times, time_intervals, date, target_path=""):
 
         for_parallel = [
             [rain_beg, lat_beg, lon_beg, hour_beg],
-            [rain_mid, lat_mid, lon_mid, hour_mid],
             [rain_end, lat_end, lon_end, hour_end],
         ]
 
         # Processing 3 IMERG files for one hour in parallel
         p = multiprocessing.Pool(
-            5, init_worker
-        )  # 5 workers at the moment. Can be changed
+            10, init_worker
+        )  # 10 workers at the moment. Can be changed
 
         try:
             print("Starting jobs")
