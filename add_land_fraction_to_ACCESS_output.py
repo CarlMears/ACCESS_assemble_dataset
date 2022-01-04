@@ -2,11 +2,9 @@ import datetime
 import os
 from pathlib import Path
 
-import numpy as np
 import xarray as xr
 
 from access_io.access_output import append_const_var_to_daily_tb_netcdf
-from util.land_fraction import read_land_fraction_1440_720
 
 
 def add_land_fraction_to_ACCESS_output(
