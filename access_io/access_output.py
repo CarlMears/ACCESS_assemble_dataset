@@ -4,9 +4,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
-from netCDF4 import Dataset as netcdf_dataset
 from numpy.typing import ArrayLike
-import time
 
 from rss_lock.locked_dataset import LockedDataset
 
