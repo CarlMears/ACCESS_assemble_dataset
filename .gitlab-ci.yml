@@ -75,7 +75,7 @@ import:
     - apt-get install -y libproj-dev libgeos-dev
     - python --version
     - pip install --upgrade pip
-    - pip install numpy netCDF4 matplotlib cdsapi xarray
+    - pip install numpy netCDF4 matplotlib cdsapi xarray typing_extensions
     # This older version of cartopy is used since it requires a version of proj
     # newer than what Debian packages
     - pip install Cartopy==0.19.0.post1
