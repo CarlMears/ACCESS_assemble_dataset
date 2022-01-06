@@ -133,7 +133,9 @@ def append_const_var_to_daily_tb_netcdf(
     lock_stale_time: float = 86400.0,
 ) -> None:
     filename = get_access_output_filename(date, satellite, dataroot)
-    with LockedDataset(filename, "a", 60, lock_stale_time=lock_stale_time,verbose=verbose) as root_grp:
+    with LockedDataset(
+        filename, "a", 60, lock_stale_time=lock_stale_time, verbose=verbose
+    ) as root_grp:
         # with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
         try:
             v = root_grp.createVariable(
