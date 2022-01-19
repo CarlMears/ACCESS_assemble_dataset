@@ -81,6 +81,7 @@ import:
     - pip install Cartopy==0.19.0.post1
     - pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
     - pip install git+http://gitlab.remss.com/Carl/plotting.git
+    - pip install git+http://gitlab.remss.com/Carl/rss_lock.git
   script:
     # Comment out the global_map import for now
     - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py
