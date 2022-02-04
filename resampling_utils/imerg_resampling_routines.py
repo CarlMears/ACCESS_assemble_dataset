@@ -1,5 +1,4 @@
 import datetime
-import os
 import numpy as np
 import xarray as xr
 import pyproj as proj
@@ -213,7 +212,9 @@ def resample_hour(hour, times, time_intervals, date, target_path):
 
     # Processing 2 IMERG files for one hour in parallel
     print("Starting jobs")
-    with multiprocessing.Pool(5, init_worker) as p:
+    with multiprocessing.Pool(
+        5, init_worker
+    ) as p:
         print("Waiting for results")
         try:
             res = p.starmap(resample_to_quarter, for_parallel)
@@ -222,7 +223,9 @@ def resample_hour(hour, times, time_intervals, date, target_path):
             p.terminate()
     print("Normal termination")
 
+
     p.join()  # this waits for all worker processes to terminate.
+
 
     hour_map = np.nanmean((res), axis=0)
 
@@ -232,8 +235,9 @@ def resample_hour(hour, times, time_intervals, date, target_path):
 def resample_imerg_day(times, time_intervals, date, target_path=Path(".")):
     total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
-    # Using multiple threads for resampling
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+
+    # Using process pool for resampling
+    with concurrent.futures.ProcessPoolExecutor() as executor:
         results = {
             executor.submit(
                 resample_hour, hour, times, time_intervals, date, target_path
