@@ -13,6 +13,7 @@ from threading import Lock
 
 NUM_LATS = 721
 NUM_LONS = 1440
+NUM_HOURS = 24
 mutex = Lock()
 
 
@@ -31,15 +32,14 @@ def read_imerg_half_hourly(
     minutes_of_day: int,
     date: datetime.date,
     target_path: Path,
-) -> None:
+):
     """
     Reading latitude, longitude, and precipitation from downloaded IMERG files.
     """
     minute_string = str(minutes_of_day).zfill(4)
     date_string = date.strftime("%Y%m%d")
-    dir = target_path
 
-    files = os.listdir(dir)
+    files = list(target_path.glob(f"*"))
 
     if minute_string == "1440":
         date += datetime.timedelta(days=1)
@@ -47,13 +47,11 @@ def read_imerg_half_hourly(
         minute_string = "0000"
         print(minute_string, date_string)
 
-        file = [i for i in files if (f".{minute_string}." in i) and (date_string in i)]
-        filename = Path(dir / file[0])
+        filename = next(target_path.glob(f"*.{date_string}*.{minute_string}*"))
 
     else:
         print(minute_string, date_string)
-        file = [i for i in files if (f".{minute_string}." in i) and (date_string in i)]
-        filename = Path(dir / file[0])
+        filename = next(target_path.glob(f"*.{date_string}*.{minute_string}*"))
     print(filename)
 
     mutex.acquire()  # multiple threads do not play nice opening HDF5 files
@@ -103,8 +101,8 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
     resampled_map = np.full((NUM_LATS, NUM_LONS), np.nan)
     g = initialize_wgs84()
 
-    for i in range(0, 1440):
-        for j in range(0, 721):
+    for i in range(NUM_LONS):
+        for j in range(NUM_LATS):
             if mask[j, i] == False:
                 continue
             lon_quarter = (i * 0.25) - 180.0
@@ -147,8 +145,7 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
             # Currently removing windows around 0.25 degree grid box where over 50% of IMERG values
             # are NaN
             where_nan = np.where(np.isnan(rain))
-            sz = rain.shape
-            n_elements_rain = sz[0] * sz[1]
+            n_elements_rain = rain.size
             n_elements_nan = len(where_nan[0])
 
             if (
@@ -172,9 +169,7 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
                 )  # a check based on Thomas' IMERG work. Removing any negative RR values
 
                 gains = target_gain(dist_km, diameter_in_km=30.0)
-                weighted_rain = np.nansum(
-                    rain[good_rain] * gains[good_rain]
-                ) / np.nansum(gains[good_rain])
+                weighted_rain = np.average(rain[good_rain], weights=gains[good_rain])
                 resampled_map[j, i] = weighted_rain
 
     return resampled_map
@@ -217,18 +212,16 @@ def resample_hour(hour, times, time_intervals, date, target_path):
     ]
 
     # Processing 2 IMERG files for one hour in parallel
-    p = multiprocessing.Pool(5, init_worker)  # 5 workers at the moment. Can be changed
-
-    try:
-        print("Starting jobs")
-        res = p.starmap(resample_to_quarter, for_parallel)
+    print("Starting jobs")
+    with multiprocessing.Pool(5, init_worker) as p:
         print("Waiting for results")
-    except KeyboardInterrupt:
-        print("Caught KeyboardInterrupt, terminating workers")
-        p.terminate()
-    else:
-        print("Normal termination")
-        p.close()
+        try:
+            res = p.starmap(resample_to_quarter, for_parallel)
+        except KeyboardInterrupt:
+            print("Caught KeyboardInterrupt, terminating workers")
+            p.terminate()
+    print("Normal termination")
+
     p.join()  # this waits for all worker processes to terminate.
 
     hour_map = np.nanmean((res), axis=0)
@@ -236,8 +229,8 @@ def resample_hour(hour, times, time_intervals, date, target_path):
     return (hour_map, hour)
 
 
-def resample_imerg_day(times, time_intervals, date, target_path=""):
-    total_hour = np.full((NUM_LATS, NUM_LONS, 24), np.nan)
+def resample_imerg_day(times, time_intervals, date, target_path=Path(".")):
+    total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
     # Using multiple threads for resampling
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -245,7 +238,7 @@ def resample_imerg_day(times, time_intervals, date, target_path=""):
             executor.submit(
                 resample_hour, hour, times, time_intervals, date, target_path
             ): hour
-            for hour in range(0, 24)
+            for hour in range(0, NUM_HOURS)
         }
         for future in concurrent.futures.as_completed(results):
             try:
