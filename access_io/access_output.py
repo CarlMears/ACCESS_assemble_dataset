@@ -4,9 +4,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
-from netCDF4 import Dataset as netcdf_dataset
 from numpy.typing import ArrayLike
-import time
 
 from rss_lock.locked_dataset import LockedDataset
 
@@ -77,7 +75,11 @@ def append_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude", "hours",),
+                (
+                    "latitude",
+                    "longitude",
+                    "hours",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -131,13 +133,18 @@ def append_const_var_to_daily_tb_netcdf(
     lock_stale_time: float = 86400.0,
 ) -> None:
     filename = get_access_output_filename(date, satellite, dataroot)
-    with LockedDataset(filename, "a", 60, lock_stale_time=lock_stale_time,verbose=verbose) as root_grp:
+    with LockedDataset(
+        filename, "a", 60, lock_stale_time=lock_stale_time, verbose=verbose
+    ) as root_grp:
         # with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
         try:
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude",),
+                (
+                    "latitude",
+                    "longitude",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -186,7 +193,10 @@ def append_lf_daily_tb_netcdf(
         lf = root_grp.createVariable(
             "land_fraction",
             "f4",
-            ("latitude", "longitude",),
+            (
+                "latitude",
+                "longitude",
+            ),
             zlib=True,
             fill_value=lf_fill,
         )
@@ -299,14 +309,23 @@ def write_daily_tb_netcdf(
         time = root_grp.createVariable(
             "second_since_midnight",
             "i4",
-            ("latitude", "longitude", "hours",),
+            (
+                "latitude",
+                "longitude",
+                "hours",
+            ),
             zlib=True,
             fill_value=-999999,
         )
         tbs = root_grp.createVariable(
             "brightness_temperature",
             "f4",
-            ("latitude", "longitude", "hours", "channels",),
+            (
+                "latitude",
+                "longitude",
+                "hours",
+                "channels",
+            ),
             zlib=True,
             fill_value=tb_fill,
             least_significant_digit=2,

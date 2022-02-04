@@ -54,11 +54,9 @@ def make_daily_ACCESS_tb_file(
         raise ValueError(f"Orbit Times for {satellite} not implemented yet")
 
     filename = get_access_output_filename(current_day, satellite, dataroot)
-    if os.path.isfile(filename):
-        if overwrite is False:
-            print(f"daily file for {current_day} exists... skipping")
-            file_list = []
-            return file_list
+    if filename.is_file() and not overwrite:
+        print(f"daily file for {current_day} exists... skipping")
+        return []
 
     # initialize arrays for daily data
     at_least_one_orbit = False
@@ -70,10 +68,10 @@ def make_daily_ACCESS_tb_file(
     file_list = []
     try:
         orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
-    except:
+    # TODO: what is the actual exception expected? AssertionError?
+    except Exception:
         print(f"No orbits found for {current_day}")
-        file_list = []
-        return file_list
+        return []
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
         print(f"{orbit} ", end="")
@@ -155,8 +153,7 @@ if __name__ == "__main__":
     year_range = range(2013, 2022)
     for n, arg in enumerate(sys.argv):
         if arg == "--year":
-            year_to_do = sys.argv[n + 1]
-            year_to_do = int(year_to_do)
+            year_to_do = int(sys.argv[n + 1])
         if arg == "--overwrite":
             overwrite = True
 

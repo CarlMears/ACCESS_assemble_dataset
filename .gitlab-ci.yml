@@ -6,6 +6,7 @@ default:
 
 variables:
   PIP_CACHE_DIR: "${CI_PROJECT_DIR}/.cache/pip"
+  PIP_PROGRESS_BAR: "off"
 
 black:
   stage: test
@@ -13,7 +14,7 @@ black:
   before_script:
     - python --version
     - pip install --upgrade pip
-    - pip install --progress-bar=off black
+    - pip install black
   script:
     - black --check --diff --color .
 
@@ -23,7 +24,7 @@ flake8:
   before_script:
     - python --version
     - pip install --upgrade pip
-    - pip install --progress-bar=off flake8
+    - pip install flake8
   script:
     - flake8 --count .
 
@@ -33,7 +34,7 @@ pycodestyle:
   before_script:
     - python --version
     - pip install --upgrade pip
-    - pip install --progress-bar=off pycodestyle
+    - pip install pycodestyle
   script:
     - pycodestyle -v --show-source .
 
@@ -43,7 +44,7 @@ mypy:
   needs: []
   before_script:
     - pip install --upgrade pip
-    - pip install --progress-bar=off lxml mypy
+    - pip install lxml mypy
   script:
     - >
       mypy --ignore-missing-imports --pretty --show-error-context
@@ -74,12 +75,13 @@ import:
     - apt-get install -y libproj-dev libgeos-dev
     - python --version
     - pip install --upgrade pip
-    - pip install --progress-bar=off numpy netCDF4 matplotlib cdsapi xarray
+    - pip install numpy netCDF4 matplotlib cdsapi xarray typing_extensions
     # This older version of cartopy is used since it requires a version of proj
     # newer than what Debian packages
-    - pip install --progress-bar=off Cartopy==0.19.0.post1
-    - pip install --progress-bar=off access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
-    - pip install --progress-bar=off git+http://gitlab.remss.com/Carl/plotting.git
+    - pip install Cartopy==0.19.0.post1
+    - pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
+    - pip install git+http://gitlab.remss.com/Carl/plotting.git
+    - pip install git+http://gitlab.remss.com/Carl/rss_lock.git
   script:
     # Comment out the global_map import for now
     - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py

@@ -103,11 +103,9 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    import calendar
-
     year = 2021
-    for month in range(7,8):
-        #for day in range(1, calendar.monthrange(year, month)[1] + 1):
+    for month in range(7, 8):
+        # for day in range(1, calendar.monthrange(year, month)[1] + 1):
         for day in range(1, 4):
             date = datetime.date(year, month, day)
             print(f"{date}")
