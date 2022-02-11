@@ -30,7 +30,7 @@ def get_ids():
     first_response = requests.get(collection_url, headers=headers, params=params)
     response_list = first_response.json()
 
-    ids = {}
+    ids = ["" for x in range(3)]
     for item in response_list["items"]:
         granule_meta = item["meta"]
         granule_umm = item["umm"]
@@ -45,15 +45,21 @@ def get_ids():
         # remain consistent from version to version.
         if "GPM_3IMERGHH" in granule_meta["native-id"]:
             if "Final" in granule_umm["EntryTitle"]:
-                ids["final"] = granule_meta["concept-id"]
+                ids[0] = granule_meta["concept-id"]
             elif "Late" in granule_umm["EntryTitle"]:
-                ids["late"] = granule_meta["concept-id"]
+                ids[1] = granule_meta["concept-id"]
             elif "Early" in granule_umm["EntryTitle"]:
-                ids["early"] = granule_meta["concept-id"]
+                ids[2] = granule_meta["concept-id"]
             else:
                 raise Exception("GPM IMERG Half Hourly Product not recognized")
 
     return ids
+
+
+# Collection IDs for the three IMERG datasets of interest
+# Only need to do this once per run since IDs should be
+# relatively stable over time
+id_list = get_ids()
 
 
 def _parse_umm(granule_umm: dict):
@@ -71,13 +77,6 @@ def _parse_umm(granule_umm: dict):
 
 
 def query_one_day_imerg(*, date: datetime.date):
-
-    # Collection IDs for the three IMERG datasets of interest
-    ids = get_ids()
-    final_id = ids["final"]
-    early_id = ids["early"]
-    late_id = ids["late"]
-    id_list = [final_id, late_id, early_id]
 
     # Base URL for CMR API query
     url = "https://cmr.earthdata.nasa.gov/search/granules"
@@ -130,7 +129,7 @@ def query_one_day_imerg(*, date: datetime.date):
             response_list["hits"] > 0 and response_list["hits"] < 51
         ):  # Should have maximum 51 'hits' in a day
             print(f"Some data, but not full day")
-            if id != early_id:
+            if id != id_list[2]:  # if id does not equal the early ID
                 continue
             break
         else:
