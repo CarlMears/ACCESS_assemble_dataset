@@ -15,7 +15,7 @@ from access_io.access_output import (
     get_access_output_filename,
     append_var_to_daily_tb_netcdf,
 )
-from resampling_utils.imerg_resampling_routines import *
+from resampling_utils.imerg_resampling_routines import resample_imerg_day
 
 
 def add_imerg_rain_rate_to_ACCESS_output(
@@ -42,7 +42,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
             target_path=dataroot / "_temp",
         )
 
-    except Exception:
+    except Exception as e:
         raise RuntimeError("Problem downloading IMERG data")
 
     # An array of hour times in seconds

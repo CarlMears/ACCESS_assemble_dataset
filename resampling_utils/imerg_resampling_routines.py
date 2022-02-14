@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 import xarray as xr
 import pyproj as proj
-from resampling_utils.AMSR2_Antenna_Gain import *
+from resampling_utils.AMSR2_Antenna_Gain import target_gain
 from pathlib import Path
 import multiprocessing
 import signal
@@ -13,7 +13,7 @@ from threading import Lock
 NUM_LATS = 721
 NUM_LONS = 1440
 NUM_HOURS = 24
-mutex = Lock()
+hdf5_access = Lock()
 
 
 def init_worker():
@@ -53,7 +53,7 @@ def read_imerg_half_hourly(
         filename = next(target_path.glob(f"*.{date_string}*.{minute_string}*"))
     print(filename)
 
-    mutex.acquire()  # multiple threads do not play nice opening HDF5 files
+    hdf5_access.acquire()  # multiple threads do not play nice opening HDF5 files
 
     hr1 = xr.open_dataset(filename, group="Grid")
     rain = hr1["precipitationCal"].values
@@ -61,7 +61,7 @@ def read_imerg_half_hourly(
     lon = hr1["lon"].values
     hr1.close()
 
-    mutex.release()
+    hdf5_access.release()
 
     return lat, lon, rain
 
@@ -212,9 +212,7 @@ def resample_hour(hour, times, time_intervals, date, target_path):
 
     # Processing 2 IMERG files for one hour in parallel
     print("Starting jobs")
-    with multiprocessing.Pool(
-        5, init_worker
-    ) as p:
+    with multiprocessing.Pool(5, init_worker) as p:
         print("Waiting for results")
         try:
             res = p.starmap(resample_to_quarter, for_parallel)
@@ -223,9 +221,7 @@ def resample_hour(hour, times, time_intervals, date, target_path):
             p.terminate()
     print("Normal termination")
 
-
     p.join()  # this waits for all worker processes to terminate.
-
 
     hour_map = np.nanmean((res), axis=0)
 
@@ -234,7 +230,6 @@ def resample_hour(hour, times, time_intervals, date, target_path):
 
 def resample_imerg_day(times, time_intervals, date, target_path=Path(".")):
     total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
-
 
     # Using process pool for resampling
     with concurrent.futures.ProcessPoolExecutor() as executor:
