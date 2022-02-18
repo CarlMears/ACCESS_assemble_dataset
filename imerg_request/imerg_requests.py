@@ -82,7 +82,7 @@ def _parse_umm(granule_umm: dict[str, Any]) -> str:
     return hdf5_url
 
 
-def query_one_day_imerg(*, date: datetime.date) -> list[str]:
+def query_one_day_imerg(date: datetime.date) -> list[str]:
     """Query CMR for one day of IMERG data.
 
     Return a list of URLs for the daily data we want to download.
@@ -188,9 +188,7 @@ def try_download(file_url: str, target_path: Path) -> Path:
 
 
 def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Path]:
-    files = query_one_day_imerg(
-        date=date,
-    )
+    files = query_one_day_imerg(date=date)
 
     files_in_day = []
     # loop through all files and download
