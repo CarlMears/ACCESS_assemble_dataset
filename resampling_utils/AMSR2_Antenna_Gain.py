@@ -94,7 +94,7 @@ def AMSRE_antenna_gain(delta, band):
         [0.651, 1.345, 4.844, 4.721, 15.18, 0.000, 79.785, 79.785], dtype=np.float64
     )
 
-    angle_scale_fact = np.array([0.8721, 0.8356, 0.8591, 0.9786, 0.8185])
+    # angle_scale_fact = np.array([0.8721, 0.8356, 0.8591, 0.9786, 0.8185])
     coeff_a = ant_approx_a[band]
     coeff_b = ant_approx_b[band]
     coeff_c = ant_approx_c[band]

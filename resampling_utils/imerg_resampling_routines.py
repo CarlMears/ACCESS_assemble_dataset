@@ -16,7 +16,7 @@ NUM_HOURS = 24
 hdf5_access = Lock()
 
 
-def init_worker():
+def init_worker() -> None:
     """
     This is a function which will allow the user to stop all workers
     with a Ctrl-C event.  Otherwise the code gets caught in an odd loop in
@@ -38,8 +38,6 @@ def read_imerg_half_hourly(
     minute_string = str(minutes_of_day).zfill(4)
     date_string = date.strftime("%Y%m%d")
 
-    files = list(target_path.glob(f"*"))
-
     if minute_string == "1440":
         date += datetime.timedelta(days=1)
         date_string = date.strftime("%Y%m%d")
@@ -53,15 +51,13 @@ def read_imerg_half_hourly(
         filename = next(target_path.glob(f"*.{date_string}*.{minute_string}*"))
     print(filename)
 
-    hdf5_access.acquire()  # multiple threads do not play nice opening HDF5 files
-
-    hr1 = xr.open_dataset(filename, group="Grid")
-    rain = hr1["precipitationCal"].values
-    lat = hr1["lat"].values
-    lon = hr1["lon"].values
-    hr1.close()
-
-    hdf5_access.release()
+    # multiple threads do not play nice opening HDF5 files
+    with hdf5_access:
+        hr1 = xr.open_dataset(filename, group="Grid")
+        rain = hr1["precipitationCal"].values
+        lat = hr1["lat"].values
+        lon = hr1["lon"].values
+        hr1.close()
 
     return lat, lon, rain
 
@@ -102,7 +98,7 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
 
     for i in range(NUM_LONS):
         for j in range(NUM_LATS):
-            if mask[j, i] == False:
+            if not mask[j, i]:
                 continue
             lon_quarter = (i * 0.25) - 180.0
             lat_quarter = (j * 0.25) - 90.0
@@ -242,9 +238,9 @@ def resample_imerg_day(times, time_intervals, date, target_path=Path(".")):
             try:
                 (map, idx) = future.result()
                 total_hour[:, :, idx] = map
-            except KeyboardInterrupt as e:
+            except KeyboardInterrupt:
                 return
             except Exception as e:
-                print("Error in run.")
+                print(f"Error in run: {e}")
 
     return total_hour
