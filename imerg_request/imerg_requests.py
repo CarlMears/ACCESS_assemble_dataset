@@ -27,13 +27,13 @@ def get_ids() -> list[str]:
     # products (final, late, and early). This prevents us from having to
     # hard-code 'concept-ids' for the different products since these IDs can
     # potentially change as new IMERG version are released.
-    collection_url = "https://cmr.earthdata.nasa.gov/search/collections"
+    COLLECTION_URL = "https://cmr.earthdata.nasa.gov/search/collections"
 
     params = {"keyword": "imerg"}
     headers = {
         "Accept": "application/vnd.nasa.cmr.umm_results+json"
     }  # this search does not like defining the json version as 1.6.4
-    first_response = requests.get(collection_url, headers=headers, params=params)
+    first_response = requests.get(COLLECTION_URL, headers=headers, params=params)
     response_list = first_response.json()
 
     ids = ["" for x in range(3)]
@@ -85,7 +85,7 @@ def _parse_umm(granule_umm: dict[str, Any]) -> str:
 def query_one_day_imerg(*, date: datetime.date) -> list[str]:
 
     # Base URL for CMR API query
-    url = "https://cmr.earthdata.nasa.gov/search/granules"
+    CMR_URL = "https://cmr.earthdata.nasa.gov/search/granules"
 
     # Since we want data from the last half hourly file of the day prior and the
     # first half hourly file of the day after the current day
@@ -105,7 +105,7 @@ def query_one_day_imerg(*, date: datetime.date) -> list[str]:
         headers = {
             "Accept": "application/vnd.nasa.cmr.umm_results+json; version=1.6.4"
         }  # does the version need to stay as '1.6.4'?
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(CMR_URL, headers=headers, params=params)
 
         # Sometimes this query will return an empty response body which leads to
         # an error. I believe this is an issue on CMR's end since waiting
@@ -117,7 +117,7 @@ def query_one_day_imerg(*, date: datetime.date) -> list[str]:
         # 200.
         while response.status_code != 200:
             try:
-                response = requests.get(url, headers=headers, params=params)
+                response = requests.get(CMR_URL, headers=headers, params=params)
             except requests.HTTPError:
                 error = f"{str(response.status_code)}"
                 print(f"API Query returned an error code {error}. Trying again in 30s")
