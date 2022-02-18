@@ -122,8 +122,7 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
             try:
                 response = requests.get(CMR_URL, headers=headers, params=params)
             except requests.HTTPError:
-                error = f"{str(response.status_code)}"
-                print(f"API Query returned an error code {error}. Trying again in 30s")
+                print(f"API Query error {response.status_code}. Retrying in 30s")
                 time.sleep(30)
 
         response_list = response.json()
@@ -139,7 +138,7 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
             continue
         elif response_list["hits"] > 0 and response_list["hits"] < 51:
             # Should have maximum 51 'hits' in a day
-            print(f"Some data, but not full day")
+            print("Some data, but not full day")
             if id != id_list[2]:  # if id does not equal the early ID
                 continue
             break
