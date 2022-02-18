@@ -1,6 +1,4 @@
-"""
-    Adding IMERG rain rates to an existing daily ACCESS data file.
-"""
+"""Add IMERG rain rates to an existing daily ACCESS data file."""
 
 import datetime
 import os
@@ -9,12 +7,11 @@ from pathlib import Path
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
 
-from imerg_request.imerg_requests import imerg_half_hourly_request
-
 from access_io.access_output import (
-    get_access_output_filename,
     append_var_to_daily_tb_netcdf,
+    get_access_output_filename,
 )
+from imerg_request.imerg_requests import imerg_half_hourly_request
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
 
 
@@ -23,7 +20,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
     current_day: datetime.date,
     satellite: str,
     dataroot: Path,
-):
+) -> None:
 
     filename = get_access_output_filename(current_day, satellite, dataroot)
 
