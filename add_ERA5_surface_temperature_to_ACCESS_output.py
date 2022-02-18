@@ -5,7 +5,6 @@ from typing import Tuple
 
 import numpy as np
 import xarray as xr
-import argparse
 from netCDF4 import Dataset as netcdf_dataset
 
 

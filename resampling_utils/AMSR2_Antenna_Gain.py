@@ -40,9 +40,9 @@ import numpy as np
 def AMSR2_antenna_gain(delta, band):
     #       0         1          2         3         4        5       6       7
     #    7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
-    sin_anglim = np.array(
-        [0.105, 0.105, 0.0524, 0.0524, 0.0262, 0.000, 0.0262, 0.0262], dtype=np.float64
-    )
+    # sin_anglim = np.array(
+    #     [0.105, 0.105, 0.0524, 0.0524, 0.0262, 0.000, 0.0262, 0.0262], dtype=np.float64
+    # )
     ant_approx_a = np.array(
         [4.343e-6, 2.096e-6, 1.890e-6, 1.623e-6, 7.248e-7, 0.000, 2.070e-6, 2.070e-6],
         dtype=np.float64,
@@ -76,9 +76,9 @@ def AMSR2_antenna_gain(delta, band):
 def AMSRE_antenna_gain(delta, band):
     #  0         1          2         3         4        5       6     7
     #  7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
-    sin_anglim = np.array(
-        [0.105, 0.105, 0.0524, 0.0524, 0.0262, 0.000, 0.0262, 0.0262], dtype=np.float64
-    )
+    # sin_anglim = np.array(
+    #     [0.105, 0.105, 0.0524, 0.0524, 0.0262, 0.000, 0.0262, 0.0262], dtype=np.float64
+    # )
     ant_approx_a = np.array(
         [4.343e-6, 2.096e-6, 1.890e-6, 1.623e-6, 7.248e-7, 0.000, 2.070e-6, 2.070e-6],
         dtype=np.float64,

@@ -37,13 +37,13 @@ def add_imerg_rain_rate_to_ACCESS_output(
 
     # Downloding all IMERG files for the day
     try:
-        files = imerg_half_hourly_request(
+        imerg_half_hourly_request(
             date=current_day,
             target_path=dataroot / "_temp",
         )
 
     except Exception as e:
-        raise RuntimeError("Problem downloading IMERG data")
+        raise RuntimeError("Problem downloading IMERG data") from e
 
     # An array of hour times in seconds
     hourly_intervals = np.arange(0, 86401, 3600)
@@ -68,8 +68,17 @@ def add_imerg_rain_rate_to_ACCESS_output(
         valid_min=0.0,
         valid_max=50.0,
         units="mm/hr",
-        source=f"Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan (2019), GPM IMERG Final Precipitation L3 Half Hourly 0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences Data and Information Services Center (GES DISC), Accessed: {today.strftime('%m/%d/%Y')}, 10.5067/GPM/IMERG/3B-HH/06",
-        cell_method="time: closest 30-min IMERG file; area: weighted average over 30km footprint",
+        source=(
+            "Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan "
+            "(2019), GPM IMERG Final Precipitation L3 Half Hourly "
+            "0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences "
+            "Data and Information Services Center (GES DISC), "
+            f"Accessed: {today.strftime('%m/%d/%Y')}, 10.5067/GPM/IMERG/3B-HH/06"
+        ),
+        cell_method=(
+            "time: closest 30-min IMERG file; "
+            "area: weighted average over 30km footprint"
+        ),
         v_fill=-999.0,
         dataroot=dataroot,
         overwrite=True,
