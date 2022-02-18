@@ -176,8 +176,7 @@ def try_download(file_url: str, target_path: Path) -> Path:
 
         try:
             result.raise_for_status()
-            with open(target, "wb") as f:
-                f.write(result.content)
+            target.write_bytes(result.content)
         except requests.HTTPError as e:
             print(f"requests.get() returned an error code {result.status_code}")
             raise e
