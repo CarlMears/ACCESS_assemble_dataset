@@ -34,10 +34,10 @@
 #  jaxa_width = [1.8,1.2,0.65,0.75,0.35]
 #  89 has not been addressed yet....
 
+import numpy as np
+
 
 def AMSR2_antenna_gain(delta, band):
-    import numpy as np
-
     #       0         1          2         3         4        5       6       7
     #    7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
     sin_anglim = np.array(
@@ -74,7 +74,6 @@ def AMSR2_antenna_gain(delta, band):
 
 
 def AMSRE_antenna_gain(delta, band):
-    import numpy as np
     #  0         1          2         3         4        5       6     7
     #  7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
     sin_anglim = np.array(
@@ -111,8 +110,6 @@ def AMSRE_antenna_gain(delta, band):
 
 
 def target_gain(delta_km, diameter_in_km=30.0):
-    import numpy as np
-
     # using the shape from the 11 GHz footprint from above
 
     coeff_a = 2.096e-6
