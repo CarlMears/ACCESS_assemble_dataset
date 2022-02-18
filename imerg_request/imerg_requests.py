@@ -25,16 +25,20 @@ import requests
 
 @lru_cache
 def get_ids() -> list[str]:
-    # Function to obtain the 'concept-ids' for the three half-hourly IMERG
-    # products (final, late, and early). This prevents us from having to
-    # hard-code 'concept-ids' for the different products since these IDs can
-    # potentially change as new IMERG version are released.
+    """Obtain 'concept-ids' for the three half-hourly IMERG products.
+
+    The three products are: final, late, and early. The function results are
+    cached since the results are assumed to be the same over an entire run.
+
+    This prevents us from having to hard-code 'concept-ids' for the different
+    products since these IDs can potentially change as new IMERG version are
+    released.
+    """
     COLLECTION_URL = "https://cmr.earthdata.nasa.gov/search/collections"
 
     params = {"keyword": "imerg"}
-    headers = {
-        "Accept": "application/vnd.nasa.cmr.umm_results+json"
-    }  # this search does not like defining the json version as 1.6.4
+    # this search does not like defining the json version as 1.6.4
+    headers = {"Accept": "application/vnd.nasa.cmr.umm_results+json"}
     first_response = requests.get(COLLECTION_URL, headers=headers, params=params)
     response_list = first_response.json()
 
@@ -79,7 +83,10 @@ def _parse_umm(granule_umm: dict[str, Any]) -> str:
 
 
 def query_one_day_imerg(*, date: datetime.date) -> list[str]:
+    """Query CMR for one day of IMERG data.
 
+    Return a list of URLs for the daily data we want to download.
+    """
     # Base URL for CMR API query
     CMR_URL = "https://cmr.earthdata.nasa.gov/search/granules"
 
@@ -100,10 +107,7 @@ def query_one_day_imerg(*, date: datetime.date) -> list[str]:
             "sort_key": "start_date",
             "page_size": "50",
         }
-
-        headers = {
-            "Accept": "application/vnd.nasa.cmr.umm_results+json; version=1.6.4"
-        }  # does the version need to stay as '1.6.4'?
+        headers = {"Accept": "application/vnd.nasa.cmr.umm_results+json; version=1.6.4"}
         response = requests.get(CMR_URL, headers=headers, params=params)
 
         # Sometimes this query will return an empty response body which leads to
@@ -150,12 +154,13 @@ def query_one_day_imerg(*, date: datetime.date) -> list[str]:
         hdf5_file = _parse_umm(granule_umm)
         files.append(hdf5_file)
 
-    return files  # a list of URLs for the daily data we want to download
+    return files
 
 
 def try_download(file_url: str, target_path: Path) -> Path:
-    """
-    Download IMERG files
+    """Download IMERG file to a target directory.
+
+    Return the path to the downloaded file.
     """
 
     file = file_url.split("/")[-1]
@@ -188,8 +193,8 @@ def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Pa
     )
 
     files_in_day = []
-    for file in files:  # loop through all files and download
-
+    # loop through all files and download
+    for file in files:
         try:
             result = try_download(
                 file_url=file,
