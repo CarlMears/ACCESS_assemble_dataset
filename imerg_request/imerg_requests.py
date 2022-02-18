@@ -205,6 +205,6 @@ def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Pa
 if __name__ == "__main__":
     date = datetime.date(2021, 12, 15)
 
-    target_path = Path("C:/ACCESS/output_files/_temp")
+    target_path = Path.cwd()
 
     files = imerg_half_hourly_request(date=date, target_path=target_path)
