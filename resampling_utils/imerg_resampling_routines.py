@@ -140,9 +140,9 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
             x, y = np.meshgrid(lon_ok, lat_ok)
             rain = map_rain[0, x, y]
 
-            # For percentage NaN checks - I am debating whether or not we should perform these checks at all
-            # Currently removing windows around 0.25 degree grid box where over 50% of IMERG values
-            # are NaN
+            # For percentage NaN checks - I am debating whether or not we should
+            # perform these checks at all. Currently removing windows around
+            # 0.25 degree grid box where over 50% of IMERG values are NaN.
             where_nan = np.where(np.isnan(rain))
             n_elements_rain = rain.size
             n_elements_nan = len(where_nan[0])
@@ -153,9 +153,9 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
                 resampled_map[j, i] = np.nan
                 continue
 
-            if ~np.any(
-                rain != 0.0
-            ):  # no need to do a weighted average calculation if all rain rates in window are zero
+            if ~np.any(rain != 0.0):
+                # no need to do a weighted average calculation if all rain rates
+                # in window are zero
                 resampled_map[j, i] = 0.0
             else:
                 dist = get_distance(
@@ -163,9 +163,8 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
                 )
 
                 dist_km = dist / 1000.0
-                good_rain = np.where(
-                    rain > -0.01
-                )  # a check based on Thomas' IMERG work. Removing any negative RR values
+                # a check based on Thomas' IMERG work. Removing any negative RR values
+                good_rain = np.where(rain > -0.01)
 
                 gains = target_gain(dist_km, diameter_in_km=30.0)
                 weighted_rain = np.average(rain[good_rain], weights=gains[good_rain])

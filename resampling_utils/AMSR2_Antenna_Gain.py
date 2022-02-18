@@ -1,15 +1,21 @@
-#     From O:\amsr_l2\v05\resampling\show_antenna_patterns.f
-
-#     These are Frank's comments on the fortran code.
-#     The values of these AMSR-E parameters come from E:\AMSR\Resampling_weights\PM1_AMSR_MOD.for
-#     The values of th Midori2   parameters come from E:\AMSR\Resampling_weights\ADEOSII_AMSR_MOD.for
-#     For these antenna parameters, Peter found one set for 89 GHZ, which was the averaged of 89A and 89B
-#     This value was put in the IFREQ=8 slot
-#     The IFREQ=6 and 7 slots were set to 0
-#     For Midori2, the IFREQ=6 and 7 slots contain the 50.3 and  52.8 patterns respectively.
-
-#     Here, I use slot 7 for 89A and slot 8 for 89B, so they have the same value
-#     When I do Midori-2, I will need to decide what to do about the 50 GHz channels (maybe put in average value into slot 6)
+#  From O:\amsr_l2\v05\resampling\show_antenna_patterns.f
+#
+#  These are Frank's comments on the fortran code.
+#
+#  The values of these AMSR-E parameters come from
+#  E:\AMSR\Resampling_weights\PM1_AMSR_MOD.for
+#
+#  The values of the Midori2 parameters come from
+#  E:\AMSR\Resampling_weights\ADEOSII_AMSR_MOD.for
+#
+#  For these antenna parameters, Peter found one set for 89 GHZ, which was the
+#  averaged of 89A and 89B. This value was put in the IFREQ=8 slot The IFREQ=6
+#  and 7 slots were set to 0 For Midori2, the IFREQ=6 and 7 slots contain the
+#  50.3 and 52.8 patterns respectively.
+#
+#  Here, I use slot 7 for 89A and slot 8 for 89B, so they have the same value
+#  When I do Midori-2, I will need to decide what to do about the 50 GHz
+#  channels (maybe put in average value into slot 6)
 
 #  Comments below by CM, Summer 2021
 #
@@ -32,8 +38,8 @@
 def AMSR2_antenna_gain(delta, band):
     import numpy as np
 
-    #                          0         1          2         3         4        5       6            7
-    #                         7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
+    #       0         1          2         3         4        5       6       7
+    #    7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
     sin_anglim = np.array(
         [0.105, 0.105, 0.0524, 0.0524, 0.0262, 0.000, 0.0262, 0.0262], dtype=np.float64
     )
@@ -69,9 +75,8 @@ def AMSR2_antenna_gain(delta, band):
 
 def AMSRE_antenna_gain(delta, band):
     import numpy as np
-
-    #                          0         1          2         3         4        5       6            7
-    #                         7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
+    #  0         1          2         3         4        5       6     7
+    #  7GHZ      11GHZ      19GHZ     24GHZ     37GHZ
     sin_anglim = np.array(
         [0.105, 0.105, 0.0524, 0.0524, 0.0262, 0.000, 0.0262, 0.0262], dtype=np.float64
     )
