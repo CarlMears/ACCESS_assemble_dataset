@@ -1,14 +1,17 @@
 """
-    Code designed to download 30 minute IMERG data for a given day
-    along with the IMERG data from 23:30 UTC on the previous day
-    and 00:30 UTC on the following day.
+Code designed to download 30 minute IMERG data for a given day along with the
+IMERG data from 23:30 UTC on the previous day and 00:30 UTC on the following
+day.
 
-    The IMERG data are queried using the CMR EarthData API and subsequently downloaded.
-    The CMR API is documented at the following URL: https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html.
-    No login information is required to query the data however, an EarthData login is required to download the data.
-    Details on how make a login as well as how to set up a required .netrc file which works with Python requests is
-    found at the following URL: https://disc.gsfc.nasa.gov/data-access#python-requests.
-    Written by AManaster
+The IMERG data are queried using the CMR EarthData API and subsequently
+downloaded. The CMR API is documented at the following URL:
+https://cmr.earthdata.nasa.gov/search/site/docs/search/api.html. No login
+information is required to query the data however, an EarthData login is
+required to download the data. Details on how make a login as well as how to set
+up a required .netrc file which works with Python requests is found at the
+following URL: https://disc.gsfc.nasa.gov/data-access#python-requests.
+
+Written by AManaster
 """
 
 import requests
@@ -18,9 +21,10 @@ import time
 
 
 def get_ids():
-    # Function to obtain the 'concept-ids' for the three half-hourly IMERG products (final, late, and early).
-    # This prevents us from having to hard-code 'concept-ids' for the different products since these IDs can potentially
-    # change as new IMERG version are released.
+    # Function to obtain the 'concept-ids' for the three half-hourly IMERG
+    # products (final, late, and early). This prevents us from having to
+    # hard-code 'concept-ids' for the different products since these IDs can
+    # potentially change as new IMERG version are released.
     collection_url = "https://cmr.earthdata.nasa.gov/search/collections"
 
     params = {"keyword": "imerg"}
@@ -36,13 +40,13 @@ def get_ids():
         granule_umm = item["umm"]
 
         # We can expect that, even as versions of half-hourly IMERG change,
-        # their native IDs will all still contain 'GPM_3IMERGHH'.
-        # Similarly, the conditional statements below operate under the assumption
-        # that the 'Final', 'Late', and 'Early' keywords will be present in the different
-        # half-hourly IMERG products and will not change from version to version.
-        # While it's possible that these things could change, it remains safer
-        # than assuming that the 'concept-ids' of these products will
-        # remain consistent from version to version.
+        # their native IDs will all still contain 'GPM_3IMERGHH'. Similarly, the
+        # conditional statements below operate under the assumption that the
+        # 'Final', 'Late', and 'Early' keywords will be present in the different
+        # half-hourly IMERG products and will not change from version to
+        # version. While it's possible that these things could change, it
+        # remains safer than assuming that the 'concept-ids' of these products
+        # will remain consistent from version to version.
         if "GPM_3IMERGHH" in granule_meta["native-id"]:
             if "Final" in granule_umm["EntryTitle"]:
                 ids[0] = granule_meta["concept-id"]
@@ -81,15 +85,14 @@ def query_one_day_imerg(*, date: datetime.date):
     # Base URL for CMR API query
     url = "https://cmr.earthdata.nasa.gov/search/granules"
 
-    # Since we want data from the last half hourly file of the day prior and the first half hourly file of the day after the current day
+    # Since we want data from the last half hourly file of the day prior and the
+    # first half hourly file of the day after the current day
     day_before = date - datetime.timedelta(days=1)
     day_after = date + datetime.timedelta(days=1)
 
-    for (
-        id
-    ) in (
-        id_list
-    ):  # check availability of all IMERG half-hourly products.  Should only be relevant for NRT ACCESS applications
+    # check availability of all IMERG half-hourly products.  Should only be
+    # relevant for NRT ACCESS applications.
+    for id in id_list:
         params = {
             "collection_concept_id": id,
             "temporal": f"{day_before}T23:30:00Z,{day_after}T00:30:00Z",
@@ -102,10 +105,14 @@ def query_one_day_imerg(*, date: datetime.date):
         }  # does the version need to stay as '1.6.4'?
         response = requests.get(url, headers=headers, params=params)
 
-        # Sometimes this query will return an empty response body which leads to an error.
-        # I believe this is an issue on CMR's end since waiting 30s-60s and trying again will often rectify the issue.
-        # If this happens, the following block of code waits 30 seconds and tries again until we receive a successful API response w/ body (i.e., status code 200).
-        # I imagine there is a more elegant way to do this since this has the potential to get caught if the response.status_code remains != 200.
+        # Sometimes this query will return an empty response body which leads to
+        # an error. I believe this is an issue on CMR's end since waiting
+        # 30s-60s and trying again will often rectify the issue. If this
+        # happens, the following block of code waits 30 seconds and tries again
+        # until we receive a successful API response w/ body (i.e., status code
+        # 200). I imagine there is a more elegant way to do this since this has
+        # the potential to get caught if the response.status_code remains !=
+        # 200.
         while response.status_code != 200:
             try:
                 response = requests.get(url, headers=headers, params=params)
@@ -125,9 +132,8 @@ def query_one_day_imerg(*, date: datetime.date):
         if response_list["hits"] == 0:
             print(f"No data for ID {id}; Checking next")
             continue
-        elif (
-            response_list["hits"] > 0 and response_list["hits"] < 51
-        ):  # Should have maximum 51 'hits' in a day
+        elif response_list["hits"] > 0 and response_list["hits"] < 51:
+            # Should have maximum 51 'hits' in a day
             print(f"Some data, but not full day")
             if id != id_list[2]:  # if id does not equal the early ID
                 continue
