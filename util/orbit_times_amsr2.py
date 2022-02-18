@@ -13,7 +13,9 @@ elif os.name == "posix":
     AMSR2_ORBIT_FILE = Path("/mnt/ops1p-ren/j/amsr2/tables/orbit_times.dat")
 
 
-def read_amsr2_orbit_times(filename_orb: Path = AMSR2_ORBIT_FILE,) -> ArrayLike:
+def read_amsr2_orbit_times(
+    filename_orb: Path = AMSR2_ORBIT_FILE,
+) -> ArrayLike:
     times = np.fromfile(filename_orb, dtype=np.float64)
     return convert_to_np_datetime64(times, ref_year=1993)
 
