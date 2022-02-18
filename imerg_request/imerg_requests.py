@@ -17,11 +17,12 @@ Written by AManaster
 import datetime
 import time
 from pathlib import Path
+from typing import Any
 
 import requests
 
 
-def get_ids():
+def get_ids() -> list[str]:
     # Function to obtain the 'concept-ids' for the three half-hourly IMERG
     # products (final, late, and early). This prevents us from having to
     # hard-code 'concept-ids' for the different products since these IDs can
@@ -67,7 +68,7 @@ def get_ids():
 id_list = get_ids()
 
 
-def _parse_umm(granule_umm: dict):
+def _parse_umm(granule_umm: dict[str, Any]) -> str:
     # Simple function to parse the data download URL
     # from the .json.umm file
 
@@ -81,7 +82,7 @@ def _parse_umm(granule_umm: dict):
     return hdf5_url
 
 
-def query_one_day_imerg(*, date: datetime.date):
+def query_one_day_imerg(*, date: datetime.date) -> list[str]:
 
     # Base URL for CMR API query
     url = "https://cmr.earthdata.nasa.gov/search/granules"
@@ -153,10 +154,7 @@ def query_one_day_imerg(*, date: datetime.date):
     return files  # a list of URLs for the daily data we want to download
 
 
-def try_download(
-    file_url: str,
-    target_path: Path,
-):
+def try_download(file_url: str, target_path: Path) -> Path:
     """
     Download IMERG files
     """
@@ -185,7 +183,7 @@ def try_download(
             return target
 
 
-def imerg_half_hourly_request(*, date: datetime.date, target_path: Path):
+def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Path]:
     files = query_one_day_imerg(
         date=date,
     )
