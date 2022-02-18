@@ -16,12 +16,14 @@ Written by AManaster
 
 import datetime
 import time
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 import requests
 
 
+@lru_cache
 def get_ids() -> list[str]:
     # Function to obtain the 'concept-ids' for the three half-hourly IMERG
     # products (final, late, and early). This prevents us from having to
@@ -62,12 +64,6 @@ def get_ids() -> list[str]:
     return ids
 
 
-# Collection IDs for the three IMERG datasets of interest
-# Only need to do this once per run since IDs should be
-# relatively stable over time
-id_list = get_ids()
-
-
 def _parse_umm(granule_umm: dict[str, Any]) -> str:
     # Simple function to parse the data download URL
     # from the .json.umm file
@@ -91,6 +87,9 @@ def query_one_day_imerg(*, date: datetime.date) -> list[str]:
     # first half hourly file of the day after the current day
     day_before = date - datetime.timedelta(days=1)
     day_after = date + datetime.timedelta(days=1)
+
+    # Collection IDs for the three IMERG datasets of interest
+    id_list = get_ids()
 
     # check availability of all IMERG half-hourly products.  Should only be
     # relevant for NRT ACCESS applications.
