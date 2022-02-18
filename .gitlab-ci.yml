@@ -65,6 +65,7 @@ mypy:
 import:
   stage: test
   needs: []
+  allow_failure: true
   parallel:
     matrix:
       - PY_VERSION: ["3.8", "3.9", "3.10"]
