@@ -74,12 +74,10 @@ def _parse_umm(granule_umm: dict[str, Any]) -> str:
 
     for url in granule_umm["RelatedUrls"]:
         if url["Type"] == "GET DATA":
-            hdf5_url = url["URL"]
-            break
-        else:
-            raise Exception("Didn't find a granule download URL in the metadata")
-
-    return hdf5_url
+            hdf5_url: str = url["URL"]
+            return hdf5_url
+    else:
+        raise Exception("Didn't find a granule download URL in the metadata")
 
 
 def query_one_day_imerg(date: datetime.date) -> list[str]:
