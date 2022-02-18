@@ -14,10 +14,11 @@ following URL: https://disc.gsfc.nasa.gov/data-access#python-requests.
 Written by AManaster
 """
 
-import requests
 import datetime
-from pathlib import Path
 import time
+from pathlib import Path
+
+import requests
 
 
 def get_ids():
