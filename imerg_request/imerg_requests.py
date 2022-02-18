@@ -42,7 +42,7 @@ def get_ids() -> list[str]:
     first_response = requests.get(COLLECTION_URL, headers=headers, params=params)
     response_list = first_response.json()
 
-    ids = ["" for x in range(3)]
+    ids = ["" for _ in range(3)]
     for item in response_list["items"]:
         granule_meta = item["meta"]
         granule_umm = item["umm"]
