@@ -143,7 +143,8 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
         elif response_list["hits"] > 51:
             # If number of 'hits' is greater than 51 for some reason
             print(
-                f"Number of hits exceeds maximum: {response_list['hits']}. Check downloaded files."
+                f"Number of hits exceeds maximum: {response_list['hits']}. "
+                "Check downloaded files."
             )
             break
         else:
