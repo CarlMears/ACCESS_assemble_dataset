@@ -65,7 +65,7 @@ def AMSR2_antenna_gain(delta, band):
     delta = delta / angle_scale_fact[band]
 
     gain = (
-        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta * delta)
+        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta**2.)
     )
 
     return gain
