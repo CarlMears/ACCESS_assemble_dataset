@@ -65,7 +65,7 @@ def AMSR2_antenna_gain(delta, band):
     delta = delta / angle_scale_fact[band]
 
     gain = (
-        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta**2.)
+        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta**2)
     )
 
     return gain
@@ -99,7 +99,7 @@ def AMSRE_antenna_gain(delta, band):
     # delta = delta/angle_scale_fact[band]
 
     gain = (
-        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta * delta)
+        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta**2)
     )
 
     return gain
@@ -116,7 +116,7 @@ def target_gain(delta_km, diameter_in_km=30.0):
     scale_factor = 0.047933 * 30.0 / diameter_in_km
     delta = delta_km * scale_factor
     gain = (
-        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta * delta)
+        coeff_a + coeff_b * np.exp(-coeff_c * delta) + np.exp(-coeff_d * delta**2)
     )
 
     return gain
