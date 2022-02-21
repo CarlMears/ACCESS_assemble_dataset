@@ -140,6 +140,10 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
             if id != id_list[2]:  # if id does not equal the early ID
                 continue
             break
+        elif response_list["hits"] > 51:
+            # If number of 'hits' is greater than 51 for some reason
+            print(f"Number of hits exceeds maximum: {hits}. Check downloaded files.")
+            break
         else:
             break
 
