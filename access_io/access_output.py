@@ -346,11 +346,13 @@ def write_daily_tb_netcdf(
         hours.valid_min = 0
         hours.valid_max = 23
 
+        # Each day's file is offset by a half-hour into the previous day
+        DAILY_OFFSET = datetime.timedelta(minutes=30)
         time.standard_name = "seconds_since_midnight"
         time.long_name = "seconds_since_midnight"
         time.missing = -999999
-        time.valid_min = -1800
-        time.valid_max = 84600  # not 86400 because last 1/2 hour is in the next day.
+        time.valid_min = -DAILY_OFFSET.total_seconds()
+        time.valid_max = (datetime.timedelta(days=1) - DAILY_OFFSET).total_seconds()
         time.coordinates = "latitude longitude"
 
         tbs.standard_name = "brightness_temperature"
