@@ -37,7 +37,7 @@ def read_imerg_half_hourly(
     """
     Reading latitude, longitude, and precipitation from downloaded IMERG files.
     """
-    minute_string = str(minutes_of_day).zfill(4)
+    minute_string = f"{minutes_of_day:04}"
     date_string = date.strftime("%Y%m%d")
 
     if minute_string == "1440":
