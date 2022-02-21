@@ -145,9 +145,8 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
             n_elements_rain = rain.size
             n_elements_nan = len(where_nan[0])
 
-            if (
-                n_elements_nan / n_elements_rain
-            ) > 0.5:  # if over 50% of window is NaN, do not include
+            if (n_elements_nan / n_elements_rain) > 0.5:
+                # if over 50% of window is NaN, do not include
                 resampled_map[j, i] = np.nan
                 continue
 
