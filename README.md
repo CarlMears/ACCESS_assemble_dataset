@@ -10,6 +10,17 @@ which append ancillary data to the daily file, can be performed in any order.  B
 as writing to netCDF files is done using file locking, the data append jobs can be run 
 simultaneously.
 
+These are the required dependencies to run the scripts:
+
+```bash
+# From PyPI
+pip install numpy netCDF4 matplotlib cdsapi xarray Cartopy
+# From RSS repos
+pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
+pip install git+http://gitlab.remss.com/Carl/plotting.git
+pip install git+http://gitlab.remss.com/Carl/rss_lock.git
+```
+
 ### Assemble measured brightness temperatures
 
 The `make_daily_ACCESS_files.py` script assembles the daily files from orbit files that contain the 
