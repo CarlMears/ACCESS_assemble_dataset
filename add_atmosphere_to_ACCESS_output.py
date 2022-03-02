@@ -175,112 +175,82 @@ class DailyAccessData:
         time = self.time[:, :, hour].astype(np.float32) / (60 * 60) + EPOCH_SHIFT
         time[~valid_data] = np.nan
 
-        # Initialize all the outputs
-        temperature = np.full_like(data_prev.temperature, np.nan)
-        specific_humidity = np.full_like(data_prev.specific_humidity, np.nan)
-        height = np.full_like(data_prev.height, np.nan)
-        liquid_content = np.full_like(data_prev.liquid_content, np.nan)
-        surface_pressure = np.full_like(data_prev.surface_pressure, np.nan)
-        surface_temperature = np.full_like(data_prev.surface_temperature, np.nan)
-        surface_dewpoint = np.full_like(data_prev.surface_dewpoint, np.nan)
-        surface_height = np.full_like(data_prev.surface_height, np.nan)
-        columnar_water_vapor = np.full_like(data_prev.columnar_water_vapor, np.nan)
-        columnar_cloud_liquid = np.full_like(data_prev.columnar_cloud_liquid, np.nan)
+        # Interpolate all the content. It's actually a little awkward to use the
+        # numpy or scipy interpolators for this, it's easier to just do it manually.
+        #
+        # The "fractional time" varies from 0 to 1.
+        fractional_time = (time - data_prev.time) / (data_next.time - data_prev.time)
+        fractional_time[~valid_data] = 0
+        fractional_time_3d = fractional_time[..., np.newaxis]
 
-        # Interpolate all the content
-        num_lat = len(data_prev.lats)
-        num_lon = len(data_prev.lons)
-        num_level = len(data_prev.levels)
-        # TODO: this is a naïve and repetitive implementation that has terrible
-        # performance in Python but I want to make sure the results look right
-        # before I redo this
-        for lat in range(num_lat):
-            for lon in range(num_lon):
-                if not valid_data[lat, lon]:
-                    continue
+        def lerp(
+            t: NDArray[np.float32], x0: NDArray[np.float32], x1: NDArray[np.float32]
+        ) -> NDArray[np.float32]:
+            """Linear interpolation."""
+            return (1 - t) * x0 + t * x1
 
-                surface_pressure[0, lat, lon] = np.interp(
-                    time[lat, lon],
-                    np.concatenate([data_prev.time, data_next.time]),
-                    [
-                        data_prev.surface_pressure[0, lat, lon],
-                        data_next.surface_pressure[0, lat, lon],
-                    ],
-                )
-                surface_temperature[0, lat, lon] = np.interp(
-                    time[lat, lon],
-                    np.concatenate([data_prev.time, data_next.time]),
-                    [
-                        data_prev.surface_temperature[0, lat, lon],
-                        data_next.surface_temperature[0, lat, lon],
-                    ],
-                )
-                surface_dewpoint[0, lat, lon] = np.interp(
-                    time[lat, lon],
-                    np.concatenate([data_prev.time, data_next.time]),
-                    [
-                        data_prev.surface_dewpoint[0, lat, lon],
-                        data_next.surface_dewpoint[0, lat, lon],
-                    ],
-                )
-                surface_height[0, lat, lon] = np.interp(
-                    time[lat, lon],
-                    np.concatenate([data_prev.time, data_next.time]),
-                    [
-                        data_prev.surface_height[0, lat, lon],
-                        data_next.surface_height[0, lat, lon],
-                    ],
-                )
-                columnar_water_vapor[0, lat, lon] = np.interp(
-                    time[lat, lon],
-                    np.concatenate([data_prev.time, data_next.time]),
-                    [
-                        data_prev.columnar_water_vapor[0, lat, lon],
-                        data_next.columnar_water_vapor[0, lat, lon],
-                    ],
-                )
-                columnar_cloud_liquid[0, lat, lon] = np.interp(
-                    time[lat, lon],
-                    np.concatenate([data_prev.time, data_next.time]),
-                    [
-                        data_prev.columnar_cloud_liquid[0, lat, lon],
-                        data_next.columnar_cloud_liquid[0, lat, lon],
-                    ],
-                )
+        temperature = lerp(
+            fractional_time_3d,
+            data_prev.temperature,
+            data_next.temperature,
+        )
+        specific_humidity = lerp(
+            fractional_time_3d,
+            data_prev.specific_humidity,
+            data_next.specific_humidity,
+        )
+        height = lerp(
+            fractional_time_3d,
+            data_prev.height,
+            data_next.height,
+        )
+        liquid_content = lerp(
+            fractional_time_3d,
+            data_prev.liquid_content,
+            data_next.liquid_content,
+        )
+        surface_pressure = lerp(
+            fractional_time,
+            data_prev.surface_pressure,
+            data_next.surface_pressure,
+        )
+        surface_temperature = lerp(
+            fractional_time,
+            data_prev.surface_temperature,
+            data_next.surface_temperature,
+        )
+        surface_dewpoint = lerp(
+            fractional_time,
+            data_prev.surface_dewpoint,
+            data_next.surface_dewpoint,
+        )
+        surface_height = lerp(
+            fractional_time,
+            data_prev.surface_height,
+            data_next.surface_height,
+        )
+        columnar_water_vapor = lerp(
+            fractional_time,
+            data_prev.columnar_water_vapor,
+            data_next.columnar_water_vapor,
+        )
+        columnar_cloud_liquid = lerp(
+            fractional_time,
+            data_prev.columnar_cloud_liquid,
+            data_next.columnar_cloud_liquid,
+        )
 
-                for level in range(num_level):
-                    temperature[0, lat, lon, level] = np.interp(
-                        time[lat, lon],
-                        np.concatenate([data_prev.time, data_next.time]),
-                        [
-                            data_prev.temperature[0, lat, lon, level],
-                            data_next.temperature[0, lat, lon, level],
-                        ],
-                    )
-                    specific_humidity[0, lat, lon, level] = np.interp(
-                        time[lat, lon],
-                        np.concatenate([data_prev.time, data_next.time]),
-                        [
-                            data_prev.specific_humidity[0, lat, lon, level],
-                            data_next.specific_humidity[0, lat, lon, level],
-                        ],
-                    )
-                    height[0, lat, lon, level] = np.interp(
-                        time[lat, lon],
-                        np.concatenate([data_prev.time, data_next.time]),
-                        [
-                            data_prev.height[0, lat, lon, level],
-                            data_next.height[0, lat, lon, level],
-                        ],
-                    )
-                    liquid_content[0, lat, lon, level] = np.interp(
-                        time[lat, lon],
-                        np.concatenate([data_prev.time, data_next.time]),
-                        [
-                            data_prev.liquid_content[0, lat, lon, level],
-                            data_next.liquid_content[0, lat, lon, level],
-                        ],
-                    )
+        surface_pressure[0, ~valid_data] = np.nan
+        temperature[0, ~valid_data] = np.nan
+        specific_humidity[0, ~valid_data] = np.nan
+        height[0, ~valid_data] = np.nan
+        liquid_content[0, ~valid_data] = np.nan
+        surface_pressure[0, ~valid_data] = np.nan
+        surface_temperature[0, ~valid_data] = np.nan
+        surface_dewpoint[0, ~valid_data] = np.nan
+        surface_height[0, ~valid_data] = np.nan
+        columnar_water_vapor[0, ~valid_data] = np.nan
+        columnar_cloud_liquid[0, ~valid_data] = np.nan
 
         return Era5DailyData(
             data_prev.levels,
