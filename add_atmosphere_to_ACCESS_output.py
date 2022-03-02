@@ -5,12 +5,13 @@ ERA5 data is downloaded if missing.
 
 import argparse
 import os
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Dict
 
 # TODO: once Python 3.9 is the minimum supported version, remove the above
-# import from typing and switch to: "from collections.abc import Sequence"
+# imports from typing and switch to: "from collections.abc import Sequence" and
+# use dict[] instead of Dict[]
 
 import numpy as np
 from numpy.typing import NDArray
@@ -140,6 +141,13 @@ class DailyAccessData:
             f.variables["upwelling_tb"][...] = data.tb_up
             f.variables["downwelling_tb"][...] = data.tb_down
 
+    def interpolate_era5(
+        self, hour: int, data_prev: Era5DailyData, data_next: Era5DailyData
+    ) -> Era5DailyData:
+        """Time-interpolate the ERA5 data to the measurement times."""
+        # TODO: implement
+        return data_prev
+
 
 def _ensure_rtm_vars(f: Dataset) -> None:
     """Ensure RTM output variables are defined in the output file."""
@@ -216,10 +224,12 @@ def append_atmosphere_to_daily_ACCESS(
     be called. The resulting values are written by appending the new variables
     to the file.
 
-    ERA5 data, both on the surface and as profiles, is required.
+    ERA5 data, both on the surface and as profiles, is required. Since the ERA5
+    data is time-interpolated to the ACCESS data, two days of ERA5 data are
+    required for each ACCESS data file.
 
-    If the resampled TB file doesn't exist, a `FileNotFound` error will be
-    raised.
+    If the ACCESS resampled TB file doesn't exist, a `FileNotFound` error will
+    be raised.
 
     The configured `downloader` is used to download the ERA5 data, if needed.
     """
@@ -234,23 +244,64 @@ def append_atmosphere_to_daily_ACCESS(
             f"({valid_points / total_points:0.2%})"
         )
 
+    next_day = current_day + timedelta(days=1)
     downloader.download_day(current_day, verbose)
-    era5_path = downloader.out_dir
+    downloader.download_day(next_day, verbose)
 
     rtm_data = DailyRtm(daily_data.lat, daily_data.lon, daily_data.time)
 
-    # Process only one hour at a time. This assumes there are 24 hours in the
-    # file...but that may not be correct.
-    for hour in range(24):
-        if verbose:
-            print(f"Processing hour {hour+1}/24")
+    era5_path = downloader.out_dir
+    era5_surface_current_day = era5_path / f"era5_surface_{current_day.isoformat()}.nc"
+    era5_levels_current_day = era5_path / f"era5_levels_{current_day.isoformat()}.nc"
+    era5_surface_next_day = era5_path / f"era5_surface_{next_day.isoformat()}.nc"
+    era5_levels_next_day = era5_path / f"era5_levels_{next_day.isoformat()}.nc"
 
-        era5_data = read_era5_data(
-            era5_path / f"era5_surface_{current_day.isoformat()}.nc",
-            era5_path / f"era5_levels_{current_day.isoformat()}.nc",
-            (hour,),
-            verbose,
-        )
+    # To reduce the memory usage, process the data one hour at a time. However,
+    # the ERA5 data is interpolated in time to the satellite measurement times,
+    # so two hours from the ERA5 data are read for each output hour. In order to
+    # avoid re-reading ERA5 data for the same hour, they're cached in a dict.
+    NUM_HOURS = 24
+    era5_cache: Dict[int, Era5DailyData] = {}
+    for hour in range(NUM_HOURS):
+        if verbose:
+            print(f"Processing hour {hour+1}/{NUM_HOURS}")
+
+        # Read the ERA5 data for the two hours that bracket the measurement
+        # data, noting that for the last hour, data from the next day is
+        # required.
+        #
+        # The era5_cache dict is used to look up the previous-hour data, which
+        # will always succeed except for the first hour of this loop when the
+        # cache is empty. For the next-hour data, the cache is not checked since
+        # the next-hour data will never be present in the cache. The values are
+        # popped from the dict since a cached entry is only reused once and this
+        # reduces the memory usage by not storing data from multiple hours ago.
+        try:
+            era5_data_prev = era5_cache.pop(hour)
+        except KeyError:
+            era5_data_prev = read_era5_data(
+                era5_surface_current_day,
+                era5_levels_current_day,
+                [hour],
+                verbose,
+            )
+        if hour + 1 < NUM_HOURS:
+            era5_data_next = read_era5_data(
+                era5_surface_current_day,
+                era5_levels_current_day,
+                [hour + 1],
+                verbose,
+            )
+        else:
+            era5_data_next = read_era5_data(
+                era5_surface_next_day,
+                era5_levels_next_day,
+                [0],
+                verbose,
+            )
+        era5_cache[hour + 1] = era5_data_next
+
+        era5_data = daily_data.interpolate_era5(hour, era5_data_prev, era5_data_next)
 
         if verbose:
             print("Computing RTM")
