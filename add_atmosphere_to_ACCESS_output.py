@@ -38,9 +38,9 @@ class DailyRtm:
 
     def __init__(
         self,
-        lat: Sequence[np.float32],
-        lon: Sequence[np.float32],
-        time: Sequence[np.float32],
+        lat: NDArray[np.float32],
+        lon: NDArray[np.float32],
+        time: NDArray[np.int32],
     ) -> None:
         """Allocate space for the results based on the size of the inputs."""
         self.lat = lat
@@ -115,16 +115,27 @@ class DailyAccessData:
         """Initialize based on the date, satellite, and root path."""
         self.tb_path = get_access_output_filename(current_day, satellite, dataroot)
         with Dataset(self.tb_path, "r") as f:
-            self.lat = f["latitude"][:]
-            self.lon = f["longitude"][:]
-            self.time = f["hours"][:]
-            # Dimensioned as (lat, lon, time, channel)
-            tb = f["brightness_temperature"][...]
+            # Each of these are 1d coordinate variables
+            lat = f["latitude"][:]
+            lon = f["longitude"][:]
+            hours = f["hours"][:]
+            # Dimensioned as (lat, lon, hours)
+            time = f["second_since_midnight"][...]
 
-        # This boolean array is True whereever there is valid data. The channel
-        # dimension is collapsed so if there is any valid data in that axis the
-        # valid mask is set. Thus the resulting shape is (lat, lon, time).
-        self.valid_data = np.any(~np.ma.getmaskarray(tb), axis=3)
+        # The mask for the time data will be used as the mask for valid data. In
+        # other words, only non-masked time values will be used to compute the
+        # RTM.
+        self.valid_data = ~np.ma.getmaskarray(time)
+        self.time: NDArray[np.int32] = np.ma.getdata(time)
+
+        self.reference_day = current_day
+
+        # These are coordinate arrays, so none of them should have masked data
+        if any(np.ma.is_masked(a) for a in (lat, lon, hours)):
+            raise Exception("Unexpected masked data")
+        self.lat: NDArray[np.float32] = np.ma.getdata(lat)
+        self.lon: NDArray[np.float32] = np.ma.getdata(lon)
+        self.hours: NDArray[np.int32] = np.ma.getdata(hours)
 
     @property
     def num_points(self) -> int:
@@ -145,8 +156,148 @@ class DailyAccessData:
         self, hour: int, data_prev: Era5DailyData, data_next: Era5DailyData
     ) -> Era5DailyData:
         """Time-interpolate the ERA5 data to the measurement times."""
-        # TODO: implement
-        return data_prev
+        # Check compatibility and inputs
+        if hour not in range(24):
+            raise Exception("Hour must be between 0 and 23")
+        if not all(
+            np.array_equal(getattr(data_prev, name), getattr(data_next, name))
+            for name in ["levels", "lats", "lons"]
+        ):
+            raise Exception("Mismatched ERA5 inputs")
+        if data_prev.time.shape != (1,) or data_next.time.shape != (1,):
+            raise Exception("ERA5 data should only contain one hour each")
+
+        valid_data = self.valid_data[:, :, hour]
+
+        # Convert measurement times to the ERA5 epoch: hours since 1900-01-01
+        ERA5_EPOCH = date(1900, 1, 1)
+        EPOCH_SHIFT = (self.reference_day - ERA5_EPOCH) / timedelta(hours=1)
+        time = self.time[:, :, hour].astype(np.float32) / (60 * 60) + EPOCH_SHIFT
+        time[~valid_data] = np.nan
+
+        # Initialize all the outputs
+        temperature = np.full_like(data_prev.temperature, np.nan)
+        specific_humidity = np.full_like(data_prev.specific_humidity, np.nan)
+        height = np.full_like(data_prev.height, np.nan)
+        liquid_content = np.full_like(data_prev.liquid_content, np.nan)
+        surface_pressure = np.full_like(data_prev.surface_pressure, np.nan)
+        surface_temperature = np.full_like(data_prev.surface_temperature, np.nan)
+        surface_dewpoint = np.full_like(data_prev.surface_dewpoint, np.nan)
+        surface_height = np.full_like(data_prev.surface_height, np.nan)
+        columnar_water_vapor = np.full_like(data_prev.columnar_water_vapor, np.nan)
+        columnar_cloud_liquid = np.full_like(data_prev.columnar_cloud_liquid, np.nan)
+
+        # Interpolate all the content
+        num_lat = len(data_prev.lats)
+        num_lon = len(data_prev.lons)
+        num_level = len(data_prev.levels)
+        # TODO: this is a naïve and repetitive implementation that has terrible
+        # performance in Python but I want to make sure the results look right
+        # before I redo this
+        for lat in range(num_lat):
+            for lon in range(num_lon):
+                if not valid_data[lat, lon]:
+                    continue
+
+                surface_pressure[0, lat, lon] = np.interp(
+                    time[lat, lon],
+                    np.concatenate([data_prev.time, data_next.time]),
+                    [
+                        data_prev.surface_pressure[0, lat, lon],
+                        data_next.surface_pressure[0, lat, lon],
+                    ],
+                )
+                surface_temperature[0, lat, lon] = np.interp(
+                    time[lat, lon],
+                    np.concatenate([data_prev.time, data_next.time]),
+                    [
+                        data_prev.surface_temperature[0, lat, lon],
+                        data_next.surface_temperature[0, lat, lon],
+                    ],
+                )
+                surface_dewpoint[0, lat, lon] = np.interp(
+                    time[lat, lon],
+                    np.concatenate([data_prev.time, data_next.time]),
+                    [
+                        data_prev.surface_dewpoint[0, lat, lon],
+                        data_next.surface_dewpoint[0, lat, lon],
+                    ],
+                )
+                surface_height[0, lat, lon] = np.interp(
+                    time[lat, lon],
+                    np.concatenate([data_prev.time, data_next.time]),
+                    [
+                        data_prev.surface_height[0, lat, lon],
+                        data_next.surface_height[0, lat, lon],
+                    ],
+                )
+                columnar_water_vapor[0, lat, lon] = np.interp(
+                    time[lat, lon],
+                    np.concatenate([data_prev.time, data_next.time]),
+                    [
+                        data_prev.columnar_water_vapor[0, lat, lon],
+                        data_next.columnar_water_vapor[0, lat, lon],
+                    ],
+                )
+                columnar_cloud_liquid[0, lat, lon] = np.interp(
+                    time[lat, lon],
+                    np.concatenate([data_prev.time, data_next.time]),
+                    [
+                        data_prev.columnar_cloud_liquid[0, lat, lon],
+                        data_next.columnar_cloud_liquid[0, lat, lon],
+                    ],
+                )
+
+                for level in range(num_level):
+                    temperature[0, lat, lon, level] = np.interp(
+                        time[lat, lon],
+                        np.concatenate([data_prev.time, data_next.time]),
+                        [
+                            data_prev.temperature[0, lat, lon, level],
+                            data_next.temperature[0, lat, lon, level],
+                        ],
+                    )
+                    specific_humidity[0, lat, lon, level] = np.interp(
+                        time[lat, lon],
+                        np.concatenate([data_prev.time, data_next.time]),
+                        [
+                            data_prev.specific_humidity[0, lat, lon, level],
+                            data_next.specific_humidity[0, lat, lon, level],
+                        ],
+                    )
+                    height[0, lat, lon, level] = np.interp(
+                        time[lat, lon],
+                        np.concatenate([data_prev.time, data_next.time]),
+                        [
+                            data_prev.height[0, lat, lon, level],
+                            data_next.height[0, lat, lon, level],
+                        ],
+                    )
+                    liquid_content[0, lat, lon, level] = np.interp(
+                        time[lat, lon],
+                        np.concatenate([data_prev.time, data_next.time]),
+                        [
+                            data_prev.liquid_content[0, lat, lon, level],
+                            data_next.liquid_content[0, lat, lon, level],
+                        ],
+                    )
+
+        return Era5DailyData(
+            data_prev.levels,
+            data_prev.lats,
+            data_prev.lons,
+            time.mean(),
+            temperature,
+            specific_humidity,
+            height,
+            liquid_content,
+            surface_pressure,
+            surface_temperature,
+            surface_dewpoint,
+            surface_height,
+            columnar_water_vapor,
+            columnar_cloud_liquid,
+        )
 
 
 def _ensure_rtm_vars(f: Dataset) -> None:
@@ -248,7 +399,7 @@ def append_atmosphere_to_daily_ACCESS(
     downloader.download_day(current_day, verbose)
     downloader.download_day(next_day, verbose)
 
-    rtm_data = DailyRtm(daily_data.lat, daily_data.lon, daily_data.time)
+    rtm_data = DailyRtm(daily_data.lat, daily_data.lon, daily_data.hours)
 
     era5_path = downloader.out_dir
     era5_surface_current_day = era5_path / f"era5_surface_{current_day.isoformat()}.nc"
@@ -301,6 +452,8 @@ def append_atmosphere_to_daily_ACCESS(
             )
         era5_cache[hour + 1] = era5_data_next
 
+        if verbose:
+            print("Interpolating ERA5 data to measurement times")
         era5_data = daily_data.interpolate_era5(hour, era5_data_prev, era5_data_next)
 
         if verbose:
