@@ -7,9 +7,13 @@ import argparse
 import os
 from datetime import date
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Sequence
+
+# TODO: once Python 3.9 is the minimum supported version, remove the above
+# import from typing and switch to: "from collections.abc import Sequence"
 
 import numpy as np
+from numpy.typing import NDArray
 from access_atmosphere import rtm
 from access_atmosphere.download import Era5Downloader
 from access_atmosphere.era5 import Era5DailyData, read_era5_data
@@ -18,10 +22,14 @@ from netCDF4 import Dataset
 from access_io.access_output import get_access_output_filename
 
 # Reference frequencies (in GHz) to use
-REF_FREQ = np.array([6.8, 10.7, 18.7, 23.8, 37.0, 89.0], np.float32)
+REF_FREQ: NDArray[np.float32] = np.array(
+    [6.8, 10.7, 18.7, 23.8, 37.0, 89.0], np.float32
+)
 
 # Reference Earth incidence angle to use for each reference frequency (in degrees)
-REF_EIA = np.array([53.0, 53.0, 53.0, 53.0, 53.0, 53.0], np.float32)
+REF_EIA: NDArray[np.float32] = np.array(
+    [53.0, 53.0, 53.0, 53.0, 53.0, 53.0], np.float32
+)
 
 
 class DailyRtm:
@@ -46,14 +54,21 @@ class DailyRtm:
         # The shapes for the arrays all match the output netCDF variables
         shape_3d = (num_lat, num_lon, num_time)
         shape_4d = (num_lat, num_lon, num_time, num_freq)
-        self.col_water_vapor = np.full(shape_3d, np.nan, np.float32)
-        self.col_cloud_liquid = np.full(shape_3d, np.nan, np.float32)
-        self.transmissivity = np.full(shape_4d, np.nan, np.float32)
-        self.tb_up = np.full(shape_4d, np.nan, np.float32)
-        self.tb_down = np.full(shape_4d, np.nan, np.float32)
+        self.col_water_vapor: NDArray[np.float32] = np.full(
+            shape_3d, np.nan, np.float32
+        )
+        self.col_cloud_liquid: NDArray[np.float32] = np.full(
+            shape_3d, np.nan, np.float32
+        )
+        self.transmissivity: NDArray[np.float32] = np.full(shape_4d, np.nan, np.float32)
+        self.tb_up: NDArray[np.float32] = np.full(shape_4d, np.nan, np.float32)
+        self.tb_down: NDArray[np.float32] = np.full(shape_4d, np.nan, np.float32)
 
     def compute_atmosphere(
-        self, era5_data: Era5DailyData, times: Sequence[int], valid_data: Any
+        self,
+        era5_data: Era5DailyData,
+        times: Sequence[int],
+        valid_data: NDArray[np.bool_],
     ) -> None:
         """Compute the atmospheric RTM for the input ERA5 data.
 
