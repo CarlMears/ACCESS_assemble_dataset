@@ -1,5 +1,4 @@
 import datetime
-from operator import ne
 import os
 from pathlib import Path
 from typing import Tuple
@@ -25,7 +24,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     dataroot: Path,
     verbose: bool = False,
     force_overwrite=False,
-):
+) -> None:
     # Get the maps of observation times from the existing output file that
     # already contains times and Tbs
     filename = get_access_output_filename(current_day, satellite, dataroot)
@@ -35,9 +34,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             # check to see if variable already exists
             if not force_overwrite:
                 try:
-                    skin_temp = root_grp.variables[variable[1]][:, :, :].filled(
-                        fill_value=-999
-                    )
+                    root_grp.variables[variable[1]][:, :, :].filled(fill_value=-999)
                     print(
                         f"var {variable[0]} ({variable[1]}) already exists.  skipping.."
                     )
