@@ -24,7 +24,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     satellite: str,
     dataroot: Path,
     verbose: bool = False,
-    force_overwrite = False
+    force_overwrite=False,
 ):
     # Get the maps of observation times from the existing output file that
     # already contains times and Tbs
@@ -32,16 +32,18 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
     try:
         with netcdf_dataset(filename, "r") as root_grp:
-            #check to see if variable already exists
+            # check to see if variable already exists
             if not force_overwrite:
                 try:
                     skin_temp = root_grp.variables[variable[1]][:, :, :].filled(
-                    fill_value=-999
+                        fill_value=-999
                     )
-                    print(f'var {variable[0]} ({variable[1]}) already exists.  skipping..')
+                    print(
+                        f"var {variable[0]} ({variable[1]}) already exists.  skipping.."
+                    )
                     return
                 except KeyError:
-                    #we exepct a key error if variable is needed
+                    # we exepct a key error if variable is needed
                     pass
             try:
                 times = root_grp.variables["second_since_midnight"][:, :, :].filled(
@@ -50,7 +52,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             except KeyError:
                 raise ValueError(f'Error finding "second_since_midnight" in {filename}')
     except FileNotFoundError:
-        print(f'File: {filename} not found, skipping')
+        print(f"File: {filename} not found, skipping")
         return
     # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour
     # of the next day.
@@ -121,13 +123,13 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 if __name__ == "__main__":
     import calendar
 
-    for year in range(2012,2013):
-        for month in range(1,8):
-            if ((year == 2012) and (month <7)):
+    for year in range(2012, 2013):
+        for month in range(1, 8):
+            if (year == 2012) and (month < 7):
                 continue
-                
+
             for day in range(1, calendar.monthrange(year, month)[1] + 1):
-            
+
                 date = datetime.date(year, month, day)
                 print(f"{date}")
 
