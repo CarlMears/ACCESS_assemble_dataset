@@ -187,16 +187,26 @@ def try_download(
 
             try:
                 result.raise_for_status()
-                target.write_bytes(result.content)
             except requests.HTTPError as e:
                 print(f"requests.get() returned an error code {result.status_code}")
                 print(e)
                 print(f"Attempt Number {attempt+1}/{max_attempts}.  Trying Again")
                 time.sleep(wait_time_seconds)
                 continue
-            else:
-                print(f"contents of URL written to {target}")
-                return target
+            except requests.ConnectionError as e:
+                print(e)
+                print(f"Attempt Number {attempt+1}/{max_attempts}.  Trying Again")
+                time.sleep(wait_time_seconds)
+                continue
+
+            target.write_bytes(result.content)
+            print(f"contents of URL written to {target}")
+            return target
+
+        else:
+            raise Exception(
+                f"Maxed out {max_attempts} attempts to download: {file_url}"
+            )
 
 
 def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Path]:
