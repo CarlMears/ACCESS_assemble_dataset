@@ -182,7 +182,7 @@ def try_download(
         print(f"Getting: {target}")
         print(file_url)
 
-        for attempt in range(1,max_attempts+1):
+        for attempt in range(max_attempts):
             result = requests.get(file_url)
 
             try:
@@ -190,14 +190,14 @@ def try_download(
                 target.write_bytes(result.content)
             except requests.HTTPError as e:
                 print(f"requests.get() returned an error code {result.status_code}")
-                print(f"Attempt Number {attempt}.  Trying Again")
+                print(e)
+                print(f"Attempt Number {attempt+1}/{max_attempts}.  Trying Again")
                 time.sleep(wait_time_seconds)
                 continue
             else:
                 print(f"contents of URL written to {target}")
                 return target
 
-            raise e
 
 def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Path]:
     files = query_one_day_imerg(date=date)
