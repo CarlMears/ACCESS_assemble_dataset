@@ -161,7 +161,12 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
     return files
 
 
-def try_download(file_url: str, target_path: Path, max_attempts : int=10,wait_time_seconds : int=15) -> Path:
+def try_download(
+    file_url: str,
+    target_path: Path,
+    max_attempts: int = 10,
+    wait_time_seconds: int = 15,
+) -> Path:
     """Download IMERG file to a target directory.
 
     Return the path to the downloaded file.
