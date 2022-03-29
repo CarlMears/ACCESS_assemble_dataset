@@ -4,9 +4,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
-from netCDF4 import Dataset as netcdf_dataset
 from numpy.typing import ArrayLike
-import time
 
 from rss_lock.locked_dataset import LockedDataset
 
@@ -77,7 +75,11 @@ def append_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude", "hours",),
+                (
+                    "latitude",
+                    "longitude",
+                    "hours",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -131,13 +133,18 @@ def append_const_var_to_daily_tb_netcdf(
     lock_stale_time: float = 86400.0,
 ) -> None:
     filename = get_access_output_filename(date, satellite, dataroot)
-    with LockedDataset(filename, "a", 60, lock_stale_time=lock_stale_time,verbose=verbose) as root_grp:
+    with LockedDataset(
+        filename, "a", 60, lock_stale_time=lock_stale_time, verbose=verbose
+    ) as root_grp:
         # with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
         try:
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude",),
+                (
+                    "latitude",
+                    "longitude",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -186,7 +193,10 @@ def append_lf_daily_tb_netcdf(
         lf = root_grp.createVariable(
             "land_fraction",
             "f4",
-            ("latitude", "longitude",),
+            (
+                "latitude",
+                "longitude",
+            ),
             zlib=True,
             fill_value=lf_fill,
         )
@@ -268,8 +278,8 @@ def write_daily_tb_netcdf(
         root_grp.geospatial_lon_units = "degrees_east"
         root_grp.spatial_resolution = "30 km X 30 km"
         day_boundary = datetime.datetime.combine(date, datetime.time())
-        start_date = day_boundary
-        end_date = day_boundary + datetime.timedelta(minutes=1440.0)
+        start_date = day_boundary - datetime.timedelta(minutes=30)
+        end_date = day_boundary + datetime.timedelta(minutes=1410.0)
         root_grp.time_coverage_start = start_date.isoformat()
         root_grp.time_coverage_end = end_date.isoformat()
         root_grp.time_coverage_duration = "P24H"
@@ -299,14 +309,23 @@ def write_daily_tb_netcdf(
         time = root_grp.createVariable(
             "second_since_midnight",
             "i4",
-            ("latitude", "longitude", "hours",),
+            (
+                "latitude",
+                "longitude",
+                "hours",
+            ),
             zlib=True,
             fill_value=-999999,
         )
         tbs = root_grp.createVariable(
             "brightness_temperature",
             "f4",
-            ("latitude", "longitude", "hours", "channels",),
+            (
+                "latitude",
+                "longitude",
+                "hours",
+                "channels",
+            ),
             zlib=True,
             fill_value=tb_fill,
             least_significant_digit=2,
@@ -327,11 +346,13 @@ def write_daily_tb_netcdf(
         hours.valid_min = 0
         hours.valid_max = 23
 
+        # Each day's file is offset by a half-hour into the previous day
+        DAILY_OFFSET = datetime.timedelta(minutes=30)
         time.standard_name = "seconds_since_midnight"
         time.long_name = "seconds_since_midnight"
         time.missing = -999999
-        time.valid_min = 0
-        time.valid_max = 86400
+        time.valid_min = -DAILY_OFFSET.total_seconds()
+        time.valid_max = (datetime.timedelta(days=1) - DAILY_OFFSET).total_seconds()
         time.coordinates = "latitude longitude"
 
         tbs.standard_name = "brightness_temperature"
