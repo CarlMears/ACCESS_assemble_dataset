@@ -1,4 +1,5 @@
 import datetime
+from operator import ne
 import os
 from pathlib import Path
 from typing import Tuple
@@ -23,19 +24,34 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     satellite: str,
     dataroot: Path,
     verbose: bool = False,
+    force_overwrite = False
 ):
     # Get the maps of observation times from the existing output file that
     # already contains times and Tbs
     filename = get_access_output_filename(current_day, satellite, dataroot)
 
-    with netcdf_dataset(filename, "r") as root_grp:
-        try:
-            times = root_grp.variables["second_since_midnight"][:, :, :].filled(
-                fill_value=-999
-            )
-        except KeyError:
-            raise ValueError(f'Error finding "second_since_midnight" in {filename}')
-
+    try:
+        with netcdf_dataset(filename, "r") as root_grp:
+            #check to see if variable already exists
+            if not force_overwrite:
+                try:
+                    skin_temp = root_grp.variables[variable[1]][:, :, :].filled(
+                    fill_value=-999
+                    )
+                    print(f'var {variable[0]} ({variable[1]}) already exists.  skipping..')
+                    return
+                except KeyError:
+                    #we exepct a key error if variable is needed
+                    pass
+            try:
+                times = root_grp.variables["second_since_midnight"][:, :, :].filled(
+                    fill_value=-999
+                )
+            except KeyError:
+                raise ValueError(f'Error finding "second_since_midnight" in {filename}')
+    except FileNotFoundError:
+        print(f'File: {filename} not found, skipping')
+        return
     # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour
     # of the next day.
     next_day = current_day + datetime.timedelta(hours=24)
@@ -105,30 +121,33 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 if __name__ == "__main__":
     import calendar
 
-    year = 2021
-    for month in range(7,8):
-        #for day in range(1, calendar.monthrange(year, month)[1] + 1):
-        for day in range(1, 4):
-            date = datetime.date(year, month, day)
-            print(f"{date}")
+    for year in range(2012,2013):
+        for month in range(1,8):
+            if ((year == 2012) and (month <7)):
+                continue
+                
+            for day in range(1, calendar.monthrange(year, month)[1] + 1):
+            
+                date = datetime.date(year, month, day)
+                print(f"{date}")
 
-            variable = (
-                "Skin temperature",
-                "skt",
-            )  # need this because var name for the ERA5 request is
-            # not that same as the variable name in the nc file
-            # that is provided/downloaded
-            satellite = "AMSR2"
-            verbose = True
-            if os.name == "nt":
-                dataroot = Path("L:/access/amsr2_daily_test")
-            elif os.name == "posix":
-                dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
+                variable = (
+                    "Skin temperature",
+                    "skt",
+                )  # need this because var name for the ERA5 request is
+                # not that same as the variable name in the nc file
+                # that is provided/downloaded
+                satellite = "AMSR2"
+                verbose = True
+                if os.name == "nt":
+                    dataroot = Path("L:/access/amsr2_out")
+                elif os.name == "posix":
+                    dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
 
-            add_ERA5_single_level_variable_to_ACCESS_output(
-                current_day=date,
-                variable=variable,
-                satellite=satellite,
-                dataroot=dataroot,
-                verbose=True,
-            )
+                add_ERA5_single_level_variable_to_ACCESS_output(
+                    current_day=date,
+                    variable=variable,
+                    satellite=satellite,
+                    dataroot=dataroot,
+                    verbose=True,
+                )
