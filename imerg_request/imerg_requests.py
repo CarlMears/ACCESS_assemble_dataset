@@ -19,6 +19,7 @@ import time
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from numpy import int256
 
 import requests
 
@@ -161,7 +162,7 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
     return files
 
 
-def try_download(file_url: str, target_path: Path) -> Path:
+def try_download(file_url: str, target_path: Path, max_attempts : int=10,wait_time_seconds : int=15) -> Path:
     """Download IMERG file to a target directory.
 
     Return the path to the downloaded file.
@@ -177,18 +178,22 @@ def try_download(file_url: str, target_path: Path) -> Path:
         print(f"Getting: {target}")
         print(file_url)
 
-        result = requests.get(file_url)
+        for attempt in range(1,max_attempts+1):
+            result = requests.get(file_url)
 
-        try:
-            result.raise_for_status()
-            target.write_bytes(result.content)
-        except requests.HTTPError as e:
-            print(f"requests.get() returned an error code {result.status_code}")
+            try:
+                result.raise_for_status()
+                target.write_bytes(result.content)
+            except requests.HTTPError as e:
+                print(f"requests.get() returned an error code {result.status_code}")
+                print(f"Attempt Number {attempt}.  Trying Again")
+                time.sleep(wait_time_seconds)
+                continue
+            else:
+                print(f"contents of URL written to {target}")
+                return target
+
             raise e
-        else:
-            print(f"contents of URL written to {target}")
-            return target
-
 
 def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Path]:
     files = query_one_day_imerg(date=date)
