@@ -28,11 +28,11 @@ def add_imerg_rain_rate_to_ACCESS_output(
         with netcdf_dataset(filename, "r") as root_grp:
             if not force_overwrite:
                 try:
-                    rr = root_grp.variables["rainfall_rate"][:, :, :].filled(
+                    root_grp.variables["rainfall_rate"][:, :, :].filled(
                         fill_value=-999
                     )
-                    print(
-                        f"var rainfall rate already exists for {str(current_day)}.  skipping to next day"
+                    print(f"var rainfall rate already exists for {str(current_day)}."
+                    print("skipping to next day")
                     )
                     return
                 except KeyError:
@@ -45,7 +45,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
                 )
             except KeyError:
                 raise ValueError(f'Error finding "second_since_midnight" in {filename}')
-    except:
+    except FileNotFoundError:
         print(f"File: {filename} not found, skipping")
         return
 
