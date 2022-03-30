@@ -33,7 +33,6 @@ def add_imerg_rain_rate_to_ACCESS_output(
                     )
                     print(f"var rainfall rate already exists for {str(current_day)}.")
                     print("skipping to next day")
-                    
                     return
                 except KeyError:
                     # we expect a key error if variable is needed
