@@ -98,57 +98,61 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
 
     # check availability of all IMERG half-hourly products.  Should only be
     # relevant for NRT ACCESS applications.
-    for id in id_list:
-        params = {
-            "collection_concept_id": id,
-            "temporal": f"{day_before}T23:30:00Z,{day_after}T00:30:00Z",
-            "sort_key": "start_date",
-            "page_size": "50",
-        }
-        headers = {"Accept": "application/vnd.nasa.cmr.umm_results+json; version=1.6.4"}
-        response = requests.get(CMR_URL, headers=headers, params=params)
+    with requests.Session() as s:
+        s.headers.update(
+            {"Accept": "application/vnd.nasa.cmr.umm_results+json; version=1.6.4"}
+        )
 
-        # Sometimes this query will return an empty response body which leads to
-        # an error. I believe this is an issue on CMR's end since waiting
-        # 30s-60s and trying again will often rectify the issue. If this
-        # happens, the following block of code waits 30 seconds and tries again
-        # until we receive a successful API response w/ body (i.e., status code
-        # 200). I imagine there is a more elegant way to do this since this has
-        # the potential to get caught if the response.status_code remains !=
-        # 200.
-        while response.status_code != 200:
-            try:
-                response = requests.get(CMR_URL, headers=headers, params=params)
-            except requests.HTTPError:
-                print(f"API Query error {response.status_code}. Retrying in 30s")
-                time.sleep(30)
+        for id in id_list:
+            params = {
+                "collection_concept_id": id,
+                "temporal": f"{day_before}T23:30:00Z,{day_after}T00:30:00Z",
+                "sort_key": "start_date",
+                "page_size": "50",
+            }
+            response = s.get(CMR_URL, params=params)
 
-        response_list = response.json()
+            # Sometimes this query will return an empty response body which leads to
+            # an error. I believe this is an issue on CMR's end since waiting
+            # 30s-60s and trying again will often rectify the issue. If this
+            # happens, the following block of code waits 30 seconds and tries again
+            # until we receive a successful API response w/ body (i.e., status code
+            # 200). I imagine there is a more elegant way to do this since this has
+            # the potential to get caught if the response.status_code remains !=
+            # 200.
+            while response.status_code != 200:
+                try:
+                    response = s.get(CMR_URL, params=params)
+                except requests.HTTPError:
+                    print(f"API Query error {response.status_code}. Retrying in 30s")
+                    time.sleep(30)
 
-        # We want to look for the 'final' versions of IMERG data first
-        # The following checks to see if any 'final' data exists for a day.
-        # If not, it queries the next type of data (late) to see if a full day has been
-        # processed.  If not, the code looks for 'early' data since it will
-        # almost always have more data than the 'late' product.
-        # This will likely only be relevant for NRT applications.
-        if response_list["hits"] == 0:
-            print(f"No data for ID {id}; Checking next")
-            continue
-        elif response_list["hits"] > 0 and response_list["hits"] < 51:
-            # Should have maximum 51 'hits' in a day
-            print("Some data, but not full day")
-            if id != id_list[2]:  # if id does not equal the early ID
+            response_list = response.json()
+
+            # We want to look for the 'final' versions of IMERG data first The
+            # following checks to see if any 'final' data exists for a day. If
+            # not, it queries the next type of data (late) to see if a full day
+            # has been processed.  If not, the code looks for 'early' data since
+            # it will almost always have more data than the 'late' product. This
+            # will likely only be relevant for NRT applications.
+            if response_list["hits"] == 0:
+                print(f"No data for ID {id}; Checking next")
                 continue
-            break
-        elif response_list["hits"] > 51:
-            # If number of 'hits' is greater than 51 for some reason
-            print(
-                f"Number of hits exceeds maximum: {response_list['hits']}. "
-                "Check downloaded files."
-            )
-            break
-        else:
-            break
+            elif response_list["hits"] > 0 and response_list["hits"] < 51:
+                # Should have maximum 51 'hits' in a day
+                print("Some data, but not full day")
+                if id != id_list[2]:  # if id does not equal the early ID
+                    continue
+                break
+            elif response_list["hits"] > 51:
+                # If number of 'hits' is greater than 51 for some reason
+                print(
+                    f"Number of hits exceeds maximum: {response_list['hits']}. "
+                    "Check downloaded files."
+                )
+                break
+            else:
+                break
 
     files = []
     for item in response_list["items"]:
@@ -162,6 +166,7 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
 
 
 def try_download(
+    session: requests.Session,
     file_url: str,
     target_path: Path,
     max_attempts: int = 10,
@@ -183,12 +188,12 @@ def try_download(
         print(file_url)
 
         for attempt in range(max_attempts):
-            result = requests.get(file_url)
+            result = session.get(file_url)
 
             try:
                 result.raise_for_status()
             except requests.HTTPError as e:
-                print(f"requests.get() returned an error code {result.status_code}")
+                print(f"HTTP error {result.status_code}")
                 print(e)
                 print(f"Attempt Number {attempt+1}/{max_attempts}.  Trying Again")
                 time.sleep(wait_time_seconds)
@@ -213,17 +218,15 @@ def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Pa
     files = query_one_day_imerg(date=date)
 
     files_in_day = []
-    # loop through all files and download
-    for file in files:
-        try:
-            result = try_download(
-                file_url=file,
-                target_path=target_path,
-            )
-        except requests.HTTPError:
-            continue
-        else:
-            files_in_day.append(result)
+    with requests.Session() as s:
+        # loop through all files and download
+        for file in files:
+            try:
+                result = try_download(s, file, target_path)
+            except requests.HTTPError:
+                continue
+            else:
+                files_in_day.append(result)
 
     return files_in_day
 
