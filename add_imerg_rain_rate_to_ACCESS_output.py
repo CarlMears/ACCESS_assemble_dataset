@@ -20,17 +20,32 @@ def add_imerg_rain_rate_to_ACCESS_output(
     current_day: datetime.date,
     satellite: str,
     dataroot: Path,
-) -> None:
+    force_overwrite: bool = False
+    ) -> None:
 
     filename = get_access_output_filename(current_day, satellite, dataroot)
+    try:
+        with netcdf_dataset(filename, "r") as root_grp:
+            if not force_overwrite:
+                try:
+                    rr = root_grp.variables['rainfall_rate'][:, :, :].filled(
+                        fill_value=-999
+                            )
+                    print(f'var rainfall rate already exists for {str(current_day)}.  skipping to next day')
+                    return
+                except KeyError:
+                    #we expect a key error if variable is needed
+                    pass
 
-    with netcdf_dataset(filename, "r") as root_grp:
-        try:
-            times = root_grp.variables["second_since_midnight"][:, :, :].filled(
-                fill_value=-999
-            )
-        except KeyError:
-            raise ValueError(f'Error finding "second_since_midnight" in {filename}')
+            try:
+                times = root_grp.variables["second_since_midnight"][:, :, :].filled(
+                    fill_value=-999
+                )
+            except KeyError:
+                raise ValueError(f'Error finding "second_since_midnight" in {filename}')
+    except:
+        print(f'File: {filename} not found, skipping')
+        return
 
     # Downloding all IMERG files for the day
     try:
@@ -84,16 +99,23 @@ def add_imerg_rain_rate_to_ACCESS_output(
 
 if __name__ == "__main__":
 
-    date = datetime.date(2016, 7, 1)
+    import calendar
+
     satellite = "AMSR2"
     verbose = True
     if os.name == "nt":
-        dataroot = Path("L:/access/amsr2_daily_test")
+        dataroot = Path("L:/access/amsr2_out")
     elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
+        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out")
 
-    add_imerg_rain_rate_to_ACCESS_output(
-        current_day=date,
-        satellite=satellite,
-        dataroot=dataroot,
-    )
+    for year in range(2012,2013):
+        for month in range(1,13):
+            if ((year == 2012) and (month < 7)):
+                continue
+            for day in range(1,calendar.monthrange(year,month)[1]+1):
+                date = datetime.date(year, month, day)
+                add_imerg_rain_rate_to_ACCESS_output(
+                    current_day=date,
+                    satellite=satellite,
+                    dataroot=dataroot,
+                    )
