@@ -20,21 +20,23 @@ def add_imerg_rain_rate_to_ACCESS_output(
     current_day: datetime.date,
     satellite: str,
     dataroot: Path,
-    force_overwrite: bool = False
-    ) -> None:
+    force_overwrite: bool = False,
+) -> None:
 
     filename = get_access_output_filename(current_day, satellite, dataroot)
     try:
         with netcdf_dataset(filename, "r") as root_grp:
             if not force_overwrite:
                 try:
-                    rr = root_grp.variables['rainfall_rate'][:, :, :].filled(
+                    rr = root_grp.variables["rainfall_rate"][:, :, :].filled(
                         fill_value=-999
-                            )
-                    print(f'var rainfall rate already exists for {str(current_day)}.  skipping to next day')
+                    )
+                    print(
+                        f"var rainfall rate already exists for {str(current_day)}.  skipping to next day"
+                    )
                     return
                 except KeyError:
-                    #we expect a key error if variable is needed
+                    # we expect a key error if variable is needed
                     pass
 
             try:
@@ -44,14 +46,13 @@ def add_imerg_rain_rate_to_ACCESS_output(
             except KeyError:
                 raise ValueError(f'Error finding "second_since_midnight" in {filename}')
     except:
-        print(f'File: {filename} not found, skipping')
+        print(f"File: {filename} not found, skipping")
         return
 
     # Downloding all IMERG files for the day
     try:
         imerg_half_hourly_request(
-            date=current_day,
-            target_path=dataroot / "_temp",
+            date=current_day, target_path=dataroot / "_temp",
         )
 
     except Exception as e:
@@ -108,14 +109,12 @@ if __name__ == "__main__":
     elif os.name == "posix":
         dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out")
 
-    for year in range(2012,2013):
-        for month in range(1,13):
-            if ((year == 2012) and (month < 7)):
+    for year in range(2012, 2013):
+        for month in range(1, 13):
+            if (year == 2012) and (month < 7):
                 continue
-            for day in range(1,calendar.monthrange(year, month)[1]+1):
+            for day in range(1, calendar.monthrange(year, month)[1] + 1):
                 date = datetime.date(year, month, day)
                 add_imerg_rain_rate_to_ACCESS_output(
-                    current_day=date,
-                    satellite=satellite,
-                    dataroot=dataroot,
-                    )
+                    current_day=date, satellite=satellite, dataroot=dataroot,
+                )
