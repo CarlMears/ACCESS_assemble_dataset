@@ -4,12 +4,26 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "make_daily_ACCESS_files.py",
             "type": "python",
             "request": "launch",
             "program": "make_daily_ACCESS_files.py",
             "args":["--root", "C:/ACCESS/output_files/"],
+            "console": "integratedTerminal"
+        }
+
+        {
+            "name": "Add ERA5 surface temperatures",
+            "type": "python",
+            "request": "launch",
+            "program": "add_ERA5_surface_temperature_to_ACCESS_output.py",
+            "args":["L:/ACCESS",
+                    "L:/access/_temp",
+                    "2013-01-01",
+                    "2013-01-31",
+                    "amsr2"],
             "console": "integratedTerminal"
         }
     ]

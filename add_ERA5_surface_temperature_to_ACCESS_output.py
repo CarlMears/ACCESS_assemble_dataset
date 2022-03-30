@@ -1,12 +1,12 @@
+import argparse
 import datetime
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import Any, Sequence, Tuple
 
+from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
 import xarray as xr
-from netCDF4 import Dataset as netcdf_dataset
-
 
 from era5_request.era5_requests import era5_hourly_single_level_request
 from access_io.access_output import (
@@ -22,6 +22,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     variable: Tuple[str, str],
     satellite: str,
     dataroot: Path,
+    temproot: Path,
     verbose: bool = False,
     force_overwrite: bool = False,
 ) -> None:
@@ -40,7 +41,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                     )
                     return
                 except KeyError:
-                    # we exepct a key error if variable is needed
+                    # we expect a key error if variable is needed
                     pass
             try:
                 times = root_grp.variables["second_since_midnight"][:, :, :].filled(
@@ -55,17 +56,17 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     # of the next day.
     next_day = current_day + datetime.timedelta(hours=24)
     try:
-        os.makedirs(dataroot / "_temp", exist_ok=True)
+        os.makedirs(temproot / "era5", exist_ok=True)
         file1 = era5_hourly_single_level_request(
             date=current_day,
             variable=variable[0],
-            target_path=dataroot / "_temp",
+            target_path=temproot / "era5",
             full_day=True,
         )
         file2 = era5_hourly_single_level_request(
             date=next_day,
             variable=variable[0],
-            target_path=dataroot / "_temp",
+            target_path=temproot / "era5",
             full_day=False,
         )
     except Exception:
@@ -118,8 +119,41 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    START_DAY = datetime.date(2012, 7, 1)
-    END_DAY = datetime.date(2012, 7, 31)
+
+    cds_help = (
+        "For downloading ERA5 data from CDS, the UID and API key "
+        "must be set as arguments or in the 'CDS_UID' and 'CDS_API_KEY` "
+        "environment variables"
+    )
+    parser = argparse.ArgumentParser(
+        description=(
+            "Interpolate and append surface temperature to ACCESS output file. "
+            "ERA5 data is downloaded if required."
+        ),
+        epilog=cds_help,
+    )
+    parser.add_argument(
+        "access_root", type=Path, help="Root directory to ACCESS project"
+    )
+    parser.add_argument(
+        "temp_root", type=Path, help="Root directory store temporary files"
+    )
+    parser.add_argument(
+        "start_date", type=datetime.date.fromisoformat, help="First Day to process, as YYYY-MM-DD"
+    )
+    parser.add_argument(
+        "end_date", type=datetime.date.fromisoformat, help="Last Day to process, as YYYY-MM-DD"
+    )
+    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+
+    args = parser.parse_args()
+
+    access_root: Path = args.access_root
+    temp_root: Path = args.temp_root
+
+    START_DAY = args.start_date
+    END_DAY = args.end_date
+    satellite = args.sensor.upper
 
     date = START_DAY
     while date <= END_DAY:
@@ -128,18 +162,21 @@ if __name__ == "__main__":
         # need this because var name for the ERA5 request is not that same as
         # the variable name in the nc file that is provided/downloaded
         variable = ("Skin temperature", "skt")
-        satellite = "AMSR2"
+        
         verbose = True
         if os.name == "nt":
-            dataroot = Path("L:/access/amsr2_out")
+            dataroot = Path(f"{access_root}/{satellite}_out")
+            temproot = Path(f"{temp_root}/era5")
         elif os.name == "posix":
-            dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
+            dataroot = Path(f"{access_root}/{satellite}_out")
+            temproot = Path(f"{temp_root}/era5")
 
         add_ERA5_single_level_variable_to_ACCESS_output(
             current_day=date,
             variable=variable,
             satellite=satellite,
             dataroot=dataroot,
+            temproot=temproot,
             verbose=True,
         )
 
