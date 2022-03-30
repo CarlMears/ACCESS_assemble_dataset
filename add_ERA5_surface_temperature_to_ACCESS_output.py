@@ -23,7 +23,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     satellite: str,
     dataroot: Path,
     verbose: bool = False,
-    force_overwrite=False,
+    force_overwrite: bool = False,
 ) -> None:
     # Get the maps of observation times from the existing output file that
     # already contains times and Tbs
@@ -118,35 +118,29 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-    import calendar
+    START_DAY = datetime.date(2012, 7, 1)
+    END_DAY = datetime.date(2012, 7, 31)
 
-    for year in range(2012, 2013):
-        for month in range(1, 8):
-            if (year == 2012) and (month < 7):
-                continue
+    date = START_DAY
+    while date <= END_DAY:
+        print(f"{date}")
 
-            for day in range(1, calendar.monthrange(year, month)[1] + 1):
+        # need this because var name for the ERA5 request is not that same as
+        # the variable name in the nc file that is provided/downloaded
+        variable = ("Skin temperature", "skt")
+        satellite = "AMSR2"
+        verbose = True
+        if os.name == "nt":
+            dataroot = Path("L:/access/amsr2_out")
+        elif os.name == "posix":
+            dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
 
-                date = datetime.date(year, month, day)
-                print(f"{date}")
+        add_ERA5_single_level_variable_to_ACCESS_output(
+            current_day=date,
+            variable=variable,
+            satellite=satellite,
+            dataroot=dataroot,
+            verbose=True,
+        )
 
-                variable = (
-                    "Skin temperature",
-                    "skt",
-                )  # need this because var name for the ERA5 request is
-                # not that same as the variable name in the nc file
-                # that is provided/downloaded
-                satellite = "AMSR2"
-                verbose = True
-                if os.name == "nt":
-                    dataroot = Path("L:/access/amsr2_out")
-                elif os.name == "posix":
-                    dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_daily_test")
-
-                add_ERA5_single_level_variable_to_ACCESS_output(
-                    current_day=date,
-                    variable=variable,
-                    satellite=satellite,
-                    dataroot=dataroot,
-                    verbose=True,
-                )
+        date += datetime.timedelta(days=1)
