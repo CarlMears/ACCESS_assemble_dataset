@@ -112,7 +112,7 @@ if __name__ == "__main__":
         for month in range(1,13):
             if ((year == 2012) and (month < 7)):
                 continue
-            for day in range(1,calendar.monthrange(year,month)[1]+1):
+            for day in range(1,calendar.monthrange(year, month)[1]+1):
                 date = datetime.date(year, month, day)
                 add_imerg_rain_rate_to_ACCESS_output(
                     current_day=date,

@@ -2,11 +2,10 @@ import argparse
 import datetime
 import os
 from pathlib import Path
-from typing import Any, Sequence, Tuple
+from typing import Tuple
 
 from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
-import xarray as xr
 
 from era5_request.era5_requests import era5_hourly_single_level_request
 from access_io.access_output import (

@@ -15,7 +15,6 @@ folder.
 import datetime
 import os
 from pathlib import Path
-from tkinter import Y
 from typing import Sequence
 from calendar import monthrange
 
@@ -42,11 +41,11 @@ def era5_hourly_single_level_request(
     elif full_day:
         target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m_%d}.full.nc"
         times = [f"{h:02d}:00" for h in range(0, 24)]
-        days = f"{date:%d}"
+        days = [f"{date:%d}]"
     else:
         target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m_%d}.1st_hour.nc"
         times = ["00:00"]
-        days = f"{date:%d}"
+        days = [f"{date:%d}]"
 
     temp_file = target_path / "temp.nc"
 

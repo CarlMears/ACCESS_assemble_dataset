@@ -130,8 +130,8 @@ def replace_var_in_daily_tb_netcdf(
         # read in existing variable
         try:
             v = root_grp.variables[var_name]
-        except:
-            raise ValueError(f"Variable: {var_name} in not dataset, can not replace")
+        except KeyError:
+            raise KeyError(f"Variable: {var_name} in not dataset, can not replace")
 
         # replace any attributes that are passed
         if standard_name is not None:
