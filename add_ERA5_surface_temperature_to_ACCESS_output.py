@@ -8,7 +8,7 @@ from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
 import xarray as xr
 
-from era5_request.era5_requests import era5_hourly_single_level_request_entire_month
+from era5_request.era5_requests import era5_hourly_single_level_request
 from access_io.access_output import (
     get_access_output_filename,
     append_var_to_daily_tb_netcdf,
@@ -55,44 +55,44 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour
     # of the next day.
     next_day = current_day + datetime.timedelta(hours=24)
-    try:
-        os.makedirs(temproot / "era5", exist_ok=True)
-        file1 = era5_hourly_single_level_request(
-            date=current_day,
-            variable=variable[0],
-            target_path=temproot / "era5",
-            full_day=True,
-        )
-        file2 = era5_hourly_single_level_request(
-            date=next_day,
-            variable=variable[0],
-            target_path=temproot / "era5",
-            full_day=False,
-        )
-        if current_day.month != next_day.month:
-            file2 = era5_hourly_single_level_request_entire_month(
-                date=next_day,
-                variable=variable[0],
-                target_path=dataroot / "_temp",
-            )
-    except Exception:
-        raise RuntimeError("Problem downloading ERA5 data using cdsapi")
+    # try:
+    os.makedirs(temproot, exist_ok=True)
+    file1 = era5_hourly_single_level_request(
+        date=current_day,
+        variable=variable[0],
+        target_path=temproot,
+        full_day=True,
+        full_month=True,
+    )
+
+    # if next day is in the same month, this second request
+    # refers to the same file, so no second download will be done
+    file2 = era5_hourly_single_level_request(
+        date=next_day,
+        variable=variable[0],
+        target_path=temproot,
+        full_day=True,
+        full_month=True,
+    )
+
+    # except Exception:
+    #    raise RuntimeError("Problem downloading ERA5 data using cdsapi")
 
     # open the file(s), and combine the two files into a 25-map array
     if current_day.month == next_day.month:
-        hour_index1 = 24*(current_day.day-1)
-        hour_index2 = hour_index1+25
-        ds1 = xr.open_dataset(file1)
-        skt = ds1[variable[1]].values[hour_index1:hour_index2,:,:]
-    else:
-        hour_index1 = 24*(current_day.day-1)
-        hour_index2 = hour_index1+24
+        hour_index1 = 24 * (current_day.day - 1)
+        hour_index2 = hour_index1 + 25
         ds1 = netcdf_dataset(file1)
-        skt_first_day = ds1[variable[1]][hour_index1:hour_index2,:,:]
+        skt = ds1[variable[1]][hour_index1:hour_index2, :, :]
+    else:
+        hour_index1 = 24 * (current_day.day - 1)
+        hour_index2 = hour_index1 + 24
+        ds1 = netcdf_dataset(file1)
+        skt_first_day = ds1[variable[1]][hour_index1:hour_index2, :, :]
 
         ds2 = netcdf_dataset(file2)
-        skt_next_day = ds2[variable[1]][0,:,:]
-        skt = np.concatenate((skt_first_day, skt_next_day[np.newaxis,:,:]), axis=0)
+        skt_next_day = ds2[variable[1]][0, :, :]
+        skt = np.concatenate((skt_first_day, skt_next_day[np.newaxis, :, :]), axis=0)
 
     # ERA-5 files are upside down relative to RSS convention.
     # TODO: I think you can just do skt = skt[:, ::-1, :] and avoid the loop
@@ -154,10 +154,14 @@ if __name__ == "__main__":
         "temp_root", type=Path, help="Root directory store temporary files"
     )
     parser.add_argument(
-        "start_date", type=datetime.date.fromisoformat, help="First Day to process, as YYYY-MM-DD"
+        "start_date",
+        type=datetime.date.fromisoformat,
+        help="First Day to process, as YYYY-MM-DD",
     )
     parser.add_argument(
-        "end_date", type=datetime.date.fromisoformat, help="Last Day to process, as YYYY-MM-DD"
+        "end_date",
+        type=datetime.date.fromisoformat,
+        help="Last Day to process, as YYYY-MM-DD",
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
 
@@ -177,7 +181,7 @@ if __name__ == "__main__":
         # need this because var name for the ERA5 request is not that same as
         # the variable name in the nc file that is provided/downloaded
         variable = ("Skin temperature", "skt")
-        
+
         verbose = True
         if os.name == "nt":
             dataroot = Path(f"{access_root}/{satellite}_out")

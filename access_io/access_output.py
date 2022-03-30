@@ -75,11 +75,7 @@ def append_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                (
-                    "latitude",
-                    "longitude",
-                    "hours",
-                ),
+                ("latitude", "longitude", "hours",),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -112,6 +108,7 @@ def append_var_to_daily_tb_netcdf(
 
         v[:, :, :] = var
 
+
 def replace_var_in_daily_tb_netcdf(
     *,
     date: datetime.date,
@@ -126,7 +123,6 @@ def replace_var_in_daily_tb_netcdf(
     source: Optional[str] = None,
     cell_method: Optional[str] = None,
     dataroot: Path = ACCESS_ROOT,
-
 ) -> None:
 
     filename = get_access_output_filename(date, satellite, dataroot)
@@ -135,9 +131,9 @@ def replace_var_in_daily_tb_netcdf(
         try:
             v = root_grp.variables[var_name]
         except:
-            raise ValueError(f'Variable: {var_name} in not dataset, can not replace')
+            raise ValueError(f"Variable: {var_name} in not dataset, can not replace")
 
-        #replace any attributes that are passed
+        # replace any attributes that are passed
         if standard_name is not None:
             v.standard_name = standard_name
         else:
@@ -189,10 +185,7 @@ def append_const_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                (
-                    "latitude",
-                    "longitude",
-                ),
+                ("latitude", "longitude",),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -241,10 +234,7 @@ def append_lf_daily_tb_netcdf(
         lf = root_grp.createVariable(
             "land_fraction",
             "f4",
-            (
-                "latitude",
-                "longitude",
-            ),
+            ("latitude", "longitude",),
             zlib=True,
             fill_value=lf_fill,
         )
@@ -357,23 +347,14 @@ def write_daily_tb_netcdf(
         time = root_grp.createVariable(
             "second_since_midnight",
             "i4",
-            (
-                "latitude",
-                "longitude",
-                "hours",
-            ),
+            ("latitude", "longitude", "hours",),
             zlib=True,
             fill_value=-999999,
         )
         tbs = root_grp.createVariable(
             "brightness_temperature",
             "f4",
-            (
-                "latitude",
-                "longitude",
-                "hours",
-                "channels",
-            ),
+            ("latitude", "longitude", "hours", "channels",),
             zlib=True,
             fill_value=tb_fill,
             least_significant_digit=2,

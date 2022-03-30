@@ -23,17 +23,30 @@ import cdsapi
 
 
 def era5_hourly_single_level_request(
-    *, date: datetime.date, variable: str, target_path: Path, full_day: bool = True
+    *,
+    date: datetime.date,
+    variable: str,
+    target_path: Path,
+    full_day: bool = True,
+    full_month: bool = False,
 ) -> Path:
+
     c = cdsapi.Client()
 
     # target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.nc"
-    if full_day:
+    if full_month:
+        target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.full.nc"
+        times = [f"{h:02d}:00" for h in range(0, 24)]
+        day_list = range(1, monthrange(date.year, date.month)[1] + 1)
+        days = [f"{day:02d}" for day in day_list]
+    elif full_day:
         target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m_%d}.full.nc"
         times = [f"{h:02d}:00" for h in range(0, 24)]
+        days = f"{date:%d}"
     else:
         target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m_%d}.1st_hour.nc"
         times = ["00:00"]
+        days = f"{date:%d}"
 
     temp_file = target_path / "temp.nc"
 
@@ -50,7 +63,7 @@ def era5_hourly_single_level_request(
                 "variable": "Skin temperature",
                 "year": f"{date:%Y}",
                 "month": f"{date:%m}",
-                "day": f"{date:%d}",
+                "day": days,
                 "time": times,
             },
             temp_file,
@@ -58,20 +71,21 @@ def era5_hourly_single_level_request(
         temp_file.rename(target)
     return target
 
+
 def era5_hourly_single_level_request_entire_month(
     *, date: datetime.date, variable: str, target_path: Path
 ) -> Path:
     c = cdsapi.Client()
 
     # target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.nc"
-    
+
     target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.full_month.nc"
     times = [f"{h:02d}:00" for h in range(0, 24)]
 
-    year = int(f'{date:%Y}')
-    month = int(f'{date:%m}')
-    num_days_in_month = monthrange(year,month)[1]
-    days = [f"{d:02d}" for d in range(1,1+num_days_in_month)]
+    year = int(f"{date:%Y}")
+    month = int(f"{date:%m}")
+    num_days_in_month = monthrange(year, month)[1]
+    days = [f"{d:02d}" for d in range(1, 1 + num_days_in_month)]
 
     temp_file = target_path / "temp.nc"
 
@@ -147,7 +161,9 @@ if __name__ == "__main__":
     elif os.name == "posix":
         target_path = Path("/mnt/ops1p-ren/l/access/_temp")
 
-    era5_hourly_single_level_request_entire_month(date=date, variable='skt', target_path=target_path)
+    era5_hourly_single_level_request_entire_month(
+        date=date, variable="skt", target_path=target_path
+    )
 
     levels = [
         "1",
