@@ -62,32 +62,3 @@ mypy:
       junit: mypy.junit.xml
       cobertura: cobertura.xml
 
-import:
-  stage: test
-  needs: []
-  allow_failure: true
-  parallel:
-    matrix:
-      - PY_VERSION: ["3.8", "3.9", "3.10"]
-  image: docker.io/library/python:${PY_VERSION}
-  before_script:
-    - apt-get update
-    # These are needed to build cartopy or its dependencies
-    - apt-get install -y libproj-dev libgeos-dev
-    - python --version
-    - pip install --upgrade pip
-    - pip install numpy netCDF4 matplotlib cdsapi xarray typing_extensions
-    # This older version of cartopy is used since it requires a version of proj
-    # newer than what Debian packages
-    - pip install Cartopy==0.19.0.post1
-    - pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
-    - pip install git+http://gitlab.remss.com/Carl/plotting.git
-    - pip install git+http://gitlab.remss.com/Carl/rss_lock.git
-  script:
-    # Comment out the global_map import for now
-    - sed -i -e '/from global_map/s/^/# /' make_daily_ACCESS_files.py
-    - python -m compileall .
-    - python -c 'import make_daily_ACCESS_files'
-    - python -c 'import add_land_fraction_to_ACCESS_output'
-    - python -c 'import add_ERA5_surface_temperature_to_ACCESS_output'
-    - python -c 'import add_atmosphere_to_ACCESS_output'
