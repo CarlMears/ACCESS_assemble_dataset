@@ -28,9 +28,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
         with netcdf_dataset(filename, "r") as root_grp:
             if not force_overwrite:
                 try:
-                    root_grp.variables["rainfall_rate"][:, :, :].filled(
-                        fill_value=-999
-                    )
+                    root_grp.variables["rainfall_rate"][:, :, :].filled(fill_value=-999)
                     print(f"var rainfall rate already exists for {str(current_day)}.")
                     print("skipping to next day")
                     return
