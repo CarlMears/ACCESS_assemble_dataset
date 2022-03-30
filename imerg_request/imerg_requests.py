@@ -215,18 +215,18 @@ def try_download(
 
 
 def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Path]:
-    files = query_one_day_imerg(date=date)
+    urls = query_one_day_imerg(date)
 
     files_in_day = []
     with requests.Session() as s:
         # loop through all files and download
-        for file in files:
+        for url in urls:
             try:
-                result = try_download(s, file, target_path)
+                output_file = try_download(s, url, target_path)
             except requests.HTTPError:
                 continue
             else:
-                files_in_day.append(result)
+                files_in_day.append(output_file)
 
     return files_in_day
 
@@ -236,4 +236,4 @@ if __name__ == "__main__":
 
     target_path = Path.cwd()
 
-    files = imerg_half_hourly_request(date=date, target_path=target_path)
+    files = imerg_half_hourly_request(date, target_path)
