@@ -31,9 +31,9 @@ def add_imerg_rain_rate_to_ACCESS_output(
                     root_grp.variables["rainfall_rate"][:, :, :].filled(
                         fill_value=-999
                     )
-                    print(f"var rainfall rate already exists for {str(current_day)}."
+                    print(f"var rainfall rate already exists for {str(current_day)}.")
                     print("skipping to next day")
-                    )
+                    
                     return
                 except KeyError:
                     # we expect a key error if variable is needed
