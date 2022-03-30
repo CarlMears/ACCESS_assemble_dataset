@@ -9,7 +9,7 @@ import xarray as xr
 from netCDF4 import Dataset as netcdf_dataset
 
 
-from era5_request.era5_requests import era5_hourly_single_level_request
+from era5_request.era5_requests import era5_hourly_single_level_request_entire_month
 from access_io.access_output import (
     get_access_output_filename,
     append_var_to_daily_tb_netcdf,
@@ -57,27 +57,35 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     next_day = current_day + datetime.timedelta(hours=24)
     try:
         os.makedirs(dataroot / "_temp", exist_ok=True)
-        file1 = era5_hourly_single_level_request(
+        file1 = era5_hourly_single_level_request_entire_month(
             date=current_day,
             variable=variable[0],
             target_path=dataroot / "_temp",
-            full_day=True,
         )
-        file2 = era5_hourly_single_level_request(
-            date=next_day,
-            variable=variable[0],
-            target_path=dataroot / "_temp",
-            full_day=False,
-        )
+        if current_day.month != next_day.month:
+            file2 = era5_hourly_single_level_request_entire_month(
+                date=next_day,
+                variable=variable[0],
+                target_path=dataroot / "_temp",
+            )
     except Exception:
         raise RuntimeError("Problem downloading ERA5 data using cdsapi")
 
-    # open the files, and combine the two files into a 25-map array
-    ds1 = xr.open_dataset(file1)
-    ds2 = xr.open_dataset(file2)
-    skt_first_day = ds1[variable[1]].values
-    skt_next_day = ds2[variable[1]].values
-    skt = np.concatenate((skt_first_day, skt_next_day), axis=0)
+    # open the file(s), and combine the two files into a 25-map array
+    if current_day.month == next_day.month:
+        hour_index1 = 24*(current_day.day-1)
+        hour_index2 = hour_index1+25
+        ds1 = xr.open_dataset(file1)
+        skt = ds1[variable[1]].values[hour_index1:hour_index2,:,:]
+    else:
+        hour_index1 = 24*(current_day.day-1)
+        hour_index2 = hour_index1+24
+        ds1 = netcdf_dataset(file1)
+        skt_first_day = ds1[variable[1]][hour_index1:hour_index2,:,:]
+
+        ds2 = netcdf_dataset(file2)
+        skt_next_day = ds2[variable[1]][0,:,:]
+        skt = np.concatenate((skt_first_day, skt_next_day[np.newaxis,:,:]), axis=0)
 
     # ERA-5 files are upside down relative to RSS convention.
     # TODO: I think you can just do skt = skt[:, ::-1, :] and avoid the loop
@@ -122,7 +130,7 @@ if __name__ == "__main__":
     import calendar
 
     for year in range(2012,2013):
-        for month in range(1,8):
+        for month in range(1,13):
             if ((year == 2012) and (month <7)):
                 continue
                 
@@ -150,4 +158,5 @@ if __name__ == "__main__":
                     satellite=satellite,
                     dataroot=dataroot,
                     verbose=True,
+                    force_overwrite = True,
                 )

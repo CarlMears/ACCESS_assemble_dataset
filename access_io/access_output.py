@@ -112,6 +112,54 @@ def append_var_to_daily_tb_netcdf(
 
         v[:, :, :] = var
 
+def replace_var_in_daily_tb_netcdf(
+    *,
+    date: datetime.date,
+    satellite: str,
+    var: ArrayLike,
+    var_name: str,
+    standard_name: Optional[str] = None,
+    long_name: Optional[str] = None,
+    valid_min: Optional[float] = None,
+    valid_max: Optional[float] = None,
+    units: Optional[str] = None,
+    source: Optional[str] = None,
+    cell_method: Optional[str] = None,
+    dataroot: Path = ACCESS_ROOT,
+
+) -> None:
+
+    filename = get_access_output_filename(date, satellite, dataroot)
+    with LockedDataset(filename, "a", 60) as root_grp:
+        # read in existing variable
+        try:
+            v = root_grp.variables[var_name]
+        except:
+            raise ValueError(f'Variable: {var_name} in not dataset, can not replace')
+
+        #replace any attributes that are passed
+        if standard_name is not None:
+            v.standard_name = standard_name
+        else:
+            v.standard_name = var_name
+
+        if long_name is not None:
+            v.long_name = long_name
+
+        if valid_min is not None:
+            v.valid_min = valid_min
+        if valid_max is not None:
+            v.valid_max = valid_max
+        if units is not None:
+            v.units = units
+        if source is not None:
+            v.source = source
+        if cell_method is not None:
+            v.cell_method = cell_method
+        v.coordinates = "latitude longitude hours"
+
+        v[:, :, :] = var
+
 
 def append_const_var_to_daily_tb_netcdf(
     *,

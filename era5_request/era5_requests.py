@@ -15,7 +15,9 @@ folder.
 import datetime
 import os
 from pathlib import Path
+from tkinter import Y
 from typing import Sequence
+from calendar import monthrange
 
 import cdsapi
 
@@ -49,6 +51,44 @@ def era5_hourly_single_level_request(
                 "year": f"{date:%Y}",
                 "month": f"{date:%m}",
                 "day": f"{date:%d}",
+                "time": times,
+            },
+            temp_file,
+        )
+        temp_file.rename(target)
+    return target
+
+def era5_hourly_single_level_request_entire_month(
+    *, date: datetime.date, variable: str, target_path: Path
+) -> Path:
+    c = cdsapi.Client()
+
+    # target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.nc"
+    
+    target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.full_month.nc"
+    times = [f"{h:02d}:00" for h in range(0, 24)]
+
+    year = int(f'{date:%Y}')
+    month = int(f'{date:%m}')
+    num_days_in_month = monthrange(year,month)[1]
+    days = [f"{d:02d}" for d in range(1,1+num_days_in_month)]
+
+    temp_file = target_path / "temp.nc"
+
+    if target.exists():
+        print(f"File: {target} already exists, skipping")
+    else:
+        print(f"Getting: {target}")
+        c.retrieve(
+            "reanalysis-era5-single-levels",
+            {
+                "product_type": "reanalysis",
+                "format": "netcdf",
+                "grid": "0.25/0.25",
+                "variable": "Skin temperature",
+                "year": f"{date:%Y}",
+                "month": f"{date:%m}",
+                "day": days,
                 "time": times,
             },
             temp_file,
@@ -106,6 +146,8 @@ if __name__ == "__main__":
         target_path = Path("L:/access/_temp")
     elif os.name == "posix":
         target_path = Path("/mnt/ops1p-ren/l/access/_temp")
+
+    era5_hourly_single_level_request_entire_month(date=date, variable='skt', target_path=target_path)
 
     levels = [
         "1",
