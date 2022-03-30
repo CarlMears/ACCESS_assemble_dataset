@@ -153,7 +153,7 @@ if __name__ == "__main__":
 
     START_DAY = args.start_date
     END_DAY = args.end_date
-    satellite = args.sensor.upper
+    satellite = args.sensor.upper()
 
     date = START_DAY
     while date <= END_DAY:
