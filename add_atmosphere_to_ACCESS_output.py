@@ -190,84 +190,55 @@ class DailyAccessData:
             """Linear interpolation."""
             return (1 - t) * x0 + t * x1
 
-        temperature = lerp(
-            fractional_time_3d,
-            data_prev.temperature,
-            data_next.temperature,
-        )
-        specific_humidity = lerp(
-            fractional_time_3d,
-            data_prev.specific_humidity,
-            data_next.specific_humidity,
-        )
-        height = lerp(
-            fractional_time_3d,
-            data_prev.height,
-            data_next.height,
-        )
-        liquid_content = lerp(
-            fractional_time_3d,
-            data_prev.liquid_content,
-            data_next.liquid_content,
-        )
-        surface_pressure = lerp(
-            fractional_time,
-            data_prev.surface_pressure,
-            data_next.surface_pressure,
-        )
-        surface_temperature = lerp(
-            fractional_time,
-            data_prev.surface_temperature,
-            data_next.surface_temperature,
-        )
-        surface_dewpoint = lerp(
-            fractional_time,
-            data_prev.surface_dewpoint,
-            data_next.surface_dewpoint,
-        )
-        surface_height = lerp(
-            fractional_time,
-            data_prev.surface_height,
-            data_next.surface_height,
-        )
-        columnar_water_vapor = lerp(
-            fractional_time,
-            data_prev.columnar_water_vapor,
-            data_next.columnar_water_vapor,
-        )
-        columnar_cloud_liquid = lerp(
-            fractional_time,
-            data_prev.columnar_cloud_liquid,
-            data_next.columnar_cloud_liquid,
-        )
+        interpolated_3d_data = {
+            variable: lerp(
+                fractional_time_3d,
+                getattr(data_prev, variable),
+                getattr(data_next, variable),
+            )
+            for variable in (
+                "temperature",
+                "specific_humidity",
+                "height",
+                "liquid_content",
+            )
+        }
+        interpolated_2d_data = {
+            variable: lerp(
+                fractional_time,
+                getattr(data_prev, variable),
+                getattr(data_next, variable),
+            )
+            for variable in (
+                "surface_pressure",
+                "surface_temperature",
+                "surface_dewpoint",
+                "surface_height",
+                "columnar_water_vapor",
+                "columnar_cloud_liquid",
+            )
+        }
 
-        surface_pressure[0, ~valid_data] = np.nan
-        temperature[0, ~valid_data] = np.nan
-        specific_humidity[0, ~valid_data] = np.nan
-        height[0, ~valid_data] = np.nan
-        liquid_content[0, ~valid_data] = np.nan
-        surface_pressure[0, ~valid_data] = np.nan
-        surface_temperature[0, ~valid_data] = np.nan
-        surface_dewpoint[0, ~valid_data] = np.nan
-        surface_height[0, ~valid_data] = np.nan
-        columnar_water_vapor[0, ~valid_data] = np.nan
-        columnar_cloud_liquid[0, ~valid_data] = np.nan
+        for data in interpolated_3d_data.values():
+            data[0, ~valid_data] = np.nan
+        for data in interpolated_2d_data.values():
+            data[0, ~valid_data] = np.nan
 
         return Era5DailyData(
             data_prev.levels,
             data_prev.lats,
             data_prev.lons,
             time.mean(),
-            temperature,
-            specific_humidity,
-            height,
-            liquid_content,
-            surface_pressure,
-            surface_temperature,
-            surface_dewpoint,
-            surface_height,
-            columnar_water_vapor,
-            columnar_cloud_liquid,
+            interpolated_3d_data["temperature"],
+            interpolated_3d_data["specific_humidity"],
+            interpolated_3d_data["height"],
+            interpolated_3d_data["liquid_content"],
+            interpolated_2d_data["surface_pressure"],
+            interpolated_2d_data["surface_temperature"],
+            interpolated_2d_data["surface_dewpoint"],
+            interpolated_2d_data["surface_height"],
+            interpolated_2d_data["columnar_water_vapor"],
+            interpolated_2d_data["columnar_cloud_liquid"],
         )
 
 
