@@ -150,21 +150,26 @@ if __name__ == "__main__":
     import sys
 
     overwrite = False
-    year_range = range(2013, 2022)
+    year_range = range(2012, 2013)
+    month_range = range(1, 13)
     for n, arg in enumerate(sys.argv):
         if arg == "--year":
             year_to_do = int(sys.argv[n + 1])
+            year_range = range(year_to_do, year_to_do + 1)
+        if arg == "--month":
+            month_to_do = int(sys.argv[n + 1])
+            month_range = range(month_to_do, month_to_do + 1)
         if arg == "--overwrite":
             overwrite = True
 
     channels = list(range(5, 13))
     satellite = "amsr2"
     if os.name == "nt":
-        dataroot = Path("L:/access/amsr2_out")
+        dataroot = Path("L:/access/amsr2_out_test")
     elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out")
+        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out_test")
     for year in year_range:
-        for month in range(1, 13):
+        for month in month_range:
             days_in_month = calendar.monthrange(year, month)[1]
             for day in range(1, days_in_month + 1):
                 make_daily_ACCESS_tb_file(

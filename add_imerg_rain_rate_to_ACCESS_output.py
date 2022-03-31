@@ -49,7 +49,8 @@ def add_imerg_rain_rate_to_ACCESS_output(
     # Downloding all IMERG files for the day
     try:
         imerg_half_hourly_request(
-            date=current_day, target_path=dataroot / "_temp",
+            date=current_day,
+            target_path=dataroot / "_temp",
         )
 
     except Exception as e:
@@ -113,5 +114,7 @@ if __name__ == "__main__":
             for day in range(1, calendar.monthrange(year, month)[1] + 1):
                 date = datetime.date(year, month, day)
                 add_imerg_rain_rate_to_ACCESS_output(
-                    current_day=date, satellite=satellite, dataroot=dataroot,
+                    current_day=date,
+                    satellite=satellite,
+                    dataroot=dataroot,
                 )
