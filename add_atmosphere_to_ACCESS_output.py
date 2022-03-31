@@ -7,20 +7,21 @@ import argparse
 import os
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Sequence, Dict
+from typing import Dict, Sequence
+
+import numpy as np
+from access_atmosphere import rtm
+from access_atmosphere.download import Era5Downloader
+from access_atmosphere.era5 import Era5DailyData, read_era5_data
+from netCDF4 import Dataset
+from numpy.typing import NDArray
+
+from access_io.access_output import get_access_output_filename
 
 # TODO: once Python 3.9 is the minimum supported version, remove the above
 # imports from typing and switch to: "from collections.abc import Sequence" and
 # use dict[] instead of Dict[]
 
-import numpy as np
-from numpy.typing import NDArray
-from access_atmosphere import rtm
-from access_atmosphere.download import Era5Downloader
-from access_atmosphere.era5 import Era5DailyData, read_era5_data
-from netCDF4 import Dataset
-
-from access_io.access_output import get_access_output_filename
 
 # Reference frequencies (in GHz) to use
 REF_FREQ: NDArray[np.float32] = np.array(
