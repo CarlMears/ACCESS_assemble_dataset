@@ -75,7 +75,11 @@ def append_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude", "hours",),
+                (
+                    "latitude",
+                    "longitude",
+                    "hours",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -185,7 +189,10 @@ def append_const_var_to_daily_tb_netcdf(
             v = root_grp.createVariable(
                 var_name,
                 "f4",
-                ("latitude", "longitude",),
+                (
+                    "latitude",
+                    "longitude",
+                ),
                 zlib=True,
                 fill_value=v_fill,
             )
@@ -234,7 +241,10 @@ def append_lf_daily_tb_netcdf(
         lf = root_grp.createVariable(
             "land_fraction",
             "f4",
-            ("latitude", "longitude",),
+            (
+                "latitude",
+                "longitude",
+            ),
             zlib=True,
             fill_value=lf_fill,
         )
@@ -345,16 +355,25 @@ def write_daily_tb_netcdf(
         channels = root_grp.createVariable("channels", "i4", ("channels",))
 
         time = root_grp.createVariable(
-            "second_since_midnight",
-            "i4",
-            ("latitude", "longitude", "hours",),
+            "time",
+            "i8",
+            (
+                "latitude",
+                "longitude",
+                "hours",
+            ),
             zlib=True,
             fill_value=-999999,
         )
         tbs = root_grp.createVariable(
             "brightness_temperature",
             "f4",
-            ("latitude", "longitude", "hours", "channels",),
+            (
+                "latitude",
+                "longitude",
+                "hours",
+                "channels",
+            ),
             zlib=True,
             fill_value=tb_fill,
             least_significant_digit=2,
@@ -370,18 +389,24 @@ def write_daily_tb_netcdf(
         longitude.units = "degrees_east"
         longitude.valid_range = (0.0, 360.0)
 
-        hours.standard_name = "hours_since_midnight"
-        hours.units = "hours"
+        hours_units = f"hours since {date.isoformat()} 00:00:00.0"
+        hours.standard_name = "time"
+        hours.units = hours_units
         hours.valid_min = 0
         hours.valid_max = 23
 
+        channels.standard_name = "channel"
+        channels.long_name = f"{satellite} channel index"
+        channel_names = ", ".join(AVAILABLE_CHANNELS[1:-2])
+        channels.channel_names = channel_names
+
         # Each day's file is offset by a half-hour into the previous day
-        DAILY_OFFSET = datetime.timedelta(minutes=30)
-        time.standard_name = "seconds_since_midnight"
-        time.long_name = "seconds_since_midnight"
+        time.standard_name = "time"
+        time.long_name = "time of satellite observation"
+        time.units = "seconds since 1900-01-01 00:00:00.0"
         time.missing = -999999
-        time.valid_min = -DAILY_OFFSET.total_seconds()
-        time.valid_max = (datetime.timedelta(days=1) - DAILY_OFFSET).total_seconds()
+        time.valid_min = 0
+        time.valid_max = (200 * 366 * 24 * 3600,)
         time.coordinates = "latitude longitude"
 
         tbs.standard_name = "brightness_temperature"
@@ -390,7 +415,6 @@ def write_daily_tb_netcdf(
         tbs.valid_min = 50.0
         tbs.valid_max = 350.0
         tbs.long_name = f"resampled {satellite} brightness temperature on lat/lon grid"
-        channel_names = ", ".join(AVAILABLE_CHANNELS[1:-2])
         tbs.channel_names = channel_names
         tbs.coordinates = "latitude longitude"
 
@@ -399,10 +423,13 @@ def write_daily_tb_netcdf(
         hours[:] = np.arange(NUM_HOURS)
         channels[:] = np.arange(NUM_CHANNELS) + 1
 
-        time_to_put = np.nan_to_num(
-            time_array_by_hour, nan=-999998.99, posinf=-999998.99, neginf=-999998.99
+        time_to_put = (
+            time_array_by_hour + (date - datetime.date(1900, 1, 1)).total_seconds()
         )
-        time_to_put = np.floor(time_to_put).astype(np.int32)
+        time_to_put = np.nan_to_num(
+            time_to_put, nan=-999998.99, posinf=-999998.99, neginf=-999998.99
+        )
+        time_to_put = np.floor(time_to_put).astype(np.int64)
         time[:, :, :] = time_to_put
 
         tbs_to_put = np.nan_to_num(
