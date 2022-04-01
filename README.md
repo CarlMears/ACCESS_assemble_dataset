@@ -5,8 +5,57 @@ the ACCESS dataset.
 
 ## Instructions
 
-### Surface temperature
+The first step is to assemble a daily brightness temperature file.  The other steps,
+which append ancillary data to the daily file, can be performed in any order.  Because
+as writing to netCDF files is done using file locking, the data append jobs can be run 
+simultaneously.
 
+### Assemble measured brightness temperatures
+
+The `make_daily_ACCESS_files.py` script assembles the daily files from orbit files that contain the 
+resampled circular footprints. Each file contains 24 hour-long slices of data arranged in lat/lon maps
+on a 0.25 degree by 0.25 degree grid.  This results in a lot of missing data - the effect of this on file 
+size if minimized by writing using slightly lossy built-in netCDF4 compression.
+
+**Positional Arguments:**
+- access_root: Path to location of daily ACCESS files
+- temp_root: Path to location to store temporary files
+- start_date: first day to process, in YYYY-MM-DD format
+- end_date: last day to process, in YYYY-MM-DD format
+- sensor: name of the sensor - currently only 'amsr2' is supported
+
+**Optional Arguments:**
+- --overwrite: if set, process and write file even if a file for this day already exists
+- --plot_map: if set, plot an example map as a debugging feature
+- --verbose: if set, print more verbose informational messages
+
+**Example Command:**
+```
+python make_daily_ACCESS_files.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 --overwrite --verbose
+```
+
+### Surface temperature
+The `make_atmosphere_to_ACCESS_output.py` script adds surface skin temperature from 
+ERA5 to the daily file.
+If not available locally, the data are automatically downloaded from ECMWF using
+an active account on the [Climate Data Store](https://cds.climate.copernicus.eu/). 
+The CDS UID and API key are required inputs to the script, either as environment 
+variables or as arguments.
+
+**Positional Arguments:**
+- access_root: Path to location of daily ACCESS files
+- temp_root: Path to location to store temporary files
+- start_date: first day to process, in YYYY-MM-DD format
+- end_date: last day to process, in YYYY-MM-DD format
+- sensor: name of the sensor - currently only 'amsr2' is supported
+
+**Optional Arguments:**
+- --verbose: if set, print more verbose informational messages
+
+**Example Command:**
+```
+python make_atmosphere_to_ACCESS_output L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 --verbose
+```
 ### Land fraction
 
 ### Atmosphere

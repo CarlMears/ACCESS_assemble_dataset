@@ -7,36 +7,63 @@
 
 
         {
+              "name": "Python: Current File no Args",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [],
+        },
+
+        {
             "name": "make_daily_ACCESS_files.py",
             "type": "python",
             "request": "launch",
             "program": "make_daily_ACCESS_files.py",
-            "args":["--year", "2012",
-                    "--month", "7"],
+            "args":["L:/access/amsr2_out_test",
+                    "L:/access/_temp",
+                    "2012-08-01",
+                    "2012-08-03",
+                    "amsr2",],
             "console": "integratedTerminal"
-        }
+        },
 
+        {
+            "name": "Add Land Fraction",
+            "type": "python",
+            "request": "launch",
+            "program": "add_land_fraction_to_ACCESS_output.py",
+            "args":["L:/ACCESS/amsr2_out_test",
+                    "L:/access/_temp",
+                    "2012-07-05",
+                    "2012-08-03",
+                    "amsr2",
+                    "modis"],
+            "console": "integratedTerminal"
+        },
         {
             "name": "Add ERA5 surface temperatures",
             "type": "python",
             "request": "launch",
             "program": "add_ERA5_surface_temperature_to_ACCESS_output.py",
-            "args":["L:/ACCESS",
+            "args":["L:/ACCESS/amsr2_out_test",
                     "L:/access/_temp",
-                    "2013-01-01",
-                    "2013-01-31",
-                    "amsr2"],
+                    "2012-07-05",
+                    "2012-08-03",
+                    "amsr2",],
             "console": "integratedTerminal"
-        }
+        },
 
         {
-            "name": "Fix Time Variable",
+            "name": "Add IMERG rainrate",
             "type": "python",
             "request": "launch",
-            "program": "fix_time_variables_ACCESS_output.py",
-            "args":["L:/ACCESS",
-                    "2012-07-03",
-                    "2012-07-03",
+            "program": "add_imerg_rain_rate_to_ACCESS_output.py",
+            "args":["L:/ACCESS/amsr2_out_test",
+                    "L:/ACCESS/_temp",
+                    "2012-08-01",
+                    "2012-08-03",
                     "amsr2"],
             "console": "integratedTerminal"
         }

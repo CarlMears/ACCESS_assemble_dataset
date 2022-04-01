@@ -15,23 +15,41 @@ elif os.name == "posix":
 
 IMPLEMENTED_SATELLITES = ["amsr2"]
 
-AVAILABLE_CHANNELS = [
-    "time",
-    "6V",
-    "6H",
-    "7V",
-    "7H",
-    "11V",
-    "11H",
-    "19V",
-    "19H",
-    "24V",
-    "24H",
-    "37V",
-    "37H",
-    "89V",
-    "89H",
-]
+USED_CHANNELS = {
+    "amsr2": [
+        "6V",
+        "6H",
+        "7V",
+        "7H",
+        "11V",
+        "11H",
+        "19V",
+        "19H",
+        "24V",
+        "24H",
+        "37V",
+        "37H",
+    ]
+}
+AVAILABLE_CHANNELS = {
+    "asmr2": [
+        "time",
+        "6V",
+        "6H",
+        "7V",
+        "7H",
+        "11V",
+        "11H",
+        "19V",
+        "19H",
+        "24V",
+        "24H",
+        "37V",
+        "37H",
+        "89V",
+        "89H",
+    ]
+}
 
 NUM_CHANNELS = 14  # all possible AMSR2 channels
 NUM_LATS = 721
@@ -389,15 +407,14 @@ def write_daily_tb_netcdf(
         longitude.units = "degrees_east"
         longitude.valid_range = (0.0, 360.0)
 
-        hours_units = f"hours since {date.isoformat()} 00:00:00.0"
         hours.standard_name = "time"
-        hours.units = hours_units
+        hours.units = f"hours since {date.isoformat()} 00:00:00.0"
         hours.valid_min = 0
         hours.valid_max = 23
 
         channels.standard_name = "channel"
         channels.long_name = f"{satellite} channel index"
-        channel_names = ", ".join(AVAILABLE_CHANNELS[1:-2])
+        channel_names = ", ".join(USED_CHANNELS["amsr2"])
         channels.channel_names = channel_names
 
         # Each day's file is offset by a half-hour into the previous day
@@ -405,8 +422,8 @@ def write_daily_tb_netcdf(
         time.long_name = "time of satellite observation"
         time.units = "seconds since 1900-01-01 00:00:00.0"
         time.missing = -999999
-        time.valid_min = 0
-        time.valid_max = (200 * 366 * 24 * 3600,)
+        time.valid_range = 0
+        time.valid_max = 200 * 366 * 24 * 3600
         time.coordinates = "latitude longitude"
 
         tbs.standard_name = "brightness_temperature"
