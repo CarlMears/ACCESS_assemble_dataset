@@ -121,13 +121,13 @@ class DailyAccessData:
             lon = f["longitude"][:]
             hours = f["hours"][:]
             # Dimensioned as (lat, lon, hours)
-            time = f["second_since_midnight"][...]
+            time = f["time"][...]
 
         # The mask for the time data will be used as the mask for valid data. In
         # other words, only non-masked time values will be used to compute the
         # RTM.
         self.valid_data = ~np.ma.getmaskarray(time)
-        self.time: NDArray[np.int32] = np.ma.getdata(time)
+        self.time: NDArray[np.int64] = np.ma.getdata(time)
 
         self.reference_day = current_day
 
@@ -170,10 +170,9 @@ class DailyAccessData:
 
         valid_data = self.valid_data[:, :, hour]
 
-        # Convert measurement times to the ERA5 epoch: hours since 1900-01-01
-        ERA5_EPOCH = date(1900, 1, 1)
-        EPOCH_SHIFT = (self.reference_day - ERA5_EPOCH) / timedelta(hours=1)
-        time = self.time[:, :, hour].astype(np.float32) / (60 * 60) + EPOCH_SHIFT
+        # Convert measurement times to the ERA5 epoch: from seconds since
+        # 1900-01-01 to hours since 1900-01-01.
+        time = self.time[:, :, hour].astype(np.float32) / (60 * 60)
         time[~valid_data] = np.nan
 
         # Interpolate all the content. It's actually a little awkward to use the
