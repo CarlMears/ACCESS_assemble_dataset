@@ -55,7 +55,7 @@ def read_resampled_tbs(
     dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
 ) -> Tuple[Any, Path]:
-    if satellite not in IMPLEMENTED_SATELLITES:
+    if satellite.lower() not in IMPLEMENTED_SATELLITES:
         raise ValueError(f"Satellite {satellite} is not implemented")
     if isinstance(channel, int):
         if (channel < 1) or (channel > 14):

@@ -43,8 +43,9 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                     # we expect a key error if variable is needed
                     pass
             try:
-                times = root_grp.variables["second_since_midnight"][:, :, :].filled(
-                    fill_value=-999
+                times = root_grp.variables["time"][:, :, :]
+                times = (
+                    times - (current_day - datetime.date(1900, 1, 1)).total_seconds()
                 )
             except KeyError:
                 raise ValueError(f'Error finding "second_since_midnight" in {filename}')
@@ -163,6 +164,9 @@ if __name__ == "__main__":
         help="Last Day to process, as YYYY-MM-DD",
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument(
+        "--verbose", help="enable more verbose screen output", action="store_true"
+    )
 
     args = parser.parse_args()
 
@@ -180,22 +184,13 @@ if __name__ == "__main__":
         # need this because var name for the ERA5 request is not that same as
         # the variable name in the nc file that is provided/downloaded
         variable = ("Skin temperature", "skt")
-
-        verbose = True
-        if os.name == "nt":
-            dataroot = Path(f"{access_root}/{satellite}_out")
-            temproot = Path(f"{temp_root}/era5")
-        elif os.name == "posix":
-            dataroot = Path(f"{access_root}/{satellite}_out")
-            temproot = Path(f"{temp_root}/era5")
-
         add_ERA5_single_level_variable_to_ACCESS_output(
             current_day=date,
             variable=variable,
             satellite=satellite,
-            dataroot=dataroot,
-            temproot=temproot,
-            verbose=True,
+            dataroot=access_root,
+            temproot=temp_root,
+            verbose=args.verbose,
         )
 
         date += datetime.timedelta(days=1)

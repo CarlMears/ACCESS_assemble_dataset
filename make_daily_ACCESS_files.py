@@ -1,8 +1,6 @@
-import os
 from datetime import date
 from pathlib import Path
 from typing import Collection, List
-import calendar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +8,7 @@ import numpy as np
 # must be installed from rss_plotting package
 from rss_plotting.global_map import plot_global_map
 
+# these packages are located in folders in the local path
 from access_io.access_output import write_daily_tb_netcdf, get_access_output_filename
 from resampled_tbs.read_resampled_orbit import read_resampled_tbs
 from util.numpy_date_utils import convert_to_sec_in_day
@@ -48,7 +47,7 @@ def make_daily_ACCESS_tb_file(
     plot_example_map: bool = True,
     overwrite: bool = False,
 ) -> List[Path]:
-    if satellite == "amsr2":
+    if satellite.lower() == "amsr2":
         orbit_times = read_amsr2_orbit_times()
     else:
         raise ValueError(f"Orbit Times for {satellite} not implemented yet")
@@ -147,39 +146,60 @@ def make_daily_ACCESS_tb_file(
 
 if __name__ == "__main__":
 
-    import sys
+    import argparse
+    import datetime
 
-    overwrite = False
-    year_range = range(2012, 2013)
-    month_range = range(1, 13)
-    for n, arg in enumerate(sys.argv):
-        if arg == "--year":
-            year_to_do = int(sys.argv[n + 1])
-            year_range = range(year_to_do, year_to_do + 1)
-        if arg == "--month":
-            month_to_do = int(sys.argv[n + 1])
-            month_range = range(month_to_do, month_to_do + 1)
-        if arg == "--overwrite":
-            overwrite = True
+    parser = argparse.ArgumentParser(
+        description=("Arrange resampled TBs into an ACCESS output file. ")
+    )
+    parser.add_argument(
+        "access_root", type=Path, help="Root directory to ACCESS project"
+    )
+    parser.add_argument(
+        "temp_root", type=Path, help="Root directory store temporary files"
+    )
+    parser.add_argument(
+        "start_date",
+        type=datetime.date.fromisoformat,
+        help="First Day to process, as YYYY-MM-DD",
+    )
+    parser.add_argument(
+        "end_date",
+        type=datetime.date.fromisoformat,
+        help="Last Day to process, as YYYY-MM-DD",
+    )
+    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument(
+        "--overwrite", help="force overwrite if file exists", action="store_true"
+    )
+    parser.add_argument("--plot_map", help="plot an example map", action="store_true")
+    parser.add_argument(
+        "--verbose", help="enable more verbose screen output", action="store_true"
+    )
 
+    args = parser.parse_args()
+
+    access_root: Path = args.access_root
+    temp_root: Path = args.temp_root
+
+    START_DAY = args.start_date
+    END_DAY = args.end_date
+    satellite = args.sensor.upper()
     channels = list(range(5, 13))
-    satellite = "amsr2"
-    if os.name == "nt":
-        dataroot = Path("L:/access/amsr2_out_test")
-    elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out_test")
-    for year in year_range:
-        for month in month_range:
-            days_in_month = calendar.monthrange(year, month)[1]
-            for day in range(1, days_in_month + 1):
-                make_daily_ACCESS_tb_file(
-                    current_day=date(year, month, day),
-                    satellite=satellite,
-                    dataroot=dataroot,
-                    channels=channels,
-                    verbose=False,
-                    plot_example_map=False,
-                    overwrite=overwrite,
-                )
 
-        plt.show()
+    day_to_do = START_DAY
+    while day_to_do <= END_DAY:
+        print(f"{day_to_do}")
+        make_daily_ACCESS_tb_file(
+            current_day=day_to_do,
+            satellite=satellite,
+            dataroot=access_root,
+            channels=channels,
+            verbose=args.verbose,
+            plot_example_map=args.plot_map,
+            overwrite=args.overwrite,
+        )
+        if args.plot_map:
+            plt.show()
+
+        day_to_do += datetime.timedelta(days=1)

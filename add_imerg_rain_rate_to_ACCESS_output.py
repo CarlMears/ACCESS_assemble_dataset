@@ -1,7 +1,6 @@
 """Add IMERG rain rates to an existing daily ACCESS data file."""
 
 import datetime
-import os
 from pathlib import Path
 
 import numpy as np
@@ -20,6 +19,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
     current_day: datetime.date,
     satellite: str,
     dataroot: Path,
+    temproot: Path,
     force_overwrite: bool = False,
 ) -> None:
 
@@ -37,11 +37,12 @@ def add_imerg_rain_rate_to_ACCESS_output(
                     pass
 
             try:
-                times = root_grp.variables["second_since_midnight"][:, :, :].filled(
-                    fill_value=-999
+                times = root_grp.variables["time"][:, :, :]
+                times = (
+                    times - (current_day - datetime.date(1900, 1, 1)).total_seconds()
                 )
             except KeyError:
-                raise ValueError(f'Error finding "second_since_midnight" in {filename}')
+                raise ValueError(f'Error finding "time" in {filename}')
     except FileNotFoundError:
         print(f"File: {filename} not found, skipping")
         return
@@ -50,7 +51,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
     try:
         imerg_half_hourly_request(
             date=current_day,
-            target_path=dataroot / "_temp",
+            target_path=temproot / "imerg",
         )
 
     except Exception as e:
@@ -64,7 +65,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
         np.roll(times, 720, axis=1),
         hourly_intervals,
         date,
-        target_path=dataroot / "_temp",
+        target_path=temproot / "imerg",
     )
     rr_for_access = np.roll(rr_for_access, 720, axis=1)
     # write the results to the existing output file
@@ -98,23 +99,49 @@ def add_imerg_rain_rate_to_ACCESS_output(
 
 if __name__ == "__main__":
 
-    import calendar
+    import argparse
 
-    satellite = "AMSR2"
-    verbose = True
-    if os.name == "nt":
-        dataroot = Path("L:/access/amsr2_out")
-    elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Interpolate and append IMERG rainfall data to ACCESS output file. "
+            "IMERG data is downloaded if required."
+        )
+    )
+    parser.add_argument(
+        "access_root", type=Path, help="Root directory to ACCESS project"
+    )
+    parser.add_argument(
+        "temp_root", type=Path, help="Root directory store temporary files"
+    )
+    parser.add_argument(
+        "start_date",
+        type=datetime.date.fromisoformat,
+        help="First Day to process, as YYYY-MM-DD",
+    )
+    parser.add_argument(
+        "end_date",
+        type=datetime.date.fromisoformat,
+        help="Last Day to process, as YYYY-MM-DD",
+    )
+    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
 
-    for year in range(2012, 2013):
-        for month in range(1, 13):
-            if (year == 2012) and (month < 7):
-                continue
-            for day in range(1, calendar.monthrange(year, month)[1] + 1):
-                date = datetime.date(year, month, day)
-                add_imerg_rain_rate_to_ACCESS_output(
-                    current_day=date,
-                    satellite=satellite,
-                    dataroot=dataroot,
-                )
+    args = parser.parse_args()
+
+    access_root: Path = args.access_root
+    temp_root: Path = args.temp_root
+
+    START_DAY = args.start_date
+    END_DAY = args.end_date
+    satellite = args.sensor.upper()
+
+    date = START_DAY
+    while date <= END_DAY:
+        print(f"{date}")
+
+        add_imerg_rain_rate_to_ACCESS_output(
+            current_day=date,
+            satellite=satellite,
+            dataroot=access_root,
+            temproot=temp_root,
+        )
+        date += datetime.timedelta(days=1)
