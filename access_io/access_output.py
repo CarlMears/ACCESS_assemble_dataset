@@ -288,7 +288,7 @@ def write_daily_tb_netcdf(
 ) -> None:
     tb_fill = -999.0
     filename = get_access_output_filename(date, satellite, dataroot)
-    os.makedirs(filename.parent, exist_ok=True)
+    filename.parent.mkdir(parents=True, exist_ok=True)
 
     lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
     lons = np.arange(0, NUM_LONS) * 0.25

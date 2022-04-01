@@ -17,7 +17,6 @@ Written by AManaster
 import datetime
 import time
 from functools import lru_cache
-import os
 from pathlib import Path
 from typing import Any
 
@@ -216,8 +215,7 @@ def try_download(
 
 
 def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Path]:
-
-    os.makedirs(target_path, exist_ok=True)
+    target_path.mkdir(parents=True, exist_ok=True)
     urls = query_one_day_imerg(date)
 
     files_in_day = []

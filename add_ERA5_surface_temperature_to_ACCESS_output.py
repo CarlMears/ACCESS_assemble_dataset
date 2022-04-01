@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import os
 from pathlib import Path
 from typing import Tuple
 
@@ -56,7 +55,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     # of the next day.
     next_day = current_day + datetime.timedelta(hours=24)
     # try:
-    os.makedirs(temproot, exist_ok=True)
+    temproot.mkdir(parents=True, exist_ok=True)
     file1 = era5_hourly_single_level_request(
         date=current_day,
         variable=variable[0],
