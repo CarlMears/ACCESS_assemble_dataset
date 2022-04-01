@@ -35,7 +35,7 @@ python make_daily_ACCESS_files.py L:\access\amsr2_out_test L:\access\_temp 2012-
 ```
 
 ### Surface temperature
-The `make_atmosphere_to_ACCESS_output.py` script adds surface skin temperature from 
+The `add_ERA5_surface_temperature_to_ACCESS_output.py` script adds surface skin temperature from 
 ERA5 to the daily file.
 If not available locally, the data are automatically downloaded from ECMWF using
 an active account on the [Climate Data Store](https://cds.climate.copernicus.eu/). 
@@ -54,9 +54,28 @@ variables or as arguments.
 
 **Example Command:**
 ```
-python make_atmosphere_to_ACCESS_output L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 --verbose
+python make_atmosphere_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 --verbose
 ```
 ### Land fraction
+The `add_land_fraction_to_ACCESS_output.py` script adds a land fraction layer to the daily netCDF4 file.  The preferred dataset,
+"modis" is mostly from the MODIS land/water dataset, with a few areas filled in using NSIDC data.
+
+**Positional Arguments:**
+- access_root: Path to location of daily ACCESS files
+- temp_root: Path to location to store temporary files
+- start_date: first day to process, in YYYY-MM-DD format
+- end_date: last day to process, in YYYY-MM-DD format
+- sensor: name of the sensor - currently only 'amsr2' is supported
+- version: chooses the version of the land fraction dataset to use.  Currently preferred option is "modis"
+
+**Optional Arguments:**
+- --overwrite: if set, process and write layer even if it already exists in this file.
+- --verbose: if set, print more verbose informational messages
+
+**Example Command:**
+```
+python add_land_fraction_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 modis --verbose --overwrite
+```
 
 ### Atmosphere
 
