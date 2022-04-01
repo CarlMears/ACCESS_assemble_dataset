@@ -172,12 +172,12 @@ if __name__ == "__main__":
     access_root: Path = args.access_root
     temp_root: Path = args.temp_root
 
-    START_DAY = args.start_date
-    END_DAY = args.end_date
-    satellite = args.sensor.upper()
+    start_day: datetime.date = args.start_date
+    end_day: datetime.date = args.end_date
+    satellite: str = args.sensor.upper()
 
-    date = START_DAY
-    while date <= END_DAY:
+    date = start_day
+    while date <= end_day:
         print(f"{date}")
 
         # need this because var name for the ERA5 request is not that same as
