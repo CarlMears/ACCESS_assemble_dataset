@@ -29,16 +29,16 @@ on a 0.25 degree by 0.25 degree grid.  This results in a lot of missing data - t
 size if minimized by writing using slightly lossy built-in netCDF4 compression.
 
 **Positional Arguments:**
-- access_root: Path to location of daily ACCESS files
-- temp_root: Path to location to store temporary files
-- start_date: first day to process, in YYYY-MM-DD format
-- end_date: last day to process, in YYYY-MM-DD format
-- sensor: name of the sensor - currently only 'amsr2' is supported
+- `access_root`: Path to location of daily ACCESS files
+- `temp_root`: Path to location to store temporary files
+- `start_date`: first day to process, in YYYY-MM-DD format
+- `end_date`: last day to process, in YYYY-MM-DD format
+- `sensor`: name of the sensor - currently only 'amsr2' is supported
 
 **Optional Arguments:**
-- --overwrite: if set, process and write file even if a file for this day already exists
-- --plot_map: if set, plot an example map as a debugging feature
-- --verbose: if set, print more verbose informational messages
+- `--overwrite`: if set, process and write file even if a file for this day already exists
+- `--plot_map`: if set, plot an example map as a debugging feature
+- `--verbose`: if set, print more verbose informational messages
 
 **Example Command:**
 ```
@@ -54,14 +54,14 @@ The CDS UID and API key are required inputs to the script, either as environment
 variables or as arguments.
 
 **Positional Arguments:**
-- access_root: Path to location of daily ACCESS files
-- temp_root: Path to location to store temporary files
-- start_date: first day to process, in YYYY-MM-DD format
-- end_date: last day to process, in YYYY-MM-DD format
-- sensor: name of the sensor - currently only 'amsr2' is supported
+- `access_root`: Path to location of daily ACCESS files
+- `temp_root`: Path to location to store temporary files
+- `start_date`: first day to process, in YYYY-MM-DD format
+- `end_date`: last day to process, in YYYY-MM-DD format
+- `sensor`: name of the sensor - currently only 'amsr2' is supported
 
 **Optional Arguments:**
-- --verbose: if set, print more verbose informational messages
+- `--verbose`: if set, print more verbose informational messages
 
 **Example Command:**
 ```
