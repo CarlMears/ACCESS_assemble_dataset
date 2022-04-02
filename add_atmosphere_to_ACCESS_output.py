@@ -5,7 +5,7 @@ ERA5 data is downloaded if missing.
 
 import argparse
 import os
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, Sequence
 
@@ -175,29 +175,28 @@ class DailyAccessData:
         time = self.time[:, :, hour].astype(np.float32) / (60 * 60)
         time[~valid_data] = np.nan
 
-        # TODO: DEBUG
-        print(f"Hour: {hour}; {time[valid_data].min()=} {time[valid_data].max()=}")
-        EPOCH = datetime(1900, 1, 1)
-        print(
-            f"{EPOCH + timedelta(hours=time[valid_data].min().item())} "
-            f"{EPOCH + timedelta(hours=time[valid_data].max().item())}"
-        )
-
         # Interpolate all the content. It's actually a little awkward to use the
         # numpy or scipy interpolators for this, it's easier to just do it manually.
-        #
-        # The "fractional time" varies from 0 to 1.
         fractional_time = (time - data_prev.time) / (data_next.time - data_prev.time)
         fractional_time[~valid_data] = 0
+
+        # The "fractional time" should vary from 0 to 1, but if any of the time
+        # data are outside the ERA5 min/max values for this hour bin, it will go
+        # outside that range. If this happens, it's probably a problem in the
+        # file data to fix. At any rate, check for those out-of-bounds
+        # conditions and warn about it, but then clamp the data so it stays
+        # between 0 and 1 so that interpolation will work.
+        too_low = fractional_time < 0
+        too_high = fractional_time > 1
+        if too_low.any() or too_high.any():
+            out_of_range = too_low.sum() + too_high.sum()
+            print(
+                f"WARNING: clamping {out_of_range} fractional times "
+                "to between 0 and 1"
+            )
+            np.clip(fractional_time, 0, 1, out=fractional_time)
+
         fractional_time_3d = fractional_time[..., np.newaxis]
-
-        # TODO: DEBUG
-        return data_prev
-
-        if np.any(fractional_time[valid_data] < 0) or np.any(
-            fractional_time[valid_data] > 1
-        ):
-            raise Exception("Unexpected fractional time")
 
         def lerp(
             t: NDArray[np.float32], x0: NDArray[np.float32], x1: NDArray[np.float32]
