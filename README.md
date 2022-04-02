@@ -96,10 +96,7 @@ pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/project
 
 (The `--trusted-host` permits pip to use HTTP instead of HTTPS and is required until we get a TLS certificate for `gitlab.remss.com`...)
 
-To install the other required packages:
-```
-pip install numpy netCDF4
-```
+Required dependencies such as `numpy` and `netCDF4` should be automatically installed when installing `access-atmosphere`.
 
 As an example, for updating the AMSR2 file on 2012-07-11:
 
@@ -107,7 +104,7 @@ As an example, for updating the AMSR2 file on 2012-07-11:
 python add_atmosphere_to_ACCESS_output.py L:/access 2012-07-11 amsr2 --user $CDS_UID --key $CDS_API_KEY
 ```
 
-The CDS credentials can also be given as environment variables:
+Instead of command-line arguments, the CDS credentials can instead be given as environment variables:
 
 ```bash
 export CDS_UID=XXX
