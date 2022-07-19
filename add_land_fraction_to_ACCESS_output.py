@@ -2,6 +2,7 @@ import argparse
 import datetime
 import numpy as np
 from pathlib import Path
+import subprocess
 import xarray as xr
 
 from access_io.access_output import append_const_var_to_daily_tb_netcdf
@@ -12,6 +13,8 @@ def add_land_fraction_to_ACCESS_output(
     date: datetime.date,
     satellite: str,
     dataroot: Path,
+    script_name: str,
+    commit: str,
     overwrite: bool,
     version: str = "modis",
 ) -> None:
@@ -45,22 +48,27 @@ def add_land_fraction_to_ACCESS_output(
     else:
         raise KeyError(f"Land version {version} not supported")
 
-    append_const_var_to_daily_tb_netcdf(
-        date=date,
-        satellite=satellite,
-        var=land_fraction_np,
-        var_name=var_name,
-        standard_name="land_area_fraction",
-        long_name="land fraction averaged over gaussian footprint",
-        valid_min=0.0,
-        valid_max=1.0,
-        units="dimensionless",
-        v_fill=-999.0,
-        dataroot=dataroot,
-        overwrite=True,
-        verbose=True,
-        lock_stale_time=30.0,
-    )
+    try:
+        append_const_var_to_daily_tb_netcdf(
+            date=date,
+            satellite=satellite,
+            var=land_fraction_np,
+            var_name=var_name,
+            standard_name="land_area_fraction",
+            long_name="land fraction averaged over gaussian footprint",
+            valid_min=0.0,
+            valid_max=1.0,
+            units="dimensionless",
+            v_fill=-999.0,
+            dataroot=dataroot,
+            overwrite=True,
+            verbose=True,
+            script_name = script_name,
+            commit=commit,
+            lock_stale_time=30.0,
+        )
+    except FileNotFoundError:
+        print('File Not Found for {date} - skipping day')
 
 
 if __name__ == "__main__":
@@ -100,6 +108,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    script_name = parser.prog
+    commit = str(subprocess.check_output(['git', 'rev-parse', 'HEAD']))
+
     access_root: Path = args.access_root
     temp_root: Path = args.temp_root
 
@@ -116,5 +127,7 @@ if __name__ == "__main__":
             version=args.version,
             dataroot=access_root,
             overwrite=args.overwrite,
+            script_name=script_name,
+            commit=commit
         )
         day_to_do += datetime.timedelta(days=1)

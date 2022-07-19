@@ -7,7 +7,7 @@
 
 
         {
-              "name": "Python: Current File no Args",
+            "name": "Python: Current File no Args",
             "type": "python",
             "request": "launch",
             "program": "${file}",
@@ -15,6 +15,7 @@
             "justMyCode": true,
             "args": [],
         },
+
 
         {
             "name": "make_daily_ACCESS_files.py",
@@ -36,8 +37,8 @@
             "program": "add_land_fraction_to_ACCESS_output.py",
             "args":["L:/ACCESS/amsr2_out_test",
                     "L:/access/_temp",
-                    "2012-07-05",
-                    "2012-08-03",
+                    "2012-08-04",
+                    "2012-08-05",
                     "amsr2",
                     "modis"],
             "console": "integratedTerminal"

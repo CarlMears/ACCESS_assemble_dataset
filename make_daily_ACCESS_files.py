@@ -9,7 +9,7 @@ import numpy as np
 from rss_plotting.global_map import plot_global_map
 
 # these packages are located in folders in the local path
-from access_io.access_output import write_daily_tb_netcdf, get_access_output_filename
+from access_io.access_output import write_daily_tb_netcdf, get_access_output_filename_daily_folder
 from resampled_tbs.read_resampled_orbit import read_resampled_tbs
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
@@ -52,7 +52,7 @@ def make_daily_ACCESS_tb_file(
     else:
         raise ValueError(f"Orbit Times for {satellite} not implemented yet")
 
-    filename = get_access_output_filename(current_day, satellite, dataroot)
+    filename = get_access_output_filename_daily_folder(current_day, satellite, dataroot, "resamp_tbs")
     if filename.is_file() and not overwrite:
         print(f"daily file for {current_day} exists... skipping")
         return []
@@ -140,7 +140,6 @@ def make_daily_ACCESS_tb_file(
             file_list=file_list,
             dataroot=dataroot,
         )
-
     return file_list
 
 
