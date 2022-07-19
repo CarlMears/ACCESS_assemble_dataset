@@ -63,12 +63,12 @@ def add_land_fraction_to_ACCESS_output(
             dataroot=dataroot,
             overwrite=True,
             verbose=True,
-            script_name = script_name,
+            script_name=script_name,
             commit=commit,
             lock_stale_time=30.0,
         )
     except FileNotFoundError:
-        print('File Not Found for {date} - skipping day')
+        print("File Not Found for {date} - skipping day")
 
 
 if __name__ == "__main__":
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     script_name = parser.prog
-    commit = str(subprocess.check_output(['git', 'rev-parse', 'HEAD']))
+    commit = str(subprocess.check_output(["git", "rev-parse", "HEAD"]))
 
     access_root: Path = args.access_root
     temp_root: Path = args.temp_root
@@ -128,6 +128,6 @@ if __name__ == "__main__":
             dataroot=access_root,
             overwrite=args.overwrite,
             script_name=script_name,
-            commit=commit
+            commit=commit,
         )
         day_to_do += datetime.timedelta(days=1)
