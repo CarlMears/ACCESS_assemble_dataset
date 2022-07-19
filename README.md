@@ -54,7 +54,7 @@ variables or as arguments.
 
 **Example Command:**
 ```
-python make_atmosphere_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 --verbose
+python add_ERA5_surface_temperature_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 --verbose
 ```
 ### Land fraction
 The `add_land_fraction_to_ACCESS_output.py` script adds a land fraction layer to the daily netCDF4 file.  The preferred dataset,
