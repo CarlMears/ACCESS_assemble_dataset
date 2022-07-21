@@ -56,6 +56,14 @@ NUM_LATS = 721
 NUM_LONS = 1440
 NUM_HOURS = 24
 
+def set_or_create_attr(var, attr_name, attr_value):
+    #seems like something like this should be part of the interface but I can not find it
+    if attr_name in var.ncattrs(): 
+        var.setncattr(attr_name, attr_value)
+        return
+    var.UnusedNameAttribute = attr_value
+    var.renameAttribute("UnusedNameAttribute", attr_name)
+    return
 
 def get_access_output_filename(
     date: datetime.date, satellite: str, dataroot: Path, var: str
@@ -701,3 +709,69 @@ def write_daily_tb_netcdf(
             tb_array_by_hour, nan=tb_fill, posinf=tb_fill, neginf=tb_fill
         ).astype(np.float32)
         tbs[:, :, :, :] = tbs_to_put
+
+
+
+def write_daily_ancillary_var_netcdf(
+    *,
+    date: datetime.date,
+    satellite: str,
+    anc_data: ArrayLike,
+    anc_name: str,
+    anc_attrs: dict,
+    dataroot: Path = ACCESS_ROOT,
+) -> None:
+
+
+    base_filename = get_access_output_filename_daily_folder(
+        date, satellite.lower(), dataroot, "resamp_tbs"
+    )
+    var_filename = get_access_output_filename_daily_folder(
+        date, satellite.lower(), dataroot, f'{anc_name}_temp'
+    )
+    var_filename_final = get_access_output_filename_daily_folder(
+        date, satellite.lower(), dataroot, anc_name
+    )
+
+    with LockedDataset(var_filename, "w", 60) as nc_out:
+        with LockedDataset(base_filename, "r", 60) as root_grp:
+            # Create the dimensions of the file
+            for name, dim in root_grp.dimensions.items():
+                if name in ["hours", "latitude", "longitude"]:
+                    nc_out.createDimension(name, len(dim) if not dim.isunlimited() else None)
+
+            # Copy the global attributes
+            nc_out.setncatts({a: root_grp.getncattr(a) for a in root_grp.ncattrs()})
+
+            for var_name in ["time", "hours", "longitude", "latitude"]:
+                # Create the time and dimension variables in the output file
+                var_in = root_grp[var_name]
+                nc_out.createVariable(var_name, var_in.dtype, var_in.dimensions, zlib=True)
+
+                # Copy the attributes
+                nc_out.variables[var_name].setncatts(
+                    {a: var_in.getncattr(a) for a in var_in.ncattrs()}
+                )
+
+                # Copy the time values
+                nc_out.variables[var_name][:] = root_grp.variables[var_name][:]
+
+            # make the rain rate variable with the same dimensions as the time variable in the base file
+            new_var = nc_out.createVariable(
+                anc_name, np.float32, nc_out.variables["time"].dimensions, zlib=True
+            )
+            for key in anc_attrs.keys():
+                val = anc_attrs[key]
+                set_or_create_attr(new_var, key, val)
+
+            new_var.coordinates = "latitude longitude"
+
+            new_var[:,:,:] = anc_data[:,:,:]
+
+    #everything written -- rename to final file name
+    try:
+        #delete the file is
+        var_filename_final.unlink()
+    except FileNotFoundError:
+        pass
+    var_filename.rename(var_filename_final)

@@ -81,6 +81,7 @@ def write_imerg_rain_rate_for_ACCESS(
     # write the results to the existing output file
     # today = datetime.date.today()
 
+
     trg = netcdf_dataset(imerge_filename, mode="w")
 
     with netcdf_dataset(base_filename, "r") as root_grp:
