@@ -1,7 +1,7 @@
 import datetime
 import os
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -56,14 +56,16 @@ NUM_LATS = 721
 NUM_LONS = 1440
 NUM_HOURS = 24
 
+
 def set_or_create_attr(var, attr_name, attr_value):
-    #seems like something like this should be part of the interface but I can not find it
-    if attr_name in var.ncattrs(): 
+    # seems like something like this should be part of the interface but I can not find it
+    if attr_name in var.ncattrs():
         var.setncattr(attr_name, attr_value)
         return
     var.UnusedNameAttribute = attr_value
     var.renameAttribute("UnusedNameAttribute", attr_name)
     return
+
 
 def get_access_output_filename(
     date: datetime.date, satellite: str, dataroot: Path, var: str
@@ -74,6 +76,7 @@ def get_access_output_filename(
         / f"M{date:%m}"
         / f"{satellite}_{var}_{date:%Y_%m_%d}.nc"
     )
+
 
 def get_access_output_filename_daily_folder(
     date: datetime.date, satellite: str, dataroot: Path, var: str
@@ -148,6 +151,7 @@ def append_var_to_daily_tb_netcdf(
         v.coordinates = "latitude longitude hours"
 
         v[:, :, :] = var
+
 
 def write_var_corresponding_to_daily_tb_netcdf(
     *,
@@ -340,7 +344,7 @@ def append_lf_daily_tb_netcdf(
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
     lf_fill = -999.0
-    filename = get_access_output_filename(date, satellite, dataroot,'land_frac')
+    filename = get_access_output_filename(date, satellite, dataroot, "land_frac")
     os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "a", 60) as root_grp:
         # with netcdf_dataset(filename, "a", format="NETCDF4") as root_grp:
@@ -370,11 +374,11 @@ def write_daily_lf_netcdf(
     date: datetime.date,
     satellite: str,
     land_fraction: ArrayLike,
-    dataroot: Path = ACCESS_ROOT
+    dataroot: Path = ACCESS_ROOT,
 ) -> None:
 
     tb_fill = -999.0
-    filename = get_access_output_filename(date, satellite, dataroot, 'land_frac')
+    filename = get_access_output_filename(date, satellite, dataroot, "land_frac")
 
     os.makedirs(filename.parent, exist_ok=True)
 
@@ -401,7 +405,7 @@ def write_daily_lf_netcdf(
             "NASA Global Change Master Directory (GCMD) "
             "Earth Science Keywords, Version 6.0"
         )
-        
+
         root_grp.cdm_data_type = "Grid"
         root_grp.program = (
             "NASA ACCESS-0031 > Machine Learning Datasets "
@@ -427,7 +431,6 @@ def write_daily_lf_netcdf(
         root_grp.geospatial_lon_units = "degrees_east"
         root_grp.spatial_resolution = "30 km X 30 km"
 
-        
         root_grp.license = "No restrictions on access or use"
         root_grp.contributor_name = "Frank Wentz, Carl Mears"
         root_grp.contributor_role = (
@@ -533,6 +536,7 @@ def write_daily_lf_netcdf(
         ).astype(np.float32)
         tbs[:, :, :, :] = tbs_to_put
 
+
 def write_daily_tb_netcdf(
     *,
     date: datetime.date,
@@ -543,7 +547,9 @@ def write_daily_tb_netcdf(
     file_list: Optional[Sequence[Path]],
 ) -> None:
     tb_fill = -999.0
-    filename = get_access_output_filename_daily_folder(date, satellite, dataroot, 'resamp_tbs')
+    filename = get_access_output_filename_daily_folder(
+        date, satellite, dataroot, "resamp_tbs"
+    )
     os.makedirs(filename.parent, exist_ok=True)
 
     lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
@@ -711,7 +717,6 @@ def write_daily_tb_netcdf(
         tbs[:, :, :, :] = tbs_to_put
 
 
-
 def write_daily_ancillary_var_netcdf(
     *,
     date: datetime.date,
@@ -719,15 +724,15 @@ def write_daily_ancillary_var_netcdf(
     anc_data: ArrayLike,
     anc_name: str,
     anc_attrs: dict,
+    global_attrs: Union[dict, str],
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
 
     base_filename = get_access_output_filename_daily_folder(
         date, satellite.lower(), dataroot, "resamp_tbs"
     )
     var_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), dataroot, f'{anc_name}_temp'
+        date, satellite.lower(), dataroot, f"{anc_name}_temp"
     )
     var_filename_final = get_access_output_filename_daily_folder(
         date, satellite.lower(), dataroot, anc_name
@@ -738,15 +743,24 @@ def write_daily_ancillary_var_netcdf(
             # Create the dimensions of the file
             for name, dim in root_grp.dimensions.items():
                 if name in ["hours", "latitude", "longitude"]:
-                    nc_out.createDimension(name, len(dim) if not dim.isunlimited() else None)
+                    nc_out.createDimension(
+                        name, len(dim) if not dim.isunlimited() else None
+                    )
 
-            # Copy the global attributes
-            nc_out.setncatts({a: root_grp.getncattr(a) for a in root_grp.ncattrs()})
+            if global_attrs == "copy":
+                # Copy the global attributes
+                nc_out.setncatts({a: root_grp.getncattr(a) for a in root_grp.ncattrs()})
+            else:
+                for key in global_attrs.keys():
+                    value = global_attrs[key]
+                    set_or_create_attr(nc_out, key, value)
 
             for var_name in ["time", "hours", "longitude", "latitude"]:
                 # Create the time and dimension variables in the output file
                 var_in = root_grp[var_name]
-                nc_out.createVariable(var_name, var_in.dtype, var_in.dimensions, zlib=True)
+                nc_out.createVariable(
+                    var_name, var_in.dtype, var_in.dimensions, zlib=True
+                )
 
                 # Copy the attributes
                 nc_out.variables[var_name].setncatts(
@@ -766,11 +780,11 @@ def write_daily_ancillary_var_netcdf(
 
             new_var.coordinates = "latitude longitude"
 
-            new_var[:,:,:] = anc_data[:,:,:]
+            new_var[:, :, :] = anc_data[:, :, :]
 
-    #everything written -- rename to final file name
+    # everything written -- rename to final file name
     try:
-        #delete the file is
+        # delete the file is
         var_filename_final.unlink()
     except FileNotFoundError:
         pass

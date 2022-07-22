@@ -28,6 +28,7 @@ def era5_hourly_single_level_request(
     target_path: Path,
     full_day: bool = True,
     full_month: bool = False,
+    verbose: bool = False,
 ) -> Path:
 
     c = cdsapi.Client()
@@ -50,9 +51,11 @@ def era5_hourly_single_level_request(
     temp_file = target_path / "temp.nc"
 
     if target.exists():
-        print(f"File: {target} already exists, skipping")
+        if verbose:
+            print(f"File: {target} already exists, skipping")
     else:
-        print(f"Getting: {target}")
+        if verbose:
+            print(f"Getting: {target}")
         c.retrieve(
             "reanalysis-era5-single-levels",
             {

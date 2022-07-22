@@ -112,8 +112,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         var[i, :, :] = np.flipud(var[i, :, :])
 
     # interpolate the array of var maps to the times in the "times" maps
-    if verbose:
-        print("Interpolating...")
+
+    print(f"Interpolating {variable[0]}")
 
     # list of times, each hour.
     var_times = np.arange(0.0, 86401.0, 3600.0)
