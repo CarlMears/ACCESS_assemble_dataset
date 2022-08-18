@@ -50,6 +50,24 @@ For each daily "base" file, we provide a number of ancillary data types on the s
 ## Date range available
 2012-07-02 to 2021-12-31
 
+## Directory Structure and file name conventions
+Files are locating in a folder for eac each inside a year - month - day structure e.g.
+***/2013/05/04***
+
+| data type | description |
+|-----------|-------------|
+|Resampled Satellite Brightness Temperatures|amsr2_resamp_tbs_2012_10_04.nc| 
+|IMERGE rain rate (mm/hr)| amsr2_rain_rate_imerge_2012_10_04.nc|
+|ERA5 Skin Temperature (K)|amsr2_skt_era5_2012_10_04.nc|
+|ERA5 Total Column Water Vapor (kg/m^2)|amsr2_tcwv_era5_2012_10_04.nc|
+|ERA5 Total Column Cloud Water (kg/m^2)|amsr2_tclw_era5_2012_10_04.nc|
+|ERA5 Zonal Wind (m/s)|amsr2_u10n_era5_2012_10_04.nc|
+|ERA5 Meridional Wind (m/s)|amsr2_v10n_era5_2012_10_04.nc|
+|Atmospheric Parameters for each channel (Upwelling Radiance, Downwelling Radiance, Tranmissivity)|amsr2_atm_par_era5_2012_10_04.nc|
+|- Transmissivity|Calculated using ERA5 profiles as input to the RSS RTM|
+|- Upwelling Radiance (K)|Calculated using ERA5 profiles as input to the RSS RTM|
+|- Downwelling Radiance (K)|Calculated using ERA5 profiles as input to the RSS RTM|
+
 ## Documentation
 The methods to construct this data collection are described in two papers in preparation
 * "A computationally-efficient for resampling microwave radianc-es from conical scanners to a regular Earth grid"
