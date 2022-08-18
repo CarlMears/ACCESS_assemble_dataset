@@ -74,6 +74,7 @@ def get_access_output_filename(
         dataroot
         / f"Y{date:%Y}"
         / f"M{date:%m}"
+        / f"D{date:%d}"
         / f"{satellite}_{var}_{date:%Y_%m_%d}.nc"
     )
 
@@ -86,7 +87,7 @@ def get_access_output_filename_daily_folder(
         / f"Y{date:%Y}"
         / f"M{date:%m}"
         / f"D{date:%d}"
-        / f"{satellite}_{var}_{date:%Y_%m_%d}.nc"
+        / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
     )
 
 

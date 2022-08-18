@@ -9,8 +9,11 @@ from netCDF4 import Dataset as netcdf_dataset
 
 from access_io.access_output import (
     append_var_to_daily_tb_netcdf,
-    get_access_output_filename_daily_folder,
+    get_access_output_filename_daily_folder,  
 )
+from access_io.access_output import set_or_create_attr
+from access_io.access_attr_define import common_global_attributes_access
+from access_io.access_attr_define import rr_imerg_attributes_access
 from imerg_request.imerg_requests import imerg_half_hourly_request
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
 
@@ -84,6 +87,11 @@ def write_imerg_rain_rate_for_ACCESS(
 
     trg = netcdf_dataset(imerge_filename, mode="w")
 
+    glb_attrs_common = common_global_attributes_access(date, version="v00r00")
+    glb_attrs_rr = rr_imerg_attributes_access(satellite,version="v00r00")
+    glb_attrs = glb_attrs_common | glb_attrs_rr
+
+
     with netcdf_dataset(base_filename, "r") as root_grp:
         # Create the dimensions of the file
         for name, dim in root_grp.dimensions.items():
@@ -92,6 +100,10 @@ def write_imerg_rain_rate_for_ACCESS(
 
         # Copy the global attributes
         trg.setncatts({a: root_grp.getncattr(a) for a in root_grp.ncattrs()})
+
+        for key in glb_attrs.keys():
+            value = glb_attrs[key]
+            set_or_create_attr(trg, key, value)
 
         for var_name in ["time", "hours", "longitude", "latitude"]:
             # Create the time variables in the output file
@@ -138,6 +150,12 @@ def write_imerg_rain_rate_for_ACCESS(
         rr[:, :, :] = rr_for_access
 
         trg.close()
+        
+        try:
+            imerge_filename_final.unlink()
+        except FileNotFoundError:
+            pass
+
         imerge_filename.rename(imerge_filename_final)
 
 
@@ -187,6 +205,6 @@ if __name__ == "__main__":
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
-            force_overwrite=False,
+            force_overwrite=True,
         )
         date += datetime.timedelta(days=1)
