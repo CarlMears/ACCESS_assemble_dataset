@@ -1,6 +1,6 @@
 # Microwave Brightness Temperatures Resampled to a regular Earth grid.
 
-This document describes the format, data content and metadata for RSS Earth-grid microwave radiance datasets.  
+This document describes the format, data content and metadata for the RSS Earth-grid microwave radiance dataset collection.  
 
 ## Overview and purpose
 Microwave radiances measured by conically-scanning satellite radiometers are available from Remote Sensing Systems as L1B files with measurements arranged in the native "swath" format.  The measurement geometry is complex and it is not trivial to collocate these data between different satellites, or with other types of Earth data, such as model output.  To facilitate collocation of these microwave radiance with other sources of Earth data, we have accurately resampled the L1B radiances onto circular footprints on Earth-referenced latitude/longitude or polar grids.
@@ -8,7 +8,7 @@ Microwave radiances measured by conically-scanning satellite radiometers are ava
 ## Satellites Available to Date
 * AMSR2 on GCOM-W
     - 0.25 x 0.25 Latitude/Longitude Grid, 30 km Circular Footprints
-    -  0.25 x 0.25 Latitude/Longitude Grid, 60 km Circular Footprints (under development)
+    -  0.25 x 0.25 Latitude/Longitude Grid, 70 km Circular Footprints (under development)
 
 ## Dataset Structure
 Data for each satellite/grid type are arranged into daily CF-compliant NetCDF4 files. The "base" or "resamp_tb" file contains resampled radiances, expressed as brightness temperatures (Tb's) for a number of microwave channels (observation frequency and polarization).  The brightess temperature variable for the global latitude/longitude grid has the following dimensions:
@@ -52,7 +52,7 @@ For each daily "base" file, we provide a number of ancillary data types on the s
 
 ## Directory Structure and file name conventions
 Files are locating in a folder for eac each inside a year - month - day structure e.g.
-***/2013/05/04***
+***/2012/10/04***.  The following table shows example file names for each type of data in the collection
 
 | data type | description |
 |-----------|-------------|
