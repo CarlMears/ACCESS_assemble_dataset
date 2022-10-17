@@ -80,14 +80,14 @@ def get_access_output_filename(
 
 
 def get_access_output_filename_daily_folder(
-    date: datetime.date, satellite: str, dataroot: Path, var: str
+    date: datetime.date, satellite: str, target_size: int,dataroot: Path, var: str
 ) -> Path:
     return (
         dataroot
         / f"Y{date:%Y}"
         / f"M{date:%m}"
         / f"D{date:%d}"
-        / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
+        / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
     )
 
 
@@ -432,7 +432,7 @@ def write_daily_lf_netcdf(
         root_grp.geospatial_lon_units = "degrees_east"
         root_grp.spatial_resolution = "30 km X 30 km"
 
-        root_grp.license = "No restrictions on access or use"
+        root_grp.license = "This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.",
         root_grp.contributor_name = "Frank Wentz, Carl Mears"
         root_grp.contributor_role = (
             "Principal investigator and originator of "
@@ -542,6 +542,7 @@ def write_daily_tb_netcdf(
     *,
     date: datetime.date,
     satellite: str,
+    target_size: int,
     tb_array_by_hour: ArrayLike,
     time_array_by_hour: ArrayLike,
     dataroot: Path = ACCESS_ROOT,
@@ -549,7 +550,7 @@ def write_daily_tb_netcdf(
 ) -> None:
     tb_fill = -999.0
     filename = get_access_output_filename_daily_folder(
-        date, satellite, dataroot, "resamp_tbs"
+        date, satellite, target_size,dataroot, "resamp_tbs"
     )
     os.makedirs(filename.parent, exist_ok=True)
 
@@ -771,7 +772,7 @@ def write_daily_ancillary_var_netcdf(
                 # Copy the time values
                 nc_out.variables[var_name][:] = root_grp.variables[var_name][:]
 
-            # make the rain rate variable with the same dimensions as the time variable in the base file
+            # make the ancillary variable with the same dimensions as the time variable in the base file
             new_var = nc_out.createVariable(
                 anc_name, np.float32, nc_out.variables["time"].dimensions, zlib=True
             )
@@ -785,7 +786,7 @@ def write_daily_ancillary_var_netcdf(
 
     # everything written -- rename to final file name
     try:
-        # delete the file is
+        # delete the final file to make room for the new one
         var_filename_final.unlink()
     except FileNotFoundError:
         pass

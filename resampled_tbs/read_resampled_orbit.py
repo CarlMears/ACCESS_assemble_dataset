@@ -51,6 +51,7 @@ def read_resampled_tbs(
     *,
     satellite: str,
     channel: Union[str, int],
+    target_size: int,
     orbit: int,
     dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
@@ -74,7 +75,7 @@ def read_resampled_tbs(
     if channel_str == "time":
         filename = orbit_dir / f"r{orbit:05d}.time.nc"
     else:
-        filename = orbit_dir / f"r{orbit:05d}.grid.{channel:02d}.nc"
+        filename = orbit_dir / f"r{orbit:05d}.grid_tb.ch{channel:02d}.{target_size:03d}km.nc"
     if verbose:
         print(filename)
     ds = xr.open_dataset(filename)

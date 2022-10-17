@@ -44,6 +44,7 @@ def make_daily_ACCESS_tb_file(
     *,
     current_day: date,
     satellite: str,
+    target_size: int,
     dataroot: Path,
     channels: Collection[int],
     verbose: bool = False,
@@ -56,7 +57,7 @@ def make_daily_ACCESS_tb_file(
         raise ValueError(f"Orbit Times for {satellite} not implemented yet")
 
     filename = get_access_output_filename_daily_folder(
-        current_day, satellite, dataroot, "resamp_tbs"
+        current_day, satellite, target_size,dataroot, "resamp_tbs"
     )
     if filename.is_file() and not overwrite:
         print(f"daily file for {current_day} exists... skipping")
@@ -82,7 +83,7 @@ def make_daily_ACCESS_tb_file(
         # get the times for this orbit, and convert to time within the day...
         try:
             ob_time, filename = read_resampled_tbs(
-                satellite=satellite, channel="time", orbit=orbit, verbose=False
+                satellite=satellite, channel="time", target_size=target_size,orbit=orbit, verbose=False
             )
         except FileNotFoundError:
             print(f"No time file found for orbit: {orbit}")
@@ -106,7 +107,7 @@ def make_daily_ACCESS_tb_file(
         for channel in channels:
             try:
                 tbs, filename = read_resampled_tbs(
-                    satellite=satellite, channel=channel, orbit=orbit
+                    satellite=satellite, channel=channel, target_size=target_size,orbit=orbit
                 )
             except FileNotFoundError:
                 print(f"No file found for orbit: {orbit}, channel: {channel}")
@@ -140,6 +141,7 @@ def make_daily_ACCESS_tb_file(
         write_daily_tb_netcdf(
             date=current_day,
             satellite=satellite,
+            target_size=target_size,
             tb_array_by_hour=tb_array_by_hour,
             time_array_by_hour=time_array_by_hour,
             file_list=file_list,
@@ -173,6 +175,7 @@ if __name__ == "__main__":
         help="Last Day to process, as YYYY-MM-DD",
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("target_size",choices=["30","70"],help="Size of target footprint in km")
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
@@ -189,6 +192,7 @@ if __name__ == "__main__":
     START_DAY = args.start_date
     END_DAY = args.end_date
     satellite = args.sensor.upper()
+    target_size = int(args.target_size)
     channels = list(range(5, 13))
 
     day_to_do = START_DAY
@@ -197,6 +201,7 @@ if __name__ == "__main__":
         make_daily_ACCESS_tb_file(
             current_day=day_to_do,
             satellite=satellite,
+            target_size=target_size,
             dataroot=access_root,
             channels=channels,
             verbose=args.verbose,

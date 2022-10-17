@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import xarray as xr
 
-from access_io.access_output import append_const_var_to_daily_tb_netcdf
+from access_io.access_output import append_const_var_to_daily_tb_netcdf,write_daily_lf_netcdf
 
 
 def add_land_fraction_to_ACCESS_output(
@@ -49,6 +49,14 @@ def add_land_fraction_to_ACCESS_output(
         raise KeyError(f"Land version {version} not supported")
 
     try:
+
+        write_daily_lf_netcdf(
+            date=date,
+            satellite=satellite,
+            land_fraction=land_fraction_np,
+            dataroot=dataroot,
+            )
+
         append_const_var_to_daily_tb_netcdf(
             date=date,
             satellite=satellite,
