@@ -20,6 +20,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
     satellite: str,
     dataroot: Path,
     temproot: Path,
+    footprint_diameter_km: int,
     force_overwrite: bool = False,
 ) -> None:
 
@@ -65,6 +66,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
         np.roll(times, 720, axis=1),
         hourly_intervals,
         date,
+        footprint_diameter_km,
         target_path=temproot / "imerg",
     )
     rr_for_access = np.roll(rr_for_access, 720, axis=1)
@@ -124,6 +126,7 @@ if __name__ == "__main__":
         help="Last Day to process, as YYYY-MM-DD",
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("footprint_diameter", type=int, help="Diameter of resampling footprint (in km). Default=30km", nargs='?', default=30)
 
     args = parser.parse_args()
 
@@ -133,6 +136,7 @@ if __name__ == "__main__":
     START_DAY = args.start_date
     END_DAY = args.end_date
     satellite = args.sensor.upper()
+    footprint_diameter_km = args.footprint_diameter
 
     date = START_DAY
     while date <= END_DAY:
@@ -143,5 +147,6 @@ if __name__ == "__main__":
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
+            footprint_diameter_km=footprint_diameter_km,
         )
         date += datetime.timedelta(days=1)
