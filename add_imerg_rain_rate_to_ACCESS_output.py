@@ -91,7 +91,7 @@ def add_imerg_rain_rate_to_ACCESS_output(
         ),
         cell_method=(
             "time: closest 30-min IMERG file; "
-            "area: weighted average over 30km footprint"
+            f"area: weighted average over {footprint_diameter_km}km footprint"
         ),
         v_fill=-999.0,
         dataroot=dataroot,
