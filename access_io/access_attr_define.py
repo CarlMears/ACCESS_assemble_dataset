@@ -225,7 +225,37 @@ def trans_era5_attributes_access(satellite:str, version="v00r00"):
         keywords=(
             "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE",
         ),
-        title=f"Donwelling Radiance computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
+        title=f"Downelling Radiance computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
         history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model",
     )
     return attrs_glob_tbdown
+
+def ocean_emiss_era5_attributes_access(satellite:str, version="v00r00"):
+
+    attrs_glob_ocean_emiss = dict(
+        summary=(
+            f"Calculated Ocean Emissivity using Remote Sensing Systems (RSS)surface model for {satellite}; "
+        ),
+        keywords=(
+            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > EMISSIVITY",
+        ),
+        title=f"Ocean Surface Emissivity calculated from ERA5 neutral stability winds on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
+        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS surface radiation model",
+    )
+    return attrs_glob_ocean_emiss
+
+def ocean_emiss_era5_attributes_access2(satellite:str, version="v00r00"):
+
+    import json
+    from pathlib import Path
+    attr_define_root = Path('/mnt/ops1p-ren/m/job_access/python/attr_define')
+    file = attr_define_root / f"ocean_emiss_era5_attributes_access_{satellite}.json"
+
+    with open(file) as json_file:
+        attrs_glob_ocean_emiss = json.load(json_file)
+
+    attrs_glob_ocean_emiss['version'] = version
+    attrs_glob_ocean_emiss['creation-date'] = f"{datetime.datetime.now()}"
+
+    return attrs_glob_ocean_emiss
+

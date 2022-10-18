@@ -11,7 +11,6 @@ from era5_request.era5_requests import era5_hourly_single_level_request
 from access_io.access_output import get_access_output_filename_daily_folder
 from access_io.access_output import write_daily_ancillary_var_netcdf
 
-# import sys
 from access_io.access_attr_define import (
     common_global_attributes_access,
     resamp_tb_attributes_access,

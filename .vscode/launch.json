@@ -30,6 +30,22 @@
                     "30"],
             "console": "integratedTerminal"
         },
+        {
+            "name": "Add Wind Emiss",
+            "type": "python",
+            "request": "launch",
+            "program": "dataset_assembly/wind_emiss/add_wind_emiss_ACCESS.py",
+            "args":["/mnt/ops1p-ren/l/ACCESS/amsr2_out",
+                    "/mnt/ops1p-ren/l/access/amsr2_out_test",
+                    "era5",
+                    "era5",
+                    "2012-08-04",
+                    "2012-08-05",
+                    "amsr2",
+                    "--verbose"],
+            "console": "integratedTerminal",
+            "cwd": "/mnt/ops1p-ren/m/job_access/python/"
+        },
 
         {
             "name": "Add Land Fraction",
@@ -46,7 +62,7 @@
         },
         {
             "name": "Add ERA5 surface temperatures",
-            "type": "python",
+            "type": "python",S
             "request": "launch",
             "program": "add_ERA5_surface_temperature_to_ACCESS_output.py",
             "args":["L:/ACCESS/amsr2_out_test",

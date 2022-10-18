@@ -82,13 +82,23 @@ def get_access_output_filename(
 def get_access_output_filename_daily_folder(
     date: datetime.date, satellite: str, target_size: int,dataroot: Path, var: str
 ) -> Path:
-    return (
-        dataroot
-        / f"Y{date:%Y}"
-        / f"M{date:%m}"
-        / f"D{date:%d}"
-        / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
-    )
+
+    if target_size > 0:
+        return (
+            dataroot
+            / f"Y{date:%Y}"
+            / f"M{date:%m}"
+            / f"D{date:%d}"
+            / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
+        )
+    else:
+        return (
+            dataroot
+            / f"Y{date:%Y}"
+            / f"M{date:%m}"
+            / f"D{date:%d}"
+            / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
+        )
 
 
 def append_var_to_daily_tb_netcdf(

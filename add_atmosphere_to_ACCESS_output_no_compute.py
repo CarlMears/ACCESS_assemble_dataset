@@ -79,7 +79,7 @@ class DailyRtm:
 
         self.time_in_day = np.arange(0,25)*3600.0
 
-def append_atmosphere_to_daily_ACCESS(
+def write_atmosphere_to_daily_ACCESS(
     current_day: date,
     satellite: str,
     dataroot: Path,
@@ -141,7 +141,7 @@ def append_atmosphere_to_daily_ACCESS(
 
                 trg.createDimension('freq', len(REF_FREQ))
 
-                # Copy the global attributes
+                # Copy the global attributes from the base file
                 trg.setncatts({a: root_grp.getncattr(a) for a in root_grp.ncattrs()})
 
                 for key in glb_attrs_atm.keys():
@@ -266,7 +266,7 @@ if __name__ == "__main__":
     date_to_do = args.start_date   
     while date_to_do <= args.end_date:
         try: 
-            append_atmosphere_to_daily_ACCESS(
+            write_atmosphere_to_daily_ACCESS(
                 date_to_do, args.sensor, access_root, rtm_dir, verbose=True
                 )
         except OkToSkipDay:
