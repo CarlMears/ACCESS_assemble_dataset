@@ -10,6 +10,17 @@ which append ancillary data to the daily file, can be performed in any order.  B
 as writing to netCDF files is done using file locking, the data append jobs can be run 
 simultaneously.
 
+These are the required dependencies to run the scripts:
+
+```bash
+# From PyPI
+pip install numpy netCDF4 matplotlib cdsapi xarray Cartopy
+# From RSS repos
+pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/projects/68/packages/pypi/simple --trusted-host gitlab.remss.com
+pip install git+http://gitlab.remss.com/Carl/plotting.git
+pip install git+http://gitlab.remss.com/Carl/rss_lock.git
+```
+
 ### Assemble measured brightness temperatures
 
 The `make_daily_ACCESS_files.py` script assembles the daily files from orbit files that contain the 
@@ -18,16 +29,16 @@ on a 0.25 degree by 0.25 degree grid.  This results in a lot of missing data - t
 size if minimized by writing using slightly lossy built-in netCDF4 compression.
 
 **Positional Arguments:**
-- access_root: Path to location of daily ACCESS files
-- temp_root: Path to location to store temporary files
-- start_date: first day to process, in YYYY-MM-DD format
-- end_date: last day to process, in YYYY-MM-DD format
-- sensor: name of the sensor - currently only 'amsr2' is supported
+- `access_root`: Path to location of daily ACCESS files
+- `temp_root`: Path to location to store temporary files
+- `start_date`: first day to process, in YYYY-MM-DD format
+- `end_date`: last day to process, in YYYY-MM-DD format
+- `sensor`: name of the sensor - currently only 'amsr2' is supported
 
 **Optional Arguments:**
-- --overwrite: if set, process and write file even if a file for this day already exists
-- --plot_map: if set, plot an example map as a debugging feature
-- --verbose: if set, print more verbose informational messages
+- `--overwrite`: if set, process and write file even if a file for this day already exists
+- `--plot_map`: if set, plot an example map as a debugging feature
+- `--verbose`: if set, print more verbose informational messages
 
 **Example Command:**
 ```
@@ -43,14 +54,14 @@ The CDS UID and API key are required inputs to the script, either as environment
 variables or as arguments.
 
 **Positional Arguments:**
-- access_root: Path to location of daily ACCESS files
-- temp_root: Path to location to store temporary files
-- start_date: first day to process, in YYYY-MM-DD format
-- end_date: last day to process, in YYYY-MM-DD format
-- sensor: name of the sensor - currently only 'amsr2' is supported
+- `access_root`: Path to location of daily ACCESS files
+- `temp_root`: Path to location to store temporary files
+- `start_date`: first day to process, in YYYY-MM-DD format
+- `end_date`: last day to process, in YYYY-MM-DD format
+- `sensor`: name of the sensor - currently only 'amsr2' is supported
 
 **Optional Arguments:**
-- --verbose: if set, print more verbose informational messages
+- `--verbose`: if set, print more verbose informational messages
 
 **Example Command:**
 ```
@@ -104,10 +115,7 @@ pip install access-atmosphere --index-url http://gitlab.remss.com/api/v4/project
 
 (The `--trusted-host` permits pip to use HTTP instead of HTTPS and is required until we get a TLS certificate for `gitlab.remss.com`...)
 
-To install the other required packages:
-```
-pip install numpy netCDF4
-```
+Required dependencies such as `numpy` and `netCDF4` should be automatically installed when installing `access-atmosphere`.
 
 As an example, for updating the AMSR2 file on 2012-07-11:
 
@@ -115,7 +123,7 @@ As an example, for updating the AMSR2 file on 2012-07-11:
 python add_atmosphere_to_ACCESS_output.py L:/access 2012-07-11 amsr2 --user $CDS_UID --key $CDS_API_KEY
 ```
 
-The CDS credentials can also be given as environment variables:
+Instead of command-line arguments, the CDS credentials can instead be given as environment variables:
 
 ```bash
 export CDS_UID=XXX
