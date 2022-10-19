@@ -1,0 +1,27 @@
+
+    {
+        "Conventions": "CF-1.8",
+        "standard_name_vocabulary": "CF Standard Name Table (v78, 21 September 2021)",
+        "date_issued": "2022-10-01",
+        "keywords_vocabulary": "NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 14.5",
+        "cdm_data_type": "Grid",
+        "program": "NASA ACCESS-0031 > Machine Learning Datasets for the Earths Natural Microwave Emission",
+        "creator_name": "Carl Mears",
+        "creator_url": "http://www.remss.com/ ",
+        "creator_email": "mears@remss.com",
+        "institution": "Remote Sensing Systems",
+        "processing_level": "NASA Level 4",
+        "references": "None",
+        "geospatial_lat_min": "-90.0",
+        "geospatial_lat_max": "90.0",
+        "geospatial_lon_min": "0.0",
+        "geospatial_lon_max": "359.9999",
+        "geospatial_lat_units": "degrees_north",
+        "geospatial_lon_units": "degrees_east",
+        "spatial_resolution": "30 km X 30 km",
+        "time_coverage_duration": "P24H",
+        "license": "This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.",
+        "contributor_name": "Carl Mears",
+        "contributor_role": "Principle investigator of ACCESS project which resamples RSS native brightness temperatures and ancillary to a fixed Earth grid",
+        "summary": "Remote Sensing Systems (RSS) Resampled brightness temperature intercalibrated and homogenized brightness temperature polar-orbiting resampled to a regular Earth grid"
+    }
