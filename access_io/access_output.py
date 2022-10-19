@@ -34,7 +34,7 @@ USED_CHANNELS = {
     ]
 }
 AVAILABLE_CHANNELS = {
-    "asmr2": [
+    "amsr2": [
         "time",
         "6V",
         "6H",
@@ -509,7 +509,7 @@ def write_daily_lf_netcdf(
 
         channels.standard_name = "channel"
         channels.long_name = f"{satellite} channel index"
-        channel_names = ", ".join(USED_CHANNELS["amsr2"])
+        channel_names = ", ".join(AVAILABLE_CHANNELS["amsr2"])
         channels.channel_names = channel_names
 
         # Each day's file is offset by a half-hour into the previous day
@@ -575,10 +575,10 @@ def write_daily_tb_netcdf(
 
         #set the global_attributes
 
-        attrs = common_global_attributes_access(date, target_size,version)
+        attrs = common_global_attributes_access(date, satellite, target_size,version)
 
         for key in attrs.keys():
-            value = global_attrs[key]
+            value = attrs[key]
             set_or_create_attr(nc_out, key, value)
 
 
@@ -644,7 +644,7 @@ def write_daily_tb_netcdf(
 
         channels.standard_name = "channel"
         channels.long_name = f"{satellite} channel index"
-        channel_names = ", ".join(USED_CHANNELS["amsr2"])
+        channel_names = ", ".join(AVAILABLE_CHANNELS["amsr2"])
         channels.channel_names = channel_names
 
         # Each day's file is offset by a half-hour into the previous day

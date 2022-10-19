@@ -1,16 +1,19 @@
 import datetime
 import json
+import os
 from pathlib import Path
 
 """
 The routines in this file define the attributes for the ACCESS project output file
 Constant attributes are read in from the .json files in attr_define_root
 """
-
-attr_define_root = Path("/mnt/ops1p-ren/m/job_access/python/dataset_assembly/access_io/attr_define_json")
+if os.name == "nt":
+    attr_define_root = Path("M:/job_access/python/dataset_assembly/access_io/attr_define_json")
+elif os.name == "posix":
+    attr_define_root = Path("/mnt/ops1p-ren/m/job_access/python/dataset_assembly/access_io/attr_define_json")
 
 def common_global_attributes_access(
-    date: datetime.datetime, target_size: int, version: str = "v00r00"
+    date: datetime.datetime, satellite: str, target_size: int, version: str = "v00r00"
 ) -> dict:
 
     day_boundary = datetime.datetime.combine(date, datetime.time())
@@ -84,7 +87,7 @@ if __name__ == "__main__":
         date = datetime.date(2021, 3, 12)
         target_size = 70
         version = "v100r01"
-        attrs = common_global_attributes_access(date, target_size, version=version)
+        attrs = common_global_attributes_access(date, satellite, target_size, version=version)
         file.write("--------------------------\n")
         file.write("ACCESS Common Attributes\n")
         file.write("--------------------------\n")
