@@ -1,0 +1,13 @@
+{
+    "global":{
+        "summary": "Rain Rate corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
+        "keywords": "EARTH SCIENCE > ATMOSPHERE > PRECIPITATION > PRECIPITATION RATE",
+        "title": "IMERG Rain Rate, resampled to circular gaussian footprints 0.25 degree Earth grid at satellite overpass times",       
+        "history": "Created from on-line IMERG data from the CMR EarthData API"},
+    "var":{
+        "standard_name": "rainfall_rate",
+        "valid_min": "0.0",
+        "valid_max": "50.0",
+        "units": "mm/hr"
+        }
+}

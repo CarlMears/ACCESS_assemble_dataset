@@ -1,0 +1,86 @@
+--------------------------
+ACCESS Common Attributes
+--------------------------
+Conventions              :  CF-1.8
+standard_name_vocabulary :  CF Standard Name Table (v78, 21 September 2021)
+date_issued              :  2022-10-01
+keywords_vocabulary      :  NASA Global Change Master Directory (GCMD) Earth Science Keywords, Version 6.0
+cdm_data_type            :  Grid
+program                  :  NASA ACCESS-0031 > Machine Learning Datasets for the Earth's Natural Microwave Emission
+creator_name             :  Carl Mears
+creator_url              :  http://www.remss.com/ 
+creator_email            :  mears@remss.com
+institution              :  Remote Sensing Systems
+processing_level         :  NASA Level 4
+references               :  None
+geospatial_lat_min       :  -90.0
+geospatial_lat_max       :  90.0
+geospatial_lon_min       :  0.0
+geospatial_lon_max       :  359.9999
+geospatial_lat_units     :  degrees_north
+geospatial_lon_units     :  degrees_east
+spatial_resolution       :  70 km X 70 km
+time_coverage_duration   :  P24H
+license                  :  This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+contributor_name         :  Carl Mears
+contributor_role         :  Principle investigator of ACCESS project which resamples RSS native brightness temperatures and ancillary to a fixed Earth grid
+title                    :  Resampled AMSR2 brightness temperatures
+date_created             :  2022-10-19T13:58:59.087014
+time_coverage_start      :  2021-03-11T23:30:00
+time_coverage_end        :  2021-03-12T23:30:00
+--------------------------
+ACCESS Resamp Tbs Attributes
+--------------------------
+summary                  :  Remote Sensing Systems (RSS) Resampled brightness temperature intercalibrated and homogenized brightness temperature polar-orbiting resampled to a regular Earth grid
+keyword                  :  EARTH SCIENCE > SPECTRAL/ENGINEERING > MICROWAVE > BRIGHTNESS TEMPERATURE
+title                    :  Resampled brightness temperatures
+history                  :  Created Resampled Brightness Temperature from RSS AMSR2 L1A data
+platform                 :  GCOM-W1, JAXA
+sensor                   :  AMSR2 > Advanced Microwave Scanning Radiometer 2
+date_created             :  2022-10-19T13:58:59.089784
+version                  :  v100r01
+--------------------------
+Atm Pars Attributes
+--------------------------
+summary                  :  Atmospheric radiation parameters corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature
+keywords                 :  ['EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > SPECTRAL IRRADIANCE', 'EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE']
+title                    :  Atmospheric radiation parameters computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time
+history                  :  Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model
+version                  :  v100r01
+creation-date            :  2022-10-19 13:58:59.092511
+--------------------------ACCESS v10n_era5 Attributes--------------------------summary                  :  Northward windcorresponding to Remote Sensing Systems (RSS) Resampled brightness temperature
+keywords                 :  ['EARTH SCIENCE > OCEANS > OCEAN WINDS > SURFACE WINDS', 'EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC WINDS > SURFACE WINDS']
+title                    :  10m neutral meridional winds from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time
+history                  :  Created from ERA5 data downloaded from the Copernicus Climate Data Store
+version                  :  v100r01
+creation-date            :  2022-10-19 13:58:59.093509
+--------------------------ACCESS ocean_emiss_era5 Attributes--------------------------summary                  :  Calculated Ocean Emissivity using Remote Sensing Systems (RSS)surface model for AMSR2
+keywords                 :  EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > EMISSIVITY
+title                    :  Ocean Surface Emissivity calculated from ERA5 neutral stability winds on a 0.25 degree Earth grid, time interpolated to satellite overpass time
+history                  :  Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS surface radiation model
+version                  :  v100r01
+creation-date            :  2022-10-19 13:58:59.094250
+--------------------------ACCESS skt_era5 Attributes--------------------------summary                  :  Skin Temperature corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature
+keywords                 :  ['EARTH SCIENCE > LAND SURFACE > SURFACE THERMAL PROPERTIES > SKIN TEMPERATURE', 'EARTH SCIENCE > OCEANS > OCEAN TEMPERATURE > SEA SURFACE TEMPERATURE > SEA SURFACE SKIN TEMPERATURE']
+title                    :  ERA5 skin temperature, resampled to circular gaussian footprints 0.25 degree Earth grid
+history                  :  Created from ERA5 data downloaded from the Copernicus Climate Data Store
+version                  :  v100r01
+creation-date            :  2022-10-19 13:58:59.095188
+--------------------------ACCESS imerg_rr Attributes--------------------------summary                  :  Rain Rate corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature
+keywords                 :  EARTH SCIENCE > ATMOSPHERE > PRECIPITATION > PRECIPITATION RATE
+title                    :  IMERG Rain Rate, resampled to circular gaussian footprints 0.25 degree Earth grid
+history                  :  Created from on-line IMERG data from the CMR EarthData API
+version                  :  v100r01
+creation-date            :  2022-10-19 13:58:59.095928
+--------------------------ACCESS tcwv_era5 Attributes--------------------------summary                  :  Total Column Water Vapor corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature
+keywords                 :  EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC WATER VAPOR > WATER VAPOR INDICATORS > TOTAL PRECIPITABLE WATER
+title                    :  Total Column Water Vapor from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time
+history                  :  Created from ERA5 data downloaded from the Copernicus Climate Data Store
+version                  :  v100r01
+creation-date            :  2022-10-19 13:58:59.096902
+--------------------------ACCESS tclw_era5 Attributes--------------------------summary                  :  Total Column Cloud Water corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature
+keywords                 :  EARTH SCIENCE > ATMOSPHERE > CLOUDS > CLOUD MICROPHYSICS > CLOUD LIQUID WATER
+title                    :  Total Column Cloud Water from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time
+history                  :  Created from ERA5 data downloaded from the Copernicus Climate Data Store
+version                  :  v100r01
+creation-date            :  2022-10-19 13:58:59.097690
