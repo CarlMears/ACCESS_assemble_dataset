@@ -24,6 +24,7 @@ def write_imerg_rain_rate_for_ACCESS(
     satellite: str,
     dataroot: Path,
     temproot: Path,
+    footprint_diameter_km: int,
     force_overwrite: bool = False,
 ) -> None:
 
@@ -78,85 +79,37 @@ def write_imerg_rain_rate_for_ACCESS(
         np.roll(times, 720, axis=1),
         hourly_intervals,
         date,
+        footprint_diameter_km,
         target_path=temproot / "imerg",
     )
     rr_for_access = np.roll(rr_for_access, 720, axis=1)
     # write the results to the existing output file
-    # today = datetime.date.today()
-
-
-    trg = netcdf_dataset(imerge_filename, mode="w")
-
-    glb_attrs_common = common_global_attributes_access(date, version="v00r00")
-    glb_attrs_rr = rr_imerg_attributes_access(satellite,version="v00r00")
-    glb_attrs = glb_attrs_common | glb_attrs_rr
-
-
-    with netcdf_dataset(base_filename, "r") as root_grp:
-        # Create the dimensions of the file
-        for name, dim in root_grp.dimensions.items():
-            if name in ["hours", "latitude", "longitude"]:
-                trg.createDimension(name, len(dim) if not dim.isunlimited() else None)
-
-        # Copy the global attributes
-        trg.setncatts({a: root_grp.getncattr(a) for a in root_grp.ncattrs()})
-
-        for key in glb_attrs.keys():
-            value = glb_attrs[key]
-            set_or_create_attr(trg, key, value)
-
-        for var_name in ["time", "hours", "longitude", "latitude"]:
-            # Create the time variables in the output file
-            var_in = root_grp[var_name]
-            trg.createVariable(var_name, var_in.dtype, var_in.dimensions, zlib=True)
-
-            # Copy the time attributes
-            trg.variables[var_name].setncatts(
-                {a: var_in.getncattr(a) for a in var_in.ncattrs()}
-            )
-
-            # Copy the time values
-            trg.variables[var_name][:] = root_grp.variables[var_name][:]
-
-        # make the rain rate variable with the same dimensions as the time variable in the base file
-        rr = trg.createVariable(
-            "rainfall_rate", np.float32, trg.variables["time"].dimensions, zlib=True
-        )
-        rr.var_name = ("rainfall_rate",)
-        rr.standard_name = ("rainfall_rate",)
-        rr.long_name = ("rainfall rates from 30-minute IMERG",)
-        rr.valid_min = (0.0,)
-        rr.valid_max = (50.0,)
-        rr.units = ("mm/hr",)
-        rr.source = (
-            (
-                "Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan "
-                "(2019), GPM IMERG Final Precipitation L3 Half Hourly "
-                "0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences "
-                "Data and Information Services Center (GES DISC), "
-                f"Accessed: {datetime.datetime.utcfromtimestamp(mod_time)}"
-                "doi: http://doi.org/10.5067/GPM/IMERG/3B-HH/06"
-            ),
-        )
-        rr.cell_method = (
-            (
-                "time: closest 30-min IMERG file; "
-                "area: weighted average over 30km footprint"
-            ),
-        )
-        rr.v_fill = (-999.0,)
-        rr.coordinates = "latitude longitude"
-
-        rr[:, :, :] = rr_for_access
-
-        trg.close()
-        
-        try:
-            imerge_filename_final.unlink()
-        except FileNotFoundError:
-            pass
-
-        imerge_filename.rename(imerge_filename_final)
+    today = datetime.date.today()
+    append_var_to_daily_tb_netcdf(
+        date=date,
+        satellite=satellite,
+        var=rr_for_access,
+        var_name="rainfall_rate",
+        standard_name="rainfall_rate",
+        long_name="rainfall rates from 30-minute IMERG",
+        valid_min=0.0,
+        valid_max=50.0,
+        units="mm/hr",
+        source=(
+            "Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan "
+            "(2019), GPM IMERG Final Precipitation L3 Half Hourly "
+            "0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences "
+            "Data and Information Services Center (GES DISC), "
+            f"Accessed: {today.strftime('%m/%d/%Y')}, 10.5067/GPM/IMERG/3B-HH/06"
+        ),
+        cell_method=(
+            "time: closest 30-min IMERG file; "
+            f"area: weighted average over {footprint_diameter_km}km footprint"
+        ),
+        v_fill=-999.0,
+        dataroot=dataroot,
+        overwrite=True,
+    )
 
 
 if __name__ == "__main__":
@@ -186,6 +139,7 @@ if __name__ == "__main__":
         help="Last Day to process, as YYYY-MM-DD",
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("footprint_diameter", type=int, help="Diameter of resampling footprint (in km). Default=30km", nargs='?', default=30)
 
     args = parser.parse_args()
 
@@ -194,7 +148,8 @@ if __name__ == "__main__":
 
     START_DAY = args.start_date
     END_DAY = args.end_date
-    satellite = args.sensor  # .upper()
+    satellite = args.sensor.upper()
+    footprint_diameter_km = args.footprint_diameter
 
     date = START_DAY
     while date <= END_DAY:
@@ -205,6 +160,6 @@ if __name__ == "__main__":
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
-            force_overwrite=True,
+            footprint_diameter_km=footprint_diameter_km,
         )
         date += datetime.timedelta(days=1)

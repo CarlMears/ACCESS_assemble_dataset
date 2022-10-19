@@ -91,7 +91,7 @@ def get_distance(latitude0, longitude0, ilat_submask, ilon_submask, g):
     return dist_grid
 
 
-def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
+def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, footprint_diameter_km, window=0.5):
     """
     Inputs a map of rain rates at a given time along with
     latitude and longitude, outputs resampled data on a 0.25x0.25 grid.
@@ -164,14 +164,14 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, window=0.5):
                 # a check based on Thomas' IMERG work. Removing any negative RR values
                 good_rain = np.where(rain > -0.01)
 
-                gains = target_gain(dist_km, diameter_in_km=30.0)
+                gains = target_gain(dist_km, diameter_in_km=footprint_diameter_km)
                 weighted_rain = np.average(rain[good_rain], weights=gains[good_rain])
                 resampled_map[j, i] = weighted_rain
 
     return resampled_map
 
 
-def resample_hour(hour, times, time_intervals, date, target_path):
+def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, target_path):
     sat_time = times[:, :, hour]
 
     hour_beg = np.all(  # from beginning of hour to 30 minutes past the hour
@@ -202,11 +202,11 @@ def resample_hour(hour, times, time_intervals, date, target_path):
         minutes_of_day=minutes_of_day_end, date=date, target_path=target_path
     )
 
-    # for_parallel = [
-    #     [rain_beg, lat_beg, lon_beg, hour_beg],
-    #     [rain_end, lat_end, lon_end, hour_end],
-    # ]
-    #
+    for_parallel = [
+        [rain_beg, lat_beg, lon_beg, hour_beg, footprint_diameter_km],
+        [rain_end, lat_end, lon_end, hour_end, footprint_diameter_km],
+    ]
+
     # Processing 2 IMERG files for one hour in parallel
     # print("Starting jobs")
     # with multiprocessing.Pool(5, init_worker) as p:
@@ -232,7 +232,7 @@ def resample_hour(hour, times, time_intervals, date, target_path):
     return (hour_map, hour, last_modified_beg)
 
 
-def resample_imerg_day(times, time_intervals, date, target_path=Path(".")):
+def resample_imerg_day(times, time_intervals, date, footprint_diameter_km, target_path=Path(".")):
     total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
 
@@ -241,7 +241,7 @@ def resample_imerg_day(times, time_intervals, date, target_path=Path(".")):
     with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
         results = {
             executor.submit(
-                resample_hour, hour, times, time_intervals, date, target_path
+                resample_hour, hour, times, time_intervals, date, footprint_diameter_km, target_path
             ): hour
             for hour in range(0, NUM_HOURS)
         }
