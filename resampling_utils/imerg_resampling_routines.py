@@ -236,8 +236,6 @@ def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, targ
 def resample_imerg_day(times, time_intervals, date, footprint_diameter_km, target_path=Path(".")):
     total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
-
-    
     #Using process pool for resampling
     with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
         results = {
