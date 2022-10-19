@@ -72,13 +72,14 @@ def write_imerg_rain_rate_for_ACCESS(
     hourly_intervals = np.arange(0, 86401, 3600)
 
     # Return resampled rain rate maps for each hour of the day
-    rr_for_access, mod_time = resample_imerg_day(
-        np.roll(times, 720, axis=1),
-        hourly_intervals,
-        date,
-        footprint_diameter_km,
-        target_path=temproot / "imerg",
-    )
+    # rr_for_access, mod_time = resample_imerg_day(
+    #     np.roll(times, 720, axis=1),
+    #     hourly_intervals,
+    #     date,
+    #     footprint_diameter_km,
+    #     target_path=temproot / "imerg",
+    # )
+    rr_for_access = np.zeros((721,1440,24),dtype=np.float32)
     rr_for_access = np.roll(rr_for_access, 720, axis=1)
     # write the results to the existing output file
     today = datetime.date.today()
@@ -86,15 +87,17 @@ def write_imerg_rain_rate_for_ACCESS(
     version = "v00r00"
     rr_attrs = anc_var_attributes_access(satellite,"imerg_rr",version=version)
     global_attrs = common_global_attributes_access(date,satellite,footprint_diameter_km,version=version)
+    global_attrs.update(rr_attrs['global'])
+    var_attrs = rr_attrs['var']
 
-    rr_attrs['source'] = (
+    global_attrs['source'] = (
             "Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan "
             "(2019), GPM IMERG Final Precipitation L3 Half Hourly "
             "0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences "
             "Data and Information Services Center (GES DISC), "
             f"Accessed: {today.strftime('%m/%d/%Y')}, 10.5067/GPM/IMERG/3B-HH/06"
             )
-    rr_attrs['cell_method']=(
+    global_attrs['cell_method']=(
             "time: closest 30-min IMERG file; "
             f"area: weighted average over {footprint_diameter_km}km footprint"
             )
@@ -105,7 +108,7 @@ def write_imerg_rain_rate_for_ACCESS(
         target_size=footprint_diameter_km,
         anc_data = rr_for_access,
         anc_name = "rainfall_rate",
-        anc_attrs = rr_attrs,
+        anc_attrs = var_attrs,
         global_attrs = global_attrs,
         dataroot = dataroot
     )

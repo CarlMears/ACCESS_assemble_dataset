@@ -749,7 +749,7 @@ def write_daily_ancillary_var_netcdf(
                 val = anc_attrs[key]
                 set_or_create_attr(new_var, key, val)
 
-            new_var.coordinates = "latitude longitude"
+            new_var.coordinates = "latitude longitude hours"
 
             new_var[:, :, :] = anc_data[:, :, :]
 
