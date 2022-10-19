@@ -1,0 +1,9 @@
+
+{
+    "summary": "Remote Sensing Systems (RSS) Resampled brightness temperature intercalibrated and homogenized brightness temperature polar-orbiting resampled to a regular Earth grid",
+    "keyword": "EARTH SCIENCE > SPECTRAL/ENGINEERING > MICROWAVE > BRIGHTNESS TEMPERATURE",
+    "title":   "Resampled brightness temperatures",
+    "history": "Created Resampled Brightness Temperature from RSS AMSR2 L1A data",
+    "platform": "GCOM-W1, JAXA",
+    "sensor": "AMSR2 > Advanced Microwave Scanning Radiometer 2"
+}

@@ -4,6 +4,7 @@ import multiprocessing
 import signal
 from pathlib import Path
 from threading import Lock
+from time import sleep
 
 import numpy as np
 import pyproj as proj
@@ -46,13 +47,13 @@ def read_imerg_half_hourly(
         minute_string = "0000"
         print(minute_string, date_string)
 
-        filename = next(target_path.glob(f"*.{date_string}*.{minute_string}*"))
+        filename = Path(next(target_path.glob(f"*.{date_string}*.{minute_string}*")))
 
     else:
         print(minute_string, date_string)
-        filename = next(target_path.glob(f"*.{date_string}*.{minute_string}*"))
-    print(filename)
+        filename = Path(next(target_path.glob(f"*.{date_string}*.{minute_string}*")))
 
+    last_modified = filename.stat().st_mtime
     # multiple threads do not play nice opening HDF5 files
     with hdf5_access:
         hr1 = xr.open_dataset(filename, group="Grid")
@@ -61,7 +62,7 @@ def read_imerg_half_hourly(
         lon = hr1["lon"].values
         hr1.close()
 
-    return lat, lon, rain
+    return lat, lon, rain, last_modified
 
 
 def initialize_wgs84():
@@ -193,11 +194,11 @@ def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, targ
     minutes_of_day_beg = int(time_intervals[hour] / 60)
     minutes_of_day_end = int((time_intervals[hour + 1] / 60) - 30)
 
-    lat_beg, lon_beg, rain_beg = read_imerg_half_hourly(
+    lat_beg, lon_beg, rain_beg, last_modified_beg = read_imerg_half_hourly(
         minutes_of_day=minutes_of_day_beg, date=date, target_path=target_path
     )
 
-    lat_end, lon_end, rain_end = read_imerg_half_hourly(
+    lat_end, lon_end, rain_end, last_modified_beg = read_imerg_half_hourly(
         minutes_of_day=minutes_of_day_end, date=date, target_path=target_path
     )
 
@@ -207,28 +208,37 @@ def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, targ
     ]
 
     # Processing 2 IMERG files for one hour in parallel
-    print("Starting jobs")
-    with multiprocessing.Pool(5, init_worker) as p:
-        print("Waiting for results")
-        try:
-            res = p.starmap(resample_to_quarter, for_parallel)
-        except KeyboardInterrupt:
-            print("Caught KeyboardInterrupt, terminating workers")
-            p.terminate()
-    print("Normal termination")
+    # print("Starting jobs")
+    # with multiprocessing.Pool(5, init_worker) as p:
+    #     print("Waiting for results")
+    #     try:
+    #         res = p.starmap(resample_to_quarter, for_parallel)
+    #     except KeyboardInterrupt:
+    #         print("Caught KeyboardInterrupt, terminating workers")
+    #         p.terminate()
+    # print("Normal termination")
 
-    p.join()  # this waits for all worker processes to terminate.
+    # p.join()  # this waits for all worker processes to terminate.
+
+    res = np.full((2,NUM_LATS, NUM_LONS), np.nan)
+    mp = resample_to_quarter(map_rain=rain_beg,lat_rain=lat_beg,lon_rain=lon_beg,mask=hour_beg)
+    res[0,:,:] = mp
+    mp = resample_to_quarter(map_rain=rain_end,lat_rain=lat_end,lon_rain=lon_end,mask=hour_end)
+    res[1,:,:] = mp
+
 
     hour_map = np.nanmean((res), axis=0)
 
-    return (hour_map, hour)
+    return (hour_map, hour, last_modified_beg)
 
 
 def resample_imerg_day(times, time_intervals, date, footprint_diameter_km, target_path=Path(".")):
     total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
-    # Using process pool for resampling
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+
+    
+    #Using process pool for resampling
+    with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
         results = {
             executor.submit(
                 resample_hour, hour, times, time_intervals, date, footprint_diameter_km, target_path
@@ -237,11 +247,11 @@ def resample_imerg_day(times, time_intervals, date, footprint_diameter_km, targe
         }
         for future in concurrent.futures.as_completed(results):
             try:
-                (map, idx) = future.result()
+                (map, idx, modtime) = future.result()
                 total_hour[:, :, idx] = map
             except KeyboardInterrupt:
                 return
             except Exception as e:
                 print(f"Error in run: {e}")
 
-    return total_hour
+    return total_hour, modtime

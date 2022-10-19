@@ -2,7 +2,7 @@ import argparse
 import datetime
 import os
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union
 
 from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
@@ -10,6 +10,22 @@ import numpy as np
 from era5_request.era5_requests import era5_hourly_single_level_request
 from access_io.access_output import get_access_output_filename_daily_folder
 from access_io.access_output import write_daily_ancillary_var_netcdf
+
+from access_io.access_attr_define import (
+    common_global_attributes_access,
+    resamp_tb_attributes_access,
+)
+from access_io.access_attr_define import rr_imerg_attributes_access
+from access_io.access_attr_define import (
+    tcwv_era5_attributes_access,
+    tclw_era5_attributes_access,
+    skt_era5_attributes_access,
+)
+from access_io.access_attr_define import (
+    u10n_era5_attributes_access,
+    v10n_era5_attributes_access,
+)
+
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 
@@ -17,6 +33,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     *,
     current_day: datetime.date,
     variable: Tuple[str, str],
+    glb_attrs: Union[dict, str],
     var_attrs: dict,
     satellite: str,
     dataroot: Path,
@@ -93,7 +110,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         var = ds1[variable[1]][hour_index1:hour_index2, :, :]
         
     else:
-        #This is the case when the 25th hour is in the next month
+        # This is the case when the 25th hour is in the next month
         hour_index1 = 24 * (current_day.day - 1)
         hour_index2 = hour_index1 + 24
         ds1 = netcdf_dataset(file1)
@@ -103,7 +120,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         var_next_day = ds2[variable[1]][0, :, :]
         var = np.concatenate((var_first_day, var_next_day[np.newaxis, :, :]), axis=0)
 
-    #file1 modification time as a datetime.datetime object
+    # file1 modification time as a datetime.datetime object
     mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
 
     # ERA-5 files are upside down relative to RSS convention.
@@ -113,7 +130,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
     # interpolate the array of var maps to the times in the "times" maps
 
-    print(f"Interpolating {variable[0]}")
+    print(f"Interpolating...{variable[0]}")
 
     # list of times, each hour.
     var_times = np.arange(0.0, 86401.0, 3600.0)
@@ -128,7 +145,10 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         )
         var_by_hour[:, :, hour_index] = var_at_time_map
 
-    var_attrs['Date accessed'] = f'{mod_time}'
+    var_attrs["Date accessed"] = f"{mod_time}"
+
+    glb_attrs["id"] = var_filename_final.name
+    glb_attrs["corresponding TB file"] = base_filename.name
 
     # write the results to the existing output file
     write_daily_ancillary_var_netcdf(
@@ -137,7 +157,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         anc_data=var_by_hour,
         anc_name=anc_name,
         anc_attrs=var_attrs,
-        dataroot=dataroot
+        global_attrs=glb_attrs,
+        dataroot=dataroot,
     )
 
 
@@ -191,6 +212,7 @@ if __name__ == "__main__":
 
         # need this because var name for the ERA5 request is not that same as
         # the variable name in the nc file that is provided/downloaded
+        
         variable = ("Skin temperature", "skt")
         source = (
             "Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. "
@@ -198,9 +220,11 @@ if __name__ == "__main__":
                "1999–2049. https://doi.org/10.1002/qj.3803. "
                "ERA5 hourly data on single levels from 1959 to present. Skin Temperature"
                "0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. "
-               "Dataset DOI: 10.24381/cds.adbb2d47 ")
+            "Dataset DOI: 10.24381/cds.adbb2d47 "
+        )
 
-        var_attrs = dict(standard_name="surface_temperature",
+        var_attrs = dict(
+            standard_name="surface_temperature",
                      long_name="skin temperature interpolated from hourly ERA5 output",
                      valid_min=150.0,
                      valid_max=400.0,
@@ -208,15 +232,19 @@ if __name__ == "__main__":
                      v_fill=-999.0,
                      source=source
                         )
+        glb_attrs_common = common_global_attributes_access(date, version="v00r00")
+        glb_attrs_skt = skt_era5_attributes_access(satellite,version="v00r00")
+        glb_attrs = glb_attrs_common | glb_attrs_skt
         add_ERA5_single_level_variable_to_ACCESS_output(
             current_day=date,
             variable=variable,
             var_attrs=var_attrs,
+            glb_attrs=glb_attrs,
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
             verbose=args.verbose,
-            force_overwrite=True
+            force_overwrite=True,
         )
 
         variable = ("Total column water vapour", "tcwv")
@@ -227,25 +255,32 @@ if __name__ == "__main__":
                "1999–2049. https://doi.org/10.1002/qj.3803. "
                "ERA5 hourly data on single levels from 1959 to present. Total column water vapour"
                "0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. "
-               "Dataset DOI: 10.24381/cds.adbb2d47 ")
+            "Dataset DOI: 10.24381/cds.adbb2d47 "
+        )
 
-        var_attrs = dict(standard_name="atmosphere_mass_content_of_water_vapor",
+        var_attrs = dict(
+            standard_name="atmosphere_mass_content_of_water_vapor",
                      long_name="Total column water vapour interpolated from hourly ERA5 output",
                      valid_min=0.0,
                      valid_max=120.0,
                      units="kg/m^2",
                      v_fill=-999999.0,
-                     source=source
+            source=source,
                         )
+        
+        glb_attrs_common = common_global_attributes_access(date, version="v00r00")
+        glb_attrs_tcwv = tcwv_era5_attributes_access(satellite, version="v00r00")
+        glb_attrs = glb_attrs_common | glb_attrs_tcwv
         add_ERA5_single_level_variable_to_ACCESS_output(
             current_day=date,
             variable=variable,
             var_attrs=var_attrs,
+            glb_attrs=glb_attrs,
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
             verbose=args.verbose,
-            force_overwrite=True
+            force_overwrite=True,
         )
 
         variable = ("total_column_cloud_liquid_water", "tclw")
@@ -256,25 +291,32 @@ if __name__ == "__main__":
                "1999–2049. https://doi.org/10.1002/qj.3803. "
                "ERA5 hourly data on single levels from 1959 to present. Total column cloud liquid water"
                "0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. "
-               "Dataset DOI: 10.24381/cds.adbb2d47 ")
+            "Dataset DOI: 10.24381/cds.adbb2d47 "
+        )
 
-        var_attrs = dict(standard_name="atmosphere_mass_content_of_cloud_liquid_water",
+        var_attrs = dict(
+            standard_name="atmosphere_mass_content_of_cloud_liquid_water",
                      long_name="Total column cloud liquid water interpolated from hourly ERA5 output",
                      valid_min=0.0,
                      valid_max=20.0,
                      units="kg/m^2",
                      v_fill=-999999.0,
-                     source=source
+            source=source,
                         )
+        glb_attrs_common = common_global_attributes_access(date, version="v00r00")
+        glb_attrs_tclw = tclw_era5_attributes_access(satellite, version="v00r00")
+        glb_attrs = glb_attrs_common | glb_attrs_tclw
+
         add_ERA5_single_level_variable_to_ACCESS_output(
             current_day=date,
             variable=variable,
             var_attrs=var_attrs,
+            glb_attrs=glb_attrs,
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
             verbose=args.verbose,
-            force_overwrite=True
+            force_overwrite=True,
         )
 
         variable = ("10m_u_component_of_neutral_wind", "u10n")
@@ -285,25 +327,32 @@ if __name__ == "__main__":
                "1999–2049. https://doi.org/10.1002/qj.3803. "
                "ERA5 hourly data on single levels from 1959 to present. 10m_u_component_of_neutral_wind"
                "0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. "
-               "Dataset DOI: 10.24381/cds.adbb2d47 ")
+            "Dataset DOI: 10.24381/cds.adbb2d47 "
+        )
 
-        var_attrs = dict(standard_name="eastward_wind",
+        var_attrs = dict(
+            standard_name="eastward_wind",
                      long_name="10m u component of neutral wind interpolated from hourly ERA5 output",
                      valid_min=-100.0,
                      valid_max=100.0,
                      units="m/s",
                      v_fill=-999999.0,
-                     source=source
+            source=source,
                         )
+
+        glb_attrs_common = common_global_attributes_access(date, version="v00r00")
+        glb_attrs_u10n = u10n_era5_attributes_access(satellite, version="v00r00")
+        glb_attrs = glb_attrs_common | glb_attrs_u10n
         add_ERA5_single_level_variable_to_ACCESS_output(
             current_day=date,
             variable=variable,
             var_attrs=var_attrs,
+            glb_attrs=glb_attrs,
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
             verbose=args.verbose,
-            force_overwrite=True
+            force_overwrite=True,
         )
 
         variable = ("10m_v_component_of_neutral_wind", "v10n")
@@ -314,25 +363,32 @@ if __name__ == "__main__":
                "1999–2049. https://doi.org/10.1002/qj.3803. "
                "ERA5 hourly data on single levels from 1959 to present. 10m_v_component_of_neutral_wind"
                "0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. "
-               "Dataset DOI: 10.24381/cds.adbb2d47 ")
+            "Dataset DOI: 10.24381/cds.adbb2d47 "
+        )
 
-        var_attrs = dict(standard_name="northward_wind",
+        var_attrs = dict(
+            standard_name="northward_wind",
                      long_name="10m v component of neutral wind interpolated from hourly ERA5 output",
                      valid_min=-100.0,
                      valid_max=100.0,
                      units="m/s",
                      v_fill=-999999.0,
-                     source=source
+            source=source,
                         )
+
+        glb_attrs_common = common_global_attributes_access(date, version="v00r00")
+        glb_attrs_v10n = v10n_era5_attributes_access(satellite, version="v00r00")
+        glb_attrs = glb_attrs_common | glb_attrs_v10n
         add_ERA5_single_level_variable_to_ACCESS_output(
             current_day=date,
             variable=variable,
             var_attrs=var_attrs,
+            glb_attrs=glb_attrs,
             satellite=satellite,
             dataroot=access_root,
             temproot=temp_root,
             verbose=args.verbose,
-            force_overwrite=True
+            force_overwrite=True,
         )
 
 

@@ -1,0 +1,6 @@
+{
+    "summary": "Total Column Water Vapor corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
+    "keywords":"EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC WATER VAPOR > WATER VAPOR INDICATORS > TOTAL PRECIPITABLE WATER",
+    "title": "Total Column Water Vapor from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
+    "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store"
+}

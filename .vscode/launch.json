@@ -7,7 +7,7 @@
 
 
         {
-              "name": "Python: Current File no Args",
+            "name": "Python: Current File no Args",
             "type": "python",
             "request": "launch",
             "program": "${file}",
@@ -16,6 +16,7 @@
             "args": [],
         },
 
+
         {
             "name": "make_daily_ACCESS_files.py",
             "type": "python",
@@ -23,10 +24,28 @@
             "program": "make_daily_ACCESS_files.py",
             "args":["L:/access/amsr2_out_test",
                     "L:/access/_temp",
-                    "2012-08-01",
-                    "2012-08-03",
-                    "amsr2",],
+                    "2012-07-10",
+                    "2012-07-12",
+                    "amsr2",
+                    "30",
+                    "v00r01"],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Add Wind Emiss",
+            "type": "python",
+            "request": "launch",
+            "program": "add_wind_emiss_ACCESS.py",
+            "args":["/mnt/ops1p-ren/l/ACCESS/amsr2_out",
+                    "/mnt/ops1p-ren/l/access/amsr2_out_test",
+                    "era5",
+                    "era5",
+                    "2012-08-04",
+                    "2012-08-05",
+                    "amsr2",
+                    "--verbose"],
+            "console": "integratedTerminal",
+
         },
 
         {
@@ -36,8 +55,8 @@
             "program": "add_land_fraction_to_ACCESS_output.py",
             "args":["L:/ACCESS/amsr2_out_test",
                     "L:/access/_temp",
-                    "2012-07-05",
-                    "2012-08-03",
+                    "2012-08-04",
+                    "2012-08-05",
                     "amsr2",
                     "modis"],
             "console": "integratedTerminal"
