@@ -60,7 +60,7 @@ def atm_pars_era5_attributes_access(satellite: str, version="v00r00"):
     attrs["creation-date"] = f"{datetime.datetime.now()}"
     return attrs
 
-def anc_var_era5_attributes_access(satellite: str, var: str, version="v00r00"):
+def anc_var_attributes_access(satellite: str, var: str, version="v00r00"):
 
     file = attr_define_root / f"{var}_attributes_access_{satellite}.json"
 
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         ]
 
         for var in var_list:
-            attrs = anc_var_era5_attributes_access(satellite, var, version=version)
+            attrs = anc_var_attributes_access(satellite, var, version=version)
             file.write("--------------------------")
             file.write(f"ACCESS {var} Attributes")
             file.write("--------------------------")

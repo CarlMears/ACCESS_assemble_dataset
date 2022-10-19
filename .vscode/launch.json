@@ -81,9 +81,10 @@
             "program": "add_imerg_rain_rate_to_ACCESS_output.py",
             "args":["L:/ACCESS/amsr2_out_test",
                     "L:/ACCESS/_temp",
-                    "2012-08-01",
-                    "2012-08-03",
-                    "amsr2"],
+                    "2012-07-10",
+                    "2012-07-12",
+                    "amsr2",
+                    "70"],
             "console": "integratedTerminal"
         }
     ]

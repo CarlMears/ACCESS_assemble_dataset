@@ -221,9 +221,10 @@ def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, targ
     # p.join()  # this waits for all worker processes to terminate.
 
     res = np.full((2,NUM_LATS, NUM_LONS), np.nan)
-    mp = resample_to_quarter(map_rain=rain_beg,lat_rain=lat_beg,lon_rain=lon_beg,mask=hour_beg)
+    
+    mp = resample_to_quarter(map_rain=rain_beg,lat_rain=lat_beg,lon_rain=lon_beg,mask=hour_beg, footprint_diameter_km=footprint_diameter_km, window=0.5)
     res[0,:,:] = mp
-    mp = resample_to_quarter(map_rain=rain_end,lat_rain=lat_end,lon_rain=lon_end,mask=hour_end)
+    mp = resample_to_quarter(map_rain=rain_end,lat_rain=lat_end,lon_rain=lon_end,mask=hour_end, footprint_diameter_km=footprint_diameter_km, window=0.5)
     res[1,:,:] = mp
 
 

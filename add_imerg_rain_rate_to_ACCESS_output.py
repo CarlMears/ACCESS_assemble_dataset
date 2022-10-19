@@ -8,12 +8,12 @@ import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
 
 from access_io.access_output import (
-    append_var_to_daily_tb_netcdf,
+    write_daily_ancillary_var_netcdf,
     get_access_output_filename_daily_folder,  
 )
 from access_io.access_output import set_or_create_attr
 from access_io.access_attr_define import common_global_attributes_access
-from access_io.access_attr_define import rr_imerg_attributes_access
+from access_io.access_attr_define import anc_var_attributes_access
 from imerg_request.imerg_requests import imerg_half_hourly_request
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
 
@@ -29,13 +29,10 @@ def write_imerg_rain_rate_for_ACCESS(
 ) -> None:
 
     base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, dataroot, "resamp_tbs"
-    )
-    imerge_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, dataroot, "rain_rate_imerge_temp"
+        current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs"
     )
     imerge_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite, dataroot, "rain_rate_imerge"
+        current_day, satellite, footprint_diameter_km, dataroot, "rain_rate_imerge"
     )
 
     if not base_filename.is_file():
@@ -85,31 +82,48 @@ def write_imerg_rain_rate_for_ACCESS(
     rr_for_access = np.roll(rr_for_access, 720, axis=1)
     # write the results to the existing output file
     today = datetime.date.today()
-    append_var_to_daily_tb_netcdf(
-        date=date,
-        satellite=satellite,
-        var=rr_for_access,
-        var_name="rainfall_rate",
-        standard_name="rainfall_rate",
-        long_name="rainfall rates from 30-minute IMERG",
-        valid_min=0.0,
-        valid_max=50.0,
-        units="mm/hr",
-        source=(
+
+    version = "v00r00"
+    rr_attrs = anc_var_attributes_access(satellite,"imerg_rr",version=version)
+    global_attrs = common_global_attributes_access(date,satellite,footprint_diameter_km,version=version)
+
+    rr_attrs['source'] = (
             "Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan "
             "(2019), GPM IMERG Final Precipitation L3 Half Hourly "
             "0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences "
             "Data and Information Services Center (GES DISC), "
             f"Accessed: {today.strftime('%m/%d/%Y')}, 10.5067/GPM/IMERG/3B-HH/06"
-        ),
-        cell_method=(
+            )
+    rr_attrs['cell_method']=(
             "time: closest 30-min IMERG file; "
             f"area: weighted average over {footprint_diameter_km}km footprint"
-        ),
-        v_fill=-999.0,
-        dataroot=dataroot,
-        overwrite=True,
+            )
+
+    write_daily_ancillary_var_netcdf(
+        date=date,
+        satellite=satellite,
+        target_size=footprint_diameter_km,
+        anc_data = rr_for_access,
+        anc_name = "rainfall_rate",
+        anc_attrs = rr_attrs,
+        global_attrs = global_attrs,
+        dataroot = dataroot
     )
+
+    # append_var_to_daily_tb_netcdf(
+    #     date=date,
+    #     satellite=satellite,
+    #     var=rr_for_access,
+    #     var_name="rainfall_rate",
+    #     standard_name="rainfall_rate",
+    #     long_name="rainfall rates from 30-minute IMERG",
+    #     valid_min=0.0,
+    #     valid_max=50.0,
+    #     units="mm/hr",
+    #     v_fill=-999.0,
+    #     dataroot=dataroot,
+    #     overwrite=True,
+    # )
 
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ from numpy.typing import ArrayLike
 
 from rss_lock.locked_dataset import LockedDataset
 from access_io.access_attr_define import common_global_attributes_access,resamp_tb_attributes_access
-from access_io.access_attr_define  import atm_pars_era5_attributes_access,anc_var_era5_attributes_access
+from access_io.access_attr_define  import atm_pars_era5_attributes_access,anc_var_attributes_access
 
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
@@ -120,6 +120,8 @@ def append_var_to_daily_tb_netcdf(
     dataroot: Path = ACCESS_ROOT,
     overwrite: bool = False,
 ) -> None:
+
+    raise ValueError('This method is no longer used')
 
     filename = get_access_output_filename(date, satellite, dataroot)
     with LockedDataset(filename, "a", 60) as root_grp:
@@ -689,6 +691,7 @@ def write_daily_ancillary_var_netcdf(
     *,
     date: datetime.date,
     satellite: str,
+    target_size: int,
     anc_data: ArrayLike,
     anc_name: str,
     anc_attrs: dict,
@@ -697,13 +700,13 @@ def write_daily_ancillary_var_netcdf(
 ) -> None:
 
     base_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), dataroot, "resamp_tbs"
+        date, satellite.lower(), target_size, dataroot, "resamp_tbs"
     )
     var_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), dataroot, f"{anc_name}_temp"
+        date, satellite.lower(), target_size, dataroot, f"{anc_name}_temp"
     )
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), dataroot, anc_name
+        date, satellite.lower(), target_size, dataroot, anc_name
     )
 
     with LockedDataset(var_filename, "w", 60) as nc_out:
