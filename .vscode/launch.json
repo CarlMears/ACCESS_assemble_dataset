@@ -4,13 +4,13 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+
         {
             "name": "Python: Current File no Args",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/add_atmosphere_to_ACCESS_output.py",
-            "envFile": "${workspaceFolder}/.env",
-            "args": ["${workspaceFolder}/2022-03-31", "2012-07-30", "amsr2"],
+            "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [],
