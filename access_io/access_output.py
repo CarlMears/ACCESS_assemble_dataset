@@ -7,6 +7,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from rss_lock.locked_dataset import LockedDataset
+from access_io.access_attr_define import common_global_attributes_access,resamp_tb_attributes_access
+from access_io.access_attr_define  import atm_pars_era5_attributes_access,anc_var_era5_attributes_access
 
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
@@ -553,6 +555,7 @@ def write_daily_tb_netcdf(
     date: datetime.date,
     satellite: str,
     target_size: int,
+    version: str,
     tb_array_by_hour: ArrayLike,
     time_array_by_hour: ArrayLike,
     dataroot: Path = ACCESS_ROOT,
@@ -567,86 +570,39 @@ def write_daily_tb_netcdf(
     lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
     lons = np.arange(0, NUM_LONS) * 0.25
 
-    # with netcdf_dataset(filename, "w", format="NETCDF4") as root_grp:
-    with LockedDataset(filename, "w", 60) as root_grp:
-        root_grp.Conventions = "CF-1.8"
-        root_grp.standard_name_vocabulary = (
-            "CF Standard Name Table (v78, 21 September 2021)"
-        )
-        root_grp.id = filename.name
-        root_grp.title = f"Resampled {satellite} brightness temperatures"
-        root_grp.product_version = "v00r00"
-        root_grp.date_issued = "2021-10-01"
-        root_grp.summary = (
-            "Remote Sensing Systems (RSS) Resampled brightness temperature; "
-            "intercalibrated and homogenized brightness temperature "
-            "polar-orbiting resampled to a regular Earth grid"
-        )
-        root_grp.keywords = (
-            "EARTH SCIENCE > SPECTRAL/ENGINEERING > MICROWAVE > BRIGHTNESS TEMPERATURE"
-        )
-        root_grp.keywords_vocabulary = (
-            "NASA Global Change Master Directory (GCMD) "
-            "Earth Science Keywords, Version 6.0"
-        )
-        root_grp.platform = "GCOM-W1, JAXA"
-        root_grp.sensor = "AMSR2 > Advanced Microwave Scanning Radiometer 2"
-        root_grp.cdm_data_type = "Grid"
-        root_grp.program = (
-            "NASA ACCESS-0031 > Machine Learning Datasets "
-            "for the Earth’s Natural Microwave Emission"
-        )
+    # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
+    with LockedDataset(filename, "w", 60) as nc_out:
+
+        #set the global_attributes
+
+        attrs = common_global_attributes_access(date, target_size,version)
+
+        for key in attrs.keys():
+            value = global_attrs[key]
+            set_or_create_attr(nc_out, key, value)
+
+
+        nc_out.id = filename.name
         if file_list is not None:
             source_string = ", ".join(str(p) for p in file_list)
-            root_grp.source = source_string
-        root_grp.date_created = datetime.datetime.now().isoformat()
-        root_grp.creator_name = "Carl Mears"
-        root_grp.creator_url = "http://www.remss.com/"
-        root_grp.creator_email = "mears@remss.com"
-        root_grp.institution = "Remote Sensing Systems"
-        root_grp.processing_level = "NASA Level 4"
-        root_grp.references = "None"
-        root_grp.history = (
-            datetime.datetime.now().isoformat()
-            + " Created Resampled Brightness Temperature from RSS AMSR2 L1A data"
-        )
-        root_grp.geospatial_lat_min = -90.0
-        root_grp.geospatial_lat_max = 90.0
-        root_grp.geospatial_lon_min = 0.0
-        root_grp.geospatial_lon_max = 359.9999
-        root_grp.geospatial_lat_units = "degrees_north"
-        root_grp.geospatial_lon_units = "degrees_east"
-        root_grp.spatial_resolution = "30 km X 30 km"
-        day_boundary = datetime.datetime.combine(date, datetime.time())
-        start_date = day_boundary - datetime.timedelta(minutes=30)
-        end_date = day_boundary + datetime.timedelta(minutes=1410.0)
-        root_grp.time_coverage_start = start_date.isoformat()
-        root_grp.time_coverage_end = end_date.isoformat()
-        root_grp.time_coverage_duration = "P24H"
-        root_grp.license = "No restrictions on access or use"
-        root_grp.contributor_name = "Frank Wentz, Carl Mears"
-        root_grp.contributor_role = (
-            "Principal investigator and originator of "
-            "input/source or antenna temperature data, "
-            "Processor and author of entire driver routine "
-            "which resamples RSS native brightness temperature to a fixed Earth grid"
-        )
+            nc_out.source = source_string
+        
+        # create Dimensions
+        nc_out.createDimension("latitude", NUM_LATS)
+        nc_out.createDimension("longitude", NUM_LONS)
+        nc_out.createDimension("hours", NUM_HOURS)
+        nc_out.createDimension("channels", NUM_CHANNELS)
 
-        root_grp.createDimension("latitude", NUM_LATS)
-        root_grp.createDimension("longitude", NUM_LONS)
-        root_grp.createDimension("hours", NUM_HOURS)
-        root_grp.createDimension("channels", NUM_CHANNELS)
-
-        latitude = root_grp.createVariable(
+        latitude = nc_out.createVariable(
             "latitude", "f4", ("latitude",), fill_value=-999.0
         )
-        longitude = root_grp.createVariable(
+        longitude = nc_out.createVariable(
             "longitude", "f4", ("longitude",), fill_value=-999.0
         )
-        hours = root_grp.createVariable("hours", "i4", ("hours",))
-        channels = root_grp.createVariable("channels", "i4", ("channels",))
+        hours = nc_out.createVariable("hours", "i4", ("hours",))
+        channels = nc_out.createVariable("channels", "i4", ("channels",))
 
-        time = root_grp.createVariable(
+        time = nc_out.createVariable(
             "time",
             "i8",
             (
@@ -657,7 +613,7 @@ def write_daily_tb_netcdf(
             zlib=True,
             fill_value=-999999,
         )
-        tbs = root_grp.createVariable(
+        tbs = nc_out.createVariable(
             "brightness_temperature",
             "f4",
             (

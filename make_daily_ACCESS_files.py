@@ -45,6 +45,7 @@ def make_daily_ACCESS_tb_file(
     current_day: date,
     satellite: str,
     target_size: int,
+    version: str,
     dataroot: Path,
     channels: Collection[int],
     verbose: bool = False,
@@ -133,7 +134,7 @@ def make_daily_ACCESS_tb_file(
                             f"time_range({start_time_sec}:{end_time_sec}) "
                             f"Num Obs: {num_ok}"
                         )
-    print()
+    
     if at_least_one_orbit:
         if plot_example_map:
             plot_global_map(tb_array_by_hour[:, :, 0, 5], vmin=0.0, vmax=330)
@@ -142,6 +143,7 @@ def make_daily_ACCESS_tb_file(
             date=current_day,
             satellite=satellite,
             target_size=target_size,
+            version=version,
             tb_array_by_hour=tb_array_by_hour,
             time_array_by_hour=time_array_by_hour,
             file_list=file_list,
@@ -176,6 +178,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
     parser.add_argument("target_size",choices=["30","70"],help="Size of target footprint in km")
+    parser.add_argument("version",help="version sting - e.g. v01r00")
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
@@ -193,6 +196,7 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     target_size = int(args.target_size)
+    version = args.version
     channels = list(range(5, 13))
 
     day_to_do = START_DAY
@@ -202,6 +206,7 @@ if __name__ == "__main__":
             current_day=day_to_do,
             satellite=satellite,
             target_size=target_size,
+            version=version,
             dataroot=access_root,
             channels=channels,
             verbose=args.verbose,

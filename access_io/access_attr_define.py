@@ -1,261 +1,121 @@
 import datetime
-from typing import Sequence, Union, Optional
+import json
 from pathlib import Path
 
+"""
+The routines in this file define the attributes for the ACCESS project output file
+Constant attributes are read in from the .json files in attr_define_root
+"""
 
-def common_global_attributes_access(date : datetime.datetime, 
-                                    version: str = 'v00r00') -> dict:
+attr_define_root = Path("/mnt/ops1p-ren/m/job_access/python/dataset_assembly/access_io/attr_define_json")
+
+def common_global_attributes_access(
+    date: datetime.datetime, target_size: int, version: str = "v00r00"
+) -> dict:
 
     day_boundary = datetime.datetime.combine(date, datetime.time())
     start_date = day_boundary - datetime.timedelta(minutes=30)
     end_date = day_boundary + datetime.timedelta(minutes=1410.0)
 
-    attrs_glob = dict(
-        Conventions="CF-1.8",
-        standard_name_vocabulary="CF Standard Name Table (v78, 21 September 2021)",
-        product_version=version,
-        date_issued="2021-10-01",
-        keywords_vocabulary=(
-            "NASA Global Change Master Directory (GCMD) "
-            "Earth Science Keywords, Version 6.0"
-        ),
-        cdm_data_type="Grid",
-        program=(
-            "NASA ACCESS-0031 > Machine Learning Datasets "
-            "for the Earth's Natural Microwave Emission"
-        ),
-        date_created=datetime.datetime.now().isoformat(),
-        creator_name="Carl Mears",
-        creator_url="http://www.remss.com/ ",
-        creator_email="mears@remss.com",
-        institution="Remote Sensing Systems",
-        processing_level="NASA Level 4",
-        references="None",
-        geospatial_lat_min=-90.0,
-        geospatial_lat_max=90.0,
-        geospatial_lon_min=0.0,
-        geospatial_lon_max=359.9999,
-        geospatial_lat_units="degrees_north",
-        geospatial_lon_units="degrees_east",
-        spatial_resolution="30 km X 30 km",
-        time_coverage_start=start_date.isoformat(),
-        time_coverage_end=end_date.isoformat(),
-        time_coverage_duration="P24H",
-        license="This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.",
-        contributor_name="Frank Wentz, Carl Mears",
-        contributor_role=(
-            "Principal investigator and originator of "
-            "input/source or antenna temperature data, "
-            "Principle investigator of ACCESS project which resamples "
-            "RSS native brightness temperatures and ancillary to a "
-            "fixed Earth grid"
-        ),
-    )
+    file = attr_define_root / f"common_attributes_access.json"
+
+    with open(file) as json_file:
+        attrs_glob = json.load(json_file)
+
+    attrs_glob["title"] = f"Resampled {satellite} brightness temperatures"
+    attrs_glob["date_created"] = datetime.datetime.now().isoformat()
+    attrs_glob["spatial_resolution"] = f"{target_size} km X {target_size} km"
+    attrs_glob["time_coverage_start"] = start_date.isoformat()
+    attrs_glob["time_coverage_end"] = end_date.isoformat()
 
     return attrs_glob
 
-
-def resamp_tb_attributes_access(
-                        satellite: str, 
-                        version="v00r00"
-                                ):
-
-    attrs_glob_tb = (
-        dict(
-            summary=(
-                "Remote Sensing Systems (RSS) Resampled brightness temperature; "
-                "intercalibrated and homogenized brightness temperature "
-                "polar-orbiting resampled to a regular Earth grid"
-            ),
-            keywords=(
-                "EARTH SCIENCE > SPECTRAL/ENGINEERING > MICROWAVE > BRIGHTNESS TEMPERATURE"
-            ),
-            title=f"Resampled {satellite} brightness temperatures",
-            version=version,
-            history=(
-                datetime.datetime.now().isoformat()
-                + " Created Resampled Brightness Temperature from RSS AMSR2 L1A data"
-            ),
-            platform="GCOM-W1, JAXA",
-            sensor="AMSR2 > Advanced Microwave Scanning Radiometer 2",
-        ),
-    )
-    return attrs_glob_tb
-
-
-def skt_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_rr = dict(
-        summary=(
-            f"Skin Temperature corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > LAND SURFACE > SURFACE THERMAL PROPERTIES > SKIN TEMPERATURE, "
-            "EARTH SCIENCE > OCEANS > OCEAN TEMPERATURE > SEA SURFACE TEMPERATURE > SEA SURFACE SKIN TEMPERATURE"
-        ),
-        title=f"ERA5 skin temperature, resampled to circular gaussian footprints 0.25 degree Earth grid",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store",
-    )
-    return attrs_glob_rr
-
-
-def rr_imerg_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_rr = dict(
-        summary=(
-            f"Rain Rate corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=("EARTH SCIENCE > ATMOSPHERE > PRECIPITATION > PRECIPITATION RATE"),
-        title=f"IMERG Rain Rate, resampled to circular gaussian footprints 0.25 degree Earth grid",
-        history=f"{datetime.datetime.now()} Created from on-line IMERG data",
-    )
-    return attrs_glob_rr
-
-
-def tcwv_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_tcwv = dict(
-        summary=(
-            f"Total Column Water Vapor corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC WATER VAPOR > WATER VAPOR INDICATORS > TOTAL PRECIPITABLE WATER"
-        ),
-        title=f"Total Column Water Vapor from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store",
-    )
-    return attrs_glob_tcwv
-
-
-def tclw_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_tclw = dict(
-        summary=(
-            f"Total Column Cloud Water corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > ATMOSPHERE > CLOUDS > CLOUD MICROPHYSICS > CLOUD LIQUID WATER"
-        ),
-        title=f"Total Column Cloud Water from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store",
-    )
-    return attrs_glob_tclw
-
-
-def u10n_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_u10n = dict(
-        summary=(
-            f"Eastward wind corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > OCEANS > OCEAN WINDS > SURFACE WINDS",
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC WINDS > SURFACE WINDS",
-        ),
-        title=f"10m neutral zonal winds from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store",
-    )
-    return attrs_glob_u10n
-
-
-def v10n_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_v10n = dict(
-        summary=(
-            f"Northward wind corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > OCEANS > OCEAN WINDS > SURFACE WINDS",
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC WINDS > SURFACE WINDS",
-        ),
-        title=f"10m neutral meridional winds from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store",
-    )
-    return attrs_glob_v10n
-
-def atm_pars_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_atm = dict(
-        summary=(
-            f"Atmopspheric radiation parameters corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > SPECTRAL IRRADIANCE",
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE",
-        ),
-        title=f"Atmospheric radiation parameters computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model",
-    )
-    return attrs_glob_atm
-
-def tbup_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_tbup = dict(
-        summary=(
-            f"Upwelling radiance (brightness temperature) corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > SPECTRAL IRRADIANCE",
-        ),
-        title=f"Upwelling Radiance computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model",
-    )
-    return attrs_glob_tbup
-
-def tbdown_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_tbdown= dict(
-        summary=(
-            f"Downwelling radiance (brightness temperature) corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > SPECTRAL IRRADIANCE",
-        ),
-        title=f"Donwelling Radiance computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model",
-    )
-    return attrs_glob_tbdown
-
-def trans_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_trans= dict(
-        summary=(
-            f"Atmospheric Transmissivty corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE",
-        ),
-        title=f"Downelling Radiance computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model",
-    )
-    return attrs_glob_tbdown
-
-def ocean_emiss_era5_attributes_access(satellite:str, version="v00r00"):
-
-    attrs_glob_ocean_emiss = dict(
-        summary=(
-            f"Calculated Ocean Emissivity using Remote Sensing Systems (RSS)surface model for {satellite}; "
-        ),
-        keywords=(
-            "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > EMISSIVITY",
-        ),
-        title=f"Ocean Surface Emissivity calculated from ERA5 neutral stability winds on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        history=f"{datetime.datetime.now()} Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS surface radiation model",
-    )
-    return attrs_glob_ocean_emiss
-
-def ocean_emiss_era5_attributes_access2(satellite:str, version="v00r00"):
-
-    import json
-    from pathlib import Path
-    attr_define_root = Path('/mnt/ops1p-ren/m/job_access/python/attr_define')
-    file = attr_define_root / f"ocean_emiss_era5_attributes_access_{satellite}.json"
+def resamp_tb_attributes_access(satellite: str, version="v00r00"):
+    if satellite == "AMSR2":
+        file = attr_define_root / "resamp_tb_attributes_access_AMSR2.json"
+    else:
+        raise ValueError(
+            f"Satellite {satellite} not valid in resamp_tb_attributes_access"
+        )
 
     with open(file) as json_file:
-        attrs_glob_ocean_emiss = json.load(json_file)
+        attrs_glob_tb = json.load(json_file)
 
-    attrs_glob_ocean_emiss['version'] = version
-    attrs_glob_ocean_emiss['creation-date'] = f"{datetime.datetime.now()}"
+    attrs_glob_tb["date_created"] = datetime.datetime.now().isoformat()
+    attrs_glob_tb["version"] = version
 
-    return attrs_glob_ocean_emiss
+    return attrs_glob_tb
+
+def atm_pars_era5_attributes_access(satellite: str, version="v00r00"):
+
+    file = attr_define_root / f"atm_pars_era5_attributes_access_{satellite}.json"
+
+    with open(file) as json_file:
+        attrs = json.load(json_file)
+
+    attrs["version"] = version
+    attrs["creation-date"] = f"{datetime.datetime.now()}"
+    return attrs
+
+def anc_var_era5_attributes_access(satellite: str, var: str, version="v00r00"):
+
+    file = attr_define_root / f"{var}_attributes_access_{satellite}.json"
+
+    with open(file) as json_file:
+        attrs_glob = json.load(json_file)
+
+    attrs_glob["version"] = version
+    attrs_glob["creation-date"] = f"{datetime.datetime.now()}"
+
+    return attrs_glob
+
+if __name__ == "__main__":
+    # exercise the code
+
+    def write_attrs(file,attrs):
+        for key in attrs.keys():
+            file.write(f"{key:25}:  {attrs[key]}\n")
+
+    satellite = "AMSR2"
+    version = "v0r01"
+
+    filename = attr_define_root / f"attributes_access_{satellite}.test.{version}.txt"
+    with open(filename,"w") as file:
+        date = datetime.date(2021, 3, 12)
+        target_size = 70
+        version = "v100r01"
+        attrs = common_global_attributes_access(date, target_size, version=version)
+        file.write("--------------------------\n")
+        file.write("ACCESS Common Attributes\n")
+        file.write("--------------------------\n")
+        write_attrs(file,attrs)
+
+        satellite = "AMSR2"
+        attrs = resamp_tb_attributes_access(satellite, version=version)
+        file.write("--------------------------\n")
+        file.write("ACCESS Resamp Tbs Attributes\n")
+        file.write("--------------------------\n")
+        write_attrs(file,attrs)
+
+        attrs = atm_pars_era5_attributes_access(satellite, version=version)
+        file.write("--------------------------\n")
+        file.write("Atm Pars Attributes\n")
+        file.write("--------------------------\n")
+        write_attrs(file,attrs)
+
+        var_list = [
+            "v10n_era5",
+            "ocean_emiss_era5",
+            "skt_era5",
+            "imerg_rr",
+            "tcwv_era5",
+            "tclw_era5",
+        ]
+
+        for var in var_list:
+            attrs = anc_var_era5_attributes_access(satellite, var, version=version)
+            file.write("--------------------------")
+            file.write(f"ACCESS {var} Attributes")
+            file.write("--------------------------")
+            write_attrs(file,attrs)
 

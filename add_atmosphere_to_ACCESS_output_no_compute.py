@@ -86,18 +86,19 @@ def write_atmosphere_to_daily_ACCESS(
     temproot: Path,
     verbose: bool = False,
 ) -> None:
-    """Append the atmospheric terms to daily ACCESS resampled-TB dataset.
+    """Add the atmospheric terms to daily ACCESS resampled-TB dataset.
 
-    The file is read in order to determine the valid points where the RTM should
-    be called. The resulting values are written by appending the new variables
-    to the file.
+       The information is added as a separate file e.g. amsr2_atm_par_era5_2012_08_01.nc
 
-    ERA5 data, both on the surface and as profiles, is required.
+        The base tb file is read in order to determine the valid points where the RTM should
+        be called. The resulting values are written by appending the new variables
+        to the file.
 
-    If the resampled TB file doesn't exist, a `FileNotFound` error will be
-    raised.
+        ERA5 data, both on the surface and as profiles, is required.
 
-    The configured `downloader` is used to download the ERA5 data, if needed.
+        If the resampled TB file doesn't exist, a `FileNotFound` error will be
+        raised.
+
     """
     if verbose:
         print(f"Opening data for {satellite} on {current_day} in {dataroot}")

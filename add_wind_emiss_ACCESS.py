@@ -19,10 +19,10 @@ from rss_lock.locked_dataset import LockedDataset
 # from access_io.access_output import write_daily_ancillary_var_netcdf
 
 from access_io.access_output import set_or_create_attr
-from dataset_assembly.access_io.access_attr_define import common_global_attributes_access
-from dataset_assembly.access_io.access_attr_define import atm_pars_era5_attributes_access
-from dataset_assembly.access_io.access_attr_define import ocean_emiss_era5_attributes_access #old version
-from dataset_assembly.access_io.access_attr_define import ocean_emiss_era5_attributes_access2 # new version, reads json file
+from access_io.access_attr_define import common_global_attributes_access
+from access_io.access_attr_define import atm_pars_era5_attributes_access
+from access_io.access_attr_define import ocean_emiss_era5_attributes_access #old version
+#from access_io.access_attr_define import ocean_emiss_era5_attributes_access2 # new version, reads json file
  
 from geomod10 import wind_emiss #python wrapper for geomod10b and geomod10c
 
@@ -45,6 +45,7 @@ from rss_plotting.global_map import plot_global_map
 import matplotlib.pyplot as plt
 
 def calc_emissivity_maps(*,date,wind_source,sst_source,target_size):
+
     print(f"{date}")
 
     #Get wind info from data repository
@@ -145,6 +146,8 @@ def write_ocean_emiss_to_daily_ACCESS(*,
 
     The configured `downloader` is used to download the ERA5 data, if needed.
     """
+
+    
     if verbose:
         print(f"Opening base file for {satellite} on {current_day} in {dataroot}")
 
@@ -169,19 +172,22 @@ def write_ocean_emiss_to_daily_ACCESS(*,
             glb_attrs_ocean_emiss_to_add2 = ocean_emiss_era5_attributes_access2(satellite, version="v00r00")
 
 
-            # for key in glb_attrs_ocean_emiss_to_add:
-            #     print(f'{key}: {glb_attrs_ocean_emiss_to_ad')
+            for key in glb_attrs_ocean_emiss_to_add:
+                 print(f'{key}: {glb_attrs_ocean_emiss_to_add[key]}')
+                
+            for key in glb_attrs_ocean_emiss_to_add2:
+                 print(f'{key}: {glb_attrs_ocean_emiss_to_add2[key]}')
             
             glb_attrs_ocean_emiss = glb_attrs_common | glb_attrs_ocean_emiss_to_add
 
-            atm_filename = get_access_output_filename_daily_folder(
-                current_day, satellite, outputroot, "ocean_emiss_era5_temp"
+            emiss_filename = get_access_output_filename_daily_folder(
+                current_day, satellite, target_size,outputroot, "ocean_emiss_era5_temp"
                 )
-            atm_filename_final = get_access_output_filename_daily_folder(
-                current_day, satellite, outputroot, "ocean_emiss_era5"
+            emiss_filename_final = get_access_output_filename_daily_folder(
+                current_day, satellite, target_size,outputroot, "ocean_emiss_era5"
                 )
-
-            with Dataset(atm_filename, mode="w") as trg:
+            os.makedirs(emiss_filename.parent,exist_ok=True)
+            with netcdf_dataset(emiss_filename, mode="w") as trg:
 
                 for name, dim in root_grp.dimensions.items():
                     if name in ["hours", "latitude", "longitude"]:
@@ -208,11 +214,15 @@ def write_ocean_emiss_to_daily_ACCESS(*,
                         {a: var_in.getncattr(a) for a in var_in.ncattrs()}
                     )
                     trg[var_name][:] = var_in[:]
+
+                trg.createVariable("pol",np.int32,'pol',zlib=True)
+                trg["pol"][:] = np.array([0,1],dtype=np.int32)
+                trg.variables["pol"].setncatts({"pol mapping": "0 = V-pol, 1 = H-pol"})
             
                 dimensions_out = ('latitude','longitude','hours','freq','pol')
 
                 for varname, long_name, units in [
-                        ("emissivity", "surface emissivity", None),
+                        ("emissivity", "ocean surface emissivity", None),
                         ]:
                         print(f'starting writing {varname}')
                         least_significant_digit = 3
@@ -223,18 +233,8 @@ def write_ocean_emiss_to_daily_ACCESS(*,
                             zlib=True,
                             least_significant_digit=least_significant_digit
                         )
-                        for freq_index,freq in enumerate(REF_FREQ):
-                            for pol_index,pol in enumerate(POLS):
-                                var = getattr(rtm_data,varname)[:,:,:,REF_FREQ_mapping[freq_index]]
-                            var = np.moveaxis(var, -1, 0)
-                            var_times = rtm_data.time_in_day
-                            for hour_index in range(len(root_grp["hours"][:])):
-                                time_map = root_grp['time'][:, :, hour_index]
-                                time_map = (time_map - (current_day - datetime.date(1900, 1, 1)).total_seconds())
-                                var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
-                                    var, var_times, time_map
-                                    )
-                                trg[varname][:, :, hour_index,freq_index] = var_at_time_map
+
+                        trg[varname][:, :, :, :, :] = ocean_emiss
                         trg[varname].long_name = long_name
                         trg[varname].coordinates = "latitude longitude"
                         trg[varname].freq_names = "6, 7, 11, 19, 24, 37"
@@ -243,16 +243,17 @@ def write_ocean_emiss_to_daily_ACCESS(*,
                         else:
                             trg[varname].units = units
                         print(f'finished writing {varname}')
+                        print()
     except FileNotFoundError:
         raise OkToSkipDay
 
     print()
     try:
-        atm_filename_final.unlink()
+        emiss_filename_final.unlink()
     except FileNotFoundError:
         pass
 
-    os.rename(atm_filename,atm_filename_final)
+    os.rename(emiss_filename,emiss_filename_final)
 
 if __name__ == '__main__':
 
@@ -316,6 +317,8 @@ while date <= END_DAY:
         dataroot=access_root,
         outputroot=output_root,
         verbose=True)
+
+    date = date + datetime.timedelta(days=1.0)
 
 
     # plot_global_map(w10n[:,:,11],vmin=0.0,vmax=25.,cmap='viridis',plt_colorbar=True,title='Wind Speed (m/s)')
