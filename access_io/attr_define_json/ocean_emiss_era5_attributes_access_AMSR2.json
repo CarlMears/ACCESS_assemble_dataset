@@ -1,0 +1,10 @@
+    {
+        "summary" : "Calculated Ocean Emissivity using Remote Sensing Systems (RSS)surface model for AMSR2",
+        "keywords": "EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > EMISSIVITY",
+        "title": "Ocean Surface Emissivity calculated from ERA5 neutral stability winds on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
+        "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS surface radiation model"
+    }
+
+
+
+    

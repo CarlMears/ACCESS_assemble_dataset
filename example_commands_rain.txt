@@ -1,0 +1,8 @@
+python add_imerg_rain_rate_to_ACCESS_output.py L:/ACCESS/amsr2_out L:/ACCESS/_temp 2012-07-02 2012-12-31 amsr2
+
+
+python download_imerg_data.py L:/access/_temp 2013-04-01 2013-06-30
+
+
+python add_ERA5_2D_vars_ACCESS_output.py L:/ACCESS/amsr2_out L:/ACCESS/_temp 2012-07-01 2012-12-31 amsr2
+                     

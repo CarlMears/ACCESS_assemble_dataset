@@ -185,7 +185,7 @@ def try_download(
         return target
     else:
         print(f"Getting: {target}")
-        print(file_url)
+        #print(file_url)
 
         for attempt in range(max_attempts):
             result = session.get(file_url)
@@ -199,13 +199,14 @@ def try_download(
                 time.sleep(wait_time_seconds)
                 continue
             except requests.ConnectionError as e:
+                print(f"Connection Error")
                 print(e)
                 print(f"Attempt Number {attempt+1}/{max_attempts}.  Trying Again")
                 time.sleep(wait_time_seconds)
                 continue
 
             target.write_bytes(result.content)
-            print(f"contents of URL written to {target}")
+            #print(f"contents of URL written to {target}")
             return target
 
         else:
