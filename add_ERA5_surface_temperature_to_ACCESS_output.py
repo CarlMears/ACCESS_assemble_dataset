@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import os
 from pathlib import Path
 from typing import Tuple
 
@@ -62,7 +61,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     # of the next day.
     next_day = current_day + datetime.timedelta(hours=24)
     # try:
-    os.makedirs(temproot, exist_ok=True)
+    temproot.mkdir(parents=True, exist_ok=True)
     file1 = era5_hourly_single_level_request(
         date=current_day,
         variable=variable[0],
@@ -181,12 +180,12 @@ if __name__ == "__main__":
     access_root: Path = args.access_root
     temp_root: Path = args.temp_root
 
-    START_DAY = args.start_date
-    END_DAY = args.end_date
-    satellite = args.sensor.upper()
+    start_day: datetime.date = args.start_date
+    end_day: datetime.date = args.end_date
+    satellite: str = args.sensor.upper()
 
-    date = START_DAY
-    while date <= END_DAY:
+    date = start_day
+    while date <= end_day:
         print(f"{date}")
 
         # need this because var name for the ERA5 request is not that same as
