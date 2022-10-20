@@ -77,7 +77,9 @@ The `add_land_fraction_to_ACCESS_output.py` script adds a land fraction layer to
 - start_date: first day to process, in YYYY-MM-DD format
 - end_date: last day to process, in YYYY-MM-DD format
 - sensor: name of the sensor - currently only 'amsr2' is supported
-- version: chooses the version of the land fraction dataset to use.  Currently preferred option is "modis"
+- target size: size of the resampled footprint in km
+- version: version of the dataset, e.g. r01v00
+- lf_version: chooses the version of the land fraction dataset to use.  Currently preferred option is "modis"
 
 **Optional Arguments:**
 - --overwrite: if set, process and write layer even if it already exists in this file.
@@ -85,7 +87,24 @@ The `add_land_fraction_to_ACCESS_output.py` script adds a land fraction layer to
 
 **Example Command:**
 ```
-python add_land_fraction_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 modis --verbose --overwrite
+python add_land_fraction_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 30 v01r00 modis --verbose --overwrite
+```
+
+### Rain Rate
+The `add_imerg_rain_Rate_to_ACCESS_output.py` script adds a rain rate to the dataset, dereived by resmapling the IMERG 3 hourly rain rate product.
+
+**Positional Arguments:**
+- access_root: Path to location of daily ACCESS files
+- temp_root: Path to location to store temporary files
+- start_date: first day to process, in YYYY-MM-DD format
+- end_date: last day to process, in YYYY-MM-DD format
+- sensor: name of the sensor - currently only 'amsr2' is supported
+- target size: size of the resampled footprint in km
+- version (not implemented yet): version of the dataset, e.g. r01v00
+
+**Example Command:**
+```
+python add_imerg_rain_rate_fraction_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 30
 ```
 
 ### Atmosphere
@@ -130,3 +149,27 @@ export CDS_UID=XXX
 export CDS_API_KEY=XXX
 python add_atmosphere_to_ACCESS_output.py L:/access 2012-07-11 amsr2
 ```
+ ### Attributes for the netCDF4 output files
+ The constant attributes are now defined in .json files in
+ ~~~
+ M:\job_access\python\dataset_assembly\access_io\attr_define_json
+ ~~~
+ Some attributes still need to be constructed programatically, so are not in the .json
+
+ This is still a work in progress, but the intention is for all the .json files to have two parts like the one for the MODIS land fraction.
+ ~~~json
+ {
+    "global":{
+        "summary": "Modis Land Mask resampled to gaussian footprints",
+        "keywords": "EARTH SCIENCE > LAND SURFACE > LAND USE/LAND COVER > LAND/OCEAN/ICE MASK",
+        "title": "Modis Land Mask resampled to circulargaussian footprintsgaussian footprints 0.25 degree Earth grid",
+        "history": "Created from on-line MODIS data from the CMR EarthData API"},
+    "var":{
+        "standard_name": "land fraction",
+        "valid_min": "0.0",
+        "valid_max": "1.0",
+        "units": "dimensionless"
+        }
+}
+~~~
+The idea is that attributes that are added to the global attributes for the file are in the "global" part, and attributes for the specific variable are in the "var" part.
