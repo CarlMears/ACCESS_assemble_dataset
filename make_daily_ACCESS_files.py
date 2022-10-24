@@ -178,7 +178,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
     parser.add_argument("target_size",choices=["30","70"],help="Size of target footprint in km")
-    parser.add_argument("version",help="version sting - e.g. v01r00")
+    parser.add_argument("version",help="version string - e.g. v01r00")
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )

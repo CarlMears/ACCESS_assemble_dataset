@@ -34,6 +34,8 @@ size if minimized by writing using slightly lossy built-in netCDF4 compression.
 - `start_date`: first day to process, in YYYY-MM-DD format
 - `end_date`: last day to process, in YYYY-MM-DD format
 - `sensor`: name of the sensor - currently only 'amsr2' is supported
+- `target_size`: size of the resampled footprint in km
+- `version`: version of the dataset, e.g., r01v00
 
 **Optional Arguments:**
 - `--overwrite`: if set, process and write file even if a file for this day already exists
@@ -42,7 +44,7 @@ size if minimized by writing using slightly lossy built-in netCDF4 compression.
 
 **Example Command:**
 ```
-python make_daily_ACCESS_files.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 --overwrite --verbose
+python make_daily_ACCESS_files.py L:\access\amsr2_out_test L:\access\_temp 2012-07-02 2012-07-31 amsr2 30 r01v00 --overwrite --verbose
 ```
 
 ### Surface temperature
@@ -72,18 +74,18 @@ The `add_land_fraction_to_ACCESS_output.py` script adds a land fraction layer to
 "modis" is mostly from the MODIS land/water dataset, with a few areas filled in using NSIDC data.
 
 **Positional Arguments:**
-- access_root: Path to location of daily ACCESS files
-- temp_root: Path to location to store temporary files
-- start_date: first day to process, in YYYY-MM-DD format
-- end_date: last day to process, in YYYY-MM-DD format
-- sensor: name of the sensor - currently only 'amsr2' is supported
-- target size: size of the resampled footprint in km
-- version: version of the dataset, e.g. r01v00
-- lf_version: chooses the version of the land fraction dataset to use.  Currently preferred option is "modis"
+- `access_root`: Path to location of daily ACCESS files
+- `temp_root`: Path to location to store temporary files
+- `start_date`: first day to process, in YYYY-MM-DD format
+- `end_date`: last day to process, in YYYY-MM-DD format
+- `sensor`: name of the sensor - currently only 'amsr2' is supported
+- `target_size`: size of the resampled footprint in km
+- `version`: version of the dataset, e.g. r01v00
+- `lf_version`: chooses the version of the land fraction dataset to use.  Currently preferred option is "modis"
 
 **Optional Arguments:**
-- --overwrite: if set, process and write layer even if it already exists in this file.
-- --verbose: if set, print more verbose informational messages
+- `--overwrite`: if set, process and write layer even if it already exists in this file.
+- `--verbose`: if set, print more verbose informational messages
 
 **Example Command:**
 ```
@@ -94,13 +96,13 @@ python add_land_fraction_to_ACCESS_output.py L:\access\amsr2_out_test L:\access\
 The `add_imerg_rain_Rate_to_ACCESS_output.py` script adds a rain rate to the dataset, dereived by resmapling the IMERG 3 hourly rain rate product.
 
 **Positional Arguments:**
-- access_root: Path to location of daily ACCESS files
-- temp_root: Path to location to store temporary files
-- start_date: first day to process, in YYYY-MM-DD format
-- end_date: last day to process, in YYYY-MM-DD format
-- sensor: name of the sensor - currently only 'amsr2' is supported
-- target size: size of the resampled footprint in km
-- version (not implemented yet): version of the dataset, e.g. r01v00
+- `access_root`: Path to location of daily ACCESS files
+- `temp_root`: Path to location to store temporary files
+- `start_date`: first day to process, in YYYY-MM-DD format
+- `end_date`: last day to process, in YYYY-MM-DD format
+- `sensor`: name of the sensor - currently only 'amsr2' is supported
+- `target_size`: size of the resampled footprint in km
+- `version` (not implemented yet): version of the dataset, e.g. r01v00
 
 **Example Command:**
 ```
