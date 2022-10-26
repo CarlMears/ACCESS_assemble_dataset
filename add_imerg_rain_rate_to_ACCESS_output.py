@@ -2,8 +2,6 @@
 
 import datetime
 from pathlib import Path
-import os
-
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
 
@@ -11,7 +9,7 @@ from access_io.access_output import (
     write_daily_ancillary_var_netcdf,
     get_access_output_filename_daily_folder,
 )
-from access_io.access_output import set_or_create_attr
+
 from access_io.access_attr_define import common_global_attributes_access
 from access_io.access_attr_define import anc_var_attributes_access
 from imerg_request.imerg_requests import imerg_half_hourly_request
@@ -88,8 +86,6 @@ def write_imerg_rain_rate_for_ACCESS(
     )
 
     rr_for_access = np.roll(rr_for_access, 720, axis=1)
-    # write the results to the existing output file
-    today = datetime.date.today()
 
     version = "v01r00"
     rr_attrs = anc_var_attributes_access(satellite, "rain_rate_imerg", version=version)

@@ -71,8 +71,8 @@ class OkToSkipDay(Exception):
 
 
 def set_or_create_attr(var, attr_name, attr_value):
-    '''seems like something like this should be part
-    of the interface but I can not find it'''
+    """seems like something like this should be part
+    of the interface but I can not find it"""
 
     if attr_name in var.ncattrs():
         if attr_name != "_FillValue":
@@ -121,7 +121,7 @@ def replace_var_in_daily_tb_netcdf(
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
 
-    raise ValueError('Not yet updated')
+    raise ValueError("Not yet updated")
 
     filename = get_access_output_filename_daily_folder(date, satellite, dataroot)
     with LockedDataset(filename, "a", 60) as root_grp:
@@ -187,15 +187,19 @@ def write_daily_lf_netcdf(
     lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
     lons = np.arange(0, NUM_LONS) * 0.25
 
-    lf_attrs = anc_var_attributes_access(satellite, "land_fraction_"+lf_version, version=version)
+    lf_attrs = anc_var_attributes_access(
+        satellite, "land_fraction_" + lf_version, version=version
+    )
     global_attrs = common_global_attributes_access(
         date, satellite, target_size, version=version
     )
 
     global_attrs.update(lf_attrs["global"])
     var_attrs = lf_attrs["var"]
-    global_attrs["cell_method"] = f"area: resampled to {target_size}km guassian footprint"
-    
+    global_attrs[
+        "cell_method"
+    ] = f"area: resampled to {target_size}km guassian footprint"
+
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "w", 60) as nc_out:
 
@@ -284,7 +288,9 @@ def write_daily_tb_netcdf(
         tb_attrs = tb_attrs["var"]
 
         glb_attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
-        glb_attrs["cell_method"] = f"area: resampled to {target_size}km guassian footprint"
+        glb_attrs[
+            "cell_method"
+        ] = f"area: resampled to {target_size}km guassian footprint"
         glb_attrs["date_accessed"] = f"{datetime.datetime.today()}"
         glb_attrs["creation_date"] = f"{datetime.datetime.today()}"
 
@@ -580,5 +586,3 @@ def write_ocean_emiss_to_daily_ACCESS(
 
     except FileNotFoundError:
         raise OkToSkipDay
-
-

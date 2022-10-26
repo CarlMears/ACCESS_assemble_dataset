@@ -31,12 +31,11 @@ def add_land_fraction_to_ACCESS_output(
         land_file = land_path / "land_fraction_1440_721_30km.combined_hansen_nsidc.nc"
         land_fraction_xr = xr.open_dataset(land_file)
         land_fraction_np = land_fraction_xr["land_fraction"].values
-        var_name = "land_area_fraction_hansen"
+
     elif lf_version.lower() == "modis":
         land_file = land_path / f"resampled.modislandwater.{target_size}km.nc"
         land_fraction_xr = xr.open_dataset(land_file)
         land_fraction_np = land_fraction_xr["resampled_modis_land_water_mask"].values
-        var_name = "land_area_fraction_modis"
 
         # we need the other dataset to fill in a few spots....
         land_file = land_path / "land_fraction_1440_721_30km.combined_hansen_nsidc.nc"

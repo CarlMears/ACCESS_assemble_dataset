@@ -59,8 +59,6 @@ def make_daily_ACCESS_tb_file(
         from satellite_definitions.amsr2 import (
             SAT_NAME,
             REF_FREQ,
-            REF_FREQ_mapping,
-            REF_EIA,
             CHANNEL_TO_FREQ_MAP,
             CHANNEL_TO_POL_MAP,
         )

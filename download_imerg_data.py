@@ -2,10 +2,6 @@
 
 import datetime
 from pathlib import Path
-
-import numpy as np
-from netCDF4 import Dataset as netcdf_dataset
-
 from imerg_request.imerg_requests import imerg_half_hourly_request
 
 

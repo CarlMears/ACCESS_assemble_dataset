@@ -14,23 +14,9 @@ from access_io.access_output import write_daily_ancillary_var_netcdf
 
 from access_io.access_attr_define import (
     common_global_attributes_access,
-    resamp_tb_attributes_access,
+    anc_var_attributes_access,
     write_attrs,
 )
-
-from access_io.access_attr_define import common_global_attributes_access
-from access_io.access_attr_define import anc_var_attributes_access
-
-# from access_io.access_attr_define import rr_imerg_attributes_access
-# from access_io.access_attr_define import (
-#     tcwv_era5_attributes_access,
-#     tclw_era5_attributes_access,
-#     skt_era5_attributes_access,
-# )
-# from access_io.access_attr_define import (
-#     u10n_era5_attributes_access,
-#     v10n_era5_attributes_access,
-# )
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
@@ -113,7 +99,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     # except Exception:
     #    raise RuntimeError("Problem downloading ERA5 data using cdsapi")
 
-    # open the file(s), and combine the two files into a 25-map array for the day being processed
+    # open the file(s), and combine the two files into a
+    # 25-map array for the day being processed
 
     if current_day.month == next_day.month:
         hour_index1 = 24 * (current_day.day - 1)
