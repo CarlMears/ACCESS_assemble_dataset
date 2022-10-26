@@ -150,7 +150,8 @@ class InterpParallelogram:
         self.len_01_sqr = self.vec01[0] ** 2 + self.vec01[1] ** 2
         self.len_03_sqr = self.vec03[0] ** 2 + self.vec03[1] ** 2
 
-        self.a = np.array([z[0], z[1] - z[0], z[3] - z[0], z[2] - z[1] - z[3] + z[0]])
+        self.a = np.array([z[0], z[1] - z[0], z[3] - z[0],
+                           z[2] - z[1] - z[3] + z[0]])
         # the interpolation is done on the unit square, where the
         # interpolated value is given by
         # a00 + a10*x + a01*y + a11*x*y
@@ -228,8 +229,7 @@ class InterpParallelogram:
 
 
 class InterpQuadrilateralFit:
-    """Interpolation in an arbitratry quadrilateral
-    using a minimum curvature bi-quadratic
+    """Interpolation in an arbitratry quadrilateral using a minimum curvature bi-quadratic
     interpolator"""
 
     """The function is in the form ax^2 + bxy + cy^2 + dx + ey + 1.
