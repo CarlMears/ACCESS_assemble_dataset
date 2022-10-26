@@ -30,7 +30,7 @@ AVAILABLE_CHANNELS = [
 ]
 
 
-def get_orbit_range(orbit: int) -> Tuple[int, int]:
+def get_AMSR2_orbit_range(orbit: int) -> Tuple[int, int]:
     """Return the lower/upper bounds to an orbit.
 
     >>> get_orbit_range(1)
@@ -47,7 +47,7 @@ def get_orbit_range(orbit: int) -> Tuple[int, int]:
     return orbit_lower, orbit_upper
 
 
-def read_resampled_tbs(
+def read_AMSR2_resampled_tbs(
     *,
     satellite: str,
     channel: Union[str, int],
@@ -56,6 +56,9 @@ def read_resampled_tbs(
     dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
 ) -> Tuple[Any, Path]:
+
+    """Using xarray here to take advantage of lazy reading"""
+
     if satellite.lower() not in IMPLEMENTED_SATELLITES:
         raise ValueError(f"Satellite {satellite} is not implemented")
     if isinstance(channel, int):
@@ -68,14 +71,16 @@ def read_resampled_tbs(
         else:
             raise ValueError(f"Channel {channel} not valid")
 
-    orbit_lower, orbit_upper = get_orbit_range(orbit)
+    orbit_lower, orbit_upper = get_AMSR2_orbit_range(orbit)
     orbit_dir = dataroot.joinpath(
         f"{satellite}_tb_orbits", f"r{orbit_lower:05d}_{orbit_upper:05d}"
     )
     if channel_str == "time":
         filename = orbit_dir / f"r{orbit:05d}.time.nc"
     else:
-        filename = orbit_dir / f"r{orbit:05d}.grid_tb.ch{channel:02d}.{target_size:03d}km.nc"
+        filename = (
+            orbit_dir / f"r{orbit:05d}.grid_tb.ch{channel:02d}.{target_size:03d}km.nc"
+        )
     if verbose:
         print(filename)
     ds = xr.open_dataset(filename)
