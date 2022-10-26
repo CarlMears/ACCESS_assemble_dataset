@@ -1,20 +1,14 @@
 from datetime import date
 from pathlib import Path
-from typing import Collection, Dict, List
+from typing import Collection, Dict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
 
-# must be installed from rss_plotting package
-from rss_plotting.global_map import plot_global_map
-
 # these packages are located in folders in the local path
-from access_io.access_output import write_daily_tb_netcdf, get_access_output_filename
-from resampled_tbs.read_resampled_orbit import read_resampled_tbs
-from util.numpy_date_utils import convert_to_sec_in_day
-from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
+from access_io.access_output import get_access_output_filename
+
 
 NUM_LATS = 721
 NUM_LONS = 1440
@@ -66,7 +60,6 @@ def plot_inventory(access_inventory):
 
     time = access_inventory.index
 
-    num_vars = inv_np.shape[0]
     vars = list(access_inventory.columns)
 
     fig, ax = plot_2d_array(

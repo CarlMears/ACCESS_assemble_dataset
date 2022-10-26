@@ -10,8 +10,6 @@ from netCDF4 import Dataset as netcdf_dataset
 from access_io.access_output import (
     get_access_output_filename,
 )
-from imerg_request.imerg_requests import imerg_half_hourly_request
-from resampling_utils.imerg_resampling_routines import resample_imerg_day
 
 
 def fix_time_in_ACCESS_output(

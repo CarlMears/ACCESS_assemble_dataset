@@ -40,9 +40,11 @@ class DailyRtm:
 
     def __init__(self, date_to_load: datetime.datetime, data_root: Path):
 
-        filename = (f"era5_tbs_{date_to_load.year}-"
-                  + f"{date_to_load.month:02d}-"
-                  + f"{date_to_load.day:02d}.nc")
+        filename = (
+            f"era5_tbs_{date_to_load.year}-"
+            + f"{date_to_load.month:02d}-"
+            + f"{date_to_load.day:02d}.nc"
+        )
         path_to_data = data_root / filename
         with Dataset(path_to_data, "r") as f:
             tb_down = f["tb_down"][:, :, :, :]
@@ -68,10 +70,11 @@ class DailyRtm:
                 self.transmissivity[:, :, hour, freq] = trans[hour, :, :, freq]
 
         date_to_load_plus_one = date_to_load + datetime.timedelta(days=1)
-        filename = (f"era5_tbs_{date_to_load_plus_one.year}-"
-                  + f"{date_to_load_plus_one.month:02d}-"
-                  + f"{date_to_load_plus_one.day:02d}.nc"
-                    )
+        filename = (
+            f"era5_tbs_{date_to_load_plus_one.year}-"
+            + f"{date_to_load_plus_one.month:02d}-"
+            + f"{date_to_load_plus_one.day:02d}.nc"
+        )
         path_to_data_plus_one = data_root / filename
 
         with Dataset(path_to_data_plus_one, "r") as f:
@@ -192,7 +195,7 @@ def write_atmosphere_to_daily_ACCESS(
                     ("downwelling_tb", "downwelling brightness temperature", "kelvin"),
                 ]:
                     var_attrs = atm_attrs[varname]
-                    print(f"starting writing {varname}",end="")
+                    print(f"starting writing {varname}", end="")
                     if varname == "transmissivity":
                         least_significant_digit = 3
                     else:
@@ -228,7 +231,7 @@ def write_atmosphere_to_daily_ACCESS(
                                 var, var_times, time_map
                             )
                             trg[varname][:, :, hour_index, freq_index] = var_at_time_map
-                            print(".",end="")
+                            print(".", end="")
                     print()
                     print(f"finished writing {varname}")
     except FileNotFoundError:
