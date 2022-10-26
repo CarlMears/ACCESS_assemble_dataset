@@ -150,8 +150,7 @@ class InterpParallelogram:
         self.len_01_sqr = self.vec01[0] ** 2 + self.vec01[1] ** 2
         self.len_03_sqr = self.vec03[0] ** 2 + self.vec03[1] ** 2
 
-        self.a = np.array([z[0], z[1] - z[0], z[3] - z[0],
-                           z[2] - z[1] - z[3] + z[0]])
+        self.a = np.array([z[0], z[1] - z[0], z[3] - z[0], z[2] - z[1] - z[3] + z[0]])
         # the interpolation is done on the unit square, where the
         # interpolated value is given by
         # a00 + a10*x + a01*y + a11*x*y
@@ -350,15 +349,15 @@ if __name__ == "__main__":
             )
     inside_test_point = [2.0, 1.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{qi(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{qi(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [2.25, 2.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{qi(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{qi(inside_test_point[0],inside_test_point[1])}"
     )
 
     print()
@@ -372,77 +371,77 @@ if __name__ == "__main__":
             )
     inside_test_point = [2.0, 1.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{pi(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{pi(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [2.5, 3.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{pi(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{pi(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [2.5, 1.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{pi(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{pi(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [3.25, 2.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{pi(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{pi(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [1.25, 2.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{pi(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{pi(inside_test_point[0],inside_test_point[1])}"
     )
 
     print()
     print("SciPy Method on a parallelogram")
     for i in range(4):
         print(
-            f"Interpolated Value ax {x[i]},{y[i]} = " +
-            f"{sci(x[i],y[i])} should be {z[i]}"
+            f"Interpolated Value ax {x[i]},{y[i]} = "
+            + f"{sci(x[i],y[i])} should be {z[i]}"
         )
         if np.abs(sci(x[i], y[i]) - z[i]) > a_small_number:
             raise Exception(
-                "Fail - error in interploated value at a corner " +
-                "of the quadrilateral"
+                "Fail - error in interploated value at a corner "
+                + "of the quadrilateral"
             )
 
     inside_test_point = [2.0, 1.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{sci(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{sci(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [2.5, 3.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{sci(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{sci(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [2.5, 1.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{sci(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{sci(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [3.25, 2.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} = " +
-        f"{sci(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} = "
+        + f"{sci(inside_test_point[0],inside_test_point[1])}"
     )
     inside_test_point = [1.25, 2.0]
     print(
-        f"Interpolated Value {inside_test_point[0]:.2f}," +
-        f"{inside_test_point[1]:.2f} =" +
-        f" {sci(inside_test_point[0],inside_test_point[1])}"
+        f"Interpolated Value {inside_test_point[0]:.2f},"
+        + f"{inside_test_point[1]:.2f} ="
+        + f" {sci(inside_test_point[0],inside_test_point[1])}"
     )
 
     print()
@@ -451,9 +450,9 @@ if __name__ == "__main__":
 
     try:
         print(
-            f"Interpolated Value {outside_test_point[0]:.2f}," +
-            f"{outside_test_point[1]:.2f} = " +
-            f"{pi(outside_test_point[0],inside_test_point[1])}"
+            f"Interpolated Value {outside_test_point[0]:.2f},"
+            + f"{outside_test_point[1]:.2f} = "
+            + f"{pi(outside_test_point[0],inside_test_point[1])}"
         )
         raise Exception("Fail - should have caused an error")
     except ValueError as e:
@@ -471,8 +470,10 @@ if __name__ == "__main__":
     print("General Quaudrilateral")
 
     for i in range(4):
-        print(f"Interpolated Value ax {x[i]},{y[i]} = " +
-              f"{qi(x[i],y[i])} should be {z[i]}")
+        print(
+            f"Interpolated Value ax {x[i]},{y[i]} = "
+            + f"{qi(x[i],y[i])} should be {z[i]}"
+        )
     print(f"Interpolated Value = {qi(2.0,2.0)}")
 
     # this should cause an error

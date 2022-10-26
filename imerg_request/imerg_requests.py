@@ -197,7 +197,7 @@ def try_download(
                 time.sleep(wait_time_seconds)
                 continue
             except requests.ConnectionError as e:
-                print(f"Connection Error")
+                print("Connection Error")
                 print(e)
                 print(f"Attempt Number {attempt+1}/{max_attempts}.  Trying Again")
                 time.sleep(wait_time_seconds)
