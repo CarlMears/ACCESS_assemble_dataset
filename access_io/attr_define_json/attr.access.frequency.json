@@ -1,0 +1,5 @@
+{
+   "standard_name": "frequency",
+   "long_name": "satellite observation frequency",
+   "units": "GHz"
+}

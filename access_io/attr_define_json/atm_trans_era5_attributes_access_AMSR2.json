@@ -1,6 +1,0 @@
-{
-    "summary" : "Atmospheric Transmissivty corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
-    "keywords": "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE",
-    "title": "Downelling Radiance computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-    "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model"
-}

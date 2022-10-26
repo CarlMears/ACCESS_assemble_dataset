@@ -1,10 +1,11 @@
 import argparse
 import datetime
 import numpy as np
+import os
 from pathlib import Path
 import subprocess
 import xarray as xr
- 
+
 from access_io.access_output import write_daily_lf_netcdf
 
 
@@ -21,21 +22,23 @@ def add_land_fraction_to_ACCESS_output(
     lf_version: str = "modis",
 ) -> None:
 
+    if os.name == "nt":
+        land_path = Path("L:/access/land_water")
+    elif os.name == "posix":
+        land_path = Path("/mnt/ops1p-ren/l/access/land_water")
+
     if lf_version.lower() == "combined_hansen":
-        land_path = land_path = Path("L:/access/land_water")
         land_file = land_path / "land_fraction_1440_721_30km.combined_hansen_nsidc.nc"
         land_fraction_xr = xr.open_dataset(land_file)
         land_fraction_np = land_fraction_xr["land_fraction"].values
         var_name = "land_area_fraction_hansen"
     elif lf_version.lower() == "modis":
-        land_path = land_path = Path("L:/access/land_water")
-        land_file = land_path / "resampled.modislandwater.nc"
+        land_file = land_path / f"resampled.modislandwater.{target_size}km.nc"
         land_fraction_xr = xr.open_dataset(land_file)
         land_fraction_np = land_fraction_xr["resampled_modis_land_water_mask"].values
         var_name = "land_area_fraction_modis"
 
         # we need the other dataset to fill in a few spots....
-        land_path = land_path = Path("L:/access/land_water")
         land_file = land_path / "land_fraction_1440_721_30km.combined_hansen_nsidc.nc"
         land_fraction_xr = xr.open_dataset(land_file)
         land_fraction_np_hansen = land_fraction_xr["land_fraction"].values
@@ -60,26 +63,9 @@ def add_land_fraction_to_ACCESS_output(
             lf_version=lf_version,
             land_fraction=land_fraction_np,
             dataroot=dataroot,
-            )
+            overwrite=overwrite,
+        )
 
-        # append_const_var_to_daily_tb_netcdf(
-        #     date=date,
-        #     satellite=satellite,
-        #     var=land_fraction_np,
-        #     var_name=var_name,
-        #     standard_name="land_area_fraction",
-        #     long_name="land fraction averaged over gaussian footprint",
-        #     valid_min=0.0,
-        #     valid_max=1.0,
-        #     units="dimensionless",
-        #     v_fill=-999.0,
-        #     dataroot=dataroot,
-        #     overwrite=True,
-        #     verbose=True,
-        #     script_name=script_name,
-        #     commit=commit,
-        #     lock_stale_time=30.0,
-        # )
     except FileNotFoundError:
         print("File Not Found for {date} - skipping day")
 
@@ -112,7 +98,9 @@ if __name__ == "__main__":
     parser.add_argument("target_size")
     parser.add_argument("version")
     parser.add_argument(
-        "lf_version", choices=["modis", "combined_hansen"], help="Microwave sensor to use"
+        "lf_version",
+        choices=["modis", "combined_hansen"],
+        help="Microwave sensor to use",
     )
     parser.add_argument(
         "--verbose", help="enable more verbose screen output", action="store_true"
@@ -141,7 +129,7 @@ if __name__ == "__main__":
             date=day_to_do,
             satellite=satellite,
             target_size=target_size,
-            version = args.version,
+            version=args.version,
             lf_version=args.lf_version,
             dataroot=access_root,
             overwrite=args.overwrite,

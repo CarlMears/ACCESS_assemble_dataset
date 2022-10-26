@@ -11,7 +11,12 @@ import xarray as xr
 
 start_date = datetime.datetime(2012, 1, 1)
 end_date = datetime.datetime(2012, 12, 31)
-access_root = Path("L:/access/amsr2_out")
+
+if os.name == "nt":
+    access_root = Path("L:/access/amsr2_out")
+elif os.name == "posix":
+    access_root = Path("/mnt/ops1p-ren/laccess/amsr2_out")
+
 satellite = "amsr2"
 possible_extra_vars = ["rainfall_rate", "skt"]
 date_to_do = start_date
