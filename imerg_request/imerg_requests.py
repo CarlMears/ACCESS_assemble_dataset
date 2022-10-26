@@ -185,8 +185,6 @@ def try_download(
         return target
     else:
         print(f"Getting: {target}")
-        #print(file_url)
-
         for attempt in range(max_attempts):
             result = session.get(file_url)
 
@@ -206,7 +204,6 @@ def try_download(
                 continue
 
             target.write_bytes(result.content)
-            #print(f"contents of URL written to {target}")
             return target
 
         else:

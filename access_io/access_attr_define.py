@@ -141,8 +141,8 @@ def coord_attributes_access(coord: str, date=None):
     if coord == "hours":
         attrs["units"] = f"hours since {date.isoformat()} 00:00:00.0"
 
-    if coord == 'time':
-        attrs = _convert_attrs_to_numbers(attrs,int_converter=np.int64)
+    if coord == "time":
+        attrs = _convert_attrs_to_numbers(attrs, int_converter=np.int64)
     else:
         attrs = _convert_attrs_to_numbers(attrs)
 

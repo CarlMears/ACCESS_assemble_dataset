@@ -1,10 +1,8 @@
 import concurrent.futures
 import datetime
-import multiprocessing
 import signal
 from pathlib import Path
 from threading import Lock
-from time import sleep
 
 import numpy as np
 import pyproj as proj
@@ -91,7 +89,9 @@ def get_distance(latitude0, longitude0, ilat_submask, ilon_submask, g):
     return dist_grid
 
 
-def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, footprint_diameter_km, window=0.5):
+def resample_to_quarter(
+    map_rain, lat_rain, lon_rain, mask, footprint_diameter_km, window=0.5
+):
     """
     Inputs a map of rain rates at a given time along with
     latitude and longitude, outputs resampled data on a 0.25x0.25 grid.
@@ -171,7 +171,9 @@ def resample_to_quarter(map_rain, lat_rain, lon_rain, mask, footprint_diameter_k
     return resampled_map
 
 
-def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, target_path):
+def resample_hour(
+    hour, times, time_intervals, date, footprint_diameter_km, target_path
+):
     sat_time = times[:, :, hour]
 
     hour_beg = np.all(  # from beginning of hour to 30 minutes past the hour
@@ -202,10 +204,10 @@ def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, targ
         minutes_of_day=minutes_of_day_end, date=date, target_path=target_path
     )
 
-    for_parallel = [
-        [rain_beg, lat_beg, lon_beg, hour_beg, footprint_diameter_km],
-        [rain_end, lat_end, lon_end, hour_end, footprint_diameter_km],
-    ]
+    # for_parallel = [
+    #     [rain_beg, lat_beg, lon_beg, hour_beg, footprint_diameter_km],
+    #     [rain_end, lat_end, lon_end, hour_end, footprint_diameter_km],
+    # ]
 
     # Processing 2 IMERG files for one hour in parallel
     # print("Starting jobs")
@@ -220,27 +222,48 @@ def resample_hour(hour, times, time_intervals, date, footprint_diameter_km, targ
 
     # p.join()  # this waits for all worker processes to terminate.
 
-    res = np.full((2,NUM_LATS, NUM_LONS), np.nan)
-    
-    mp = resample_to_quarter(map_rain=rain_beg,lat_rain=lat_beg,lon_rain=lon_beg,mask=hour_beg, footprint_diameter_km=footprint_diameter_km, window=0.5)
-    res[0,:,:] = mp
-    mp = resample_to_quarter(map_rain=rain_end,lat_rain=lat_end,lon_rain=lon_end,mask=hour_end, footprint_diameter_km=footprint_diameter_km, window=0.5)
-    res[1,:,:] = mp
+    res = np.full((2, NUM_LATS, NUM_LONS), np.nan)
 
+    mp = resample_to_quarter(
+        map_rain=rain_beg,
+        lat_rain=lat_beg,
+        lon_rain=lon_beg,
+        mask=hour_beg,
+        footprint_diameter_km=footprint_diameter_km,
+        window=0.5,
+    )
+    res[0, :, :] = mp
+    mp = resample_to_quarter(
+        map_rain=rain_end,
+        lat_rain=lat_end,
+        lon_rain=lon_end,
+        mask=hour_end,
+        footprint_diameter_km=footprint_diameter_km,
+        window=0.5,
+    )
+    res[1, :, :] = mp
 
     hour_map = np.nanmean((res), axis=0)
 
     return (hour_map, hour, last_modified_beg)
 
 
-def resample_imerg_day(times, time_intervals, date, footprint_diameter_km, target_path=Path(".")):
+def resample_imerg_day(
+    times, time_intervals, date, footprint_diameter_km, target_path=Path(".")
+):
     total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
-    #Using process pool for resampling
+    # Using process pool for resampling
     with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
         results = {
             executor.submit(
-                resample_hour, hour, times, time_intervals, date, footprint_diameter_km, target_path
+                resample_hour,
+                hour,
+                times,
+                time_intervals,
+                date,
+                footprint_diameter_km,
+                target_path,
             ): hour
             for hour in range(0, NUM_HOURS)
         }
