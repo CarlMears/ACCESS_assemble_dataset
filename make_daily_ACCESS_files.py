@@ -13,9 +13,10 @@ from access_io.access_output import (
     write_daily_tb_netcdf,
     get_access_output_filename_daily_folder,
 )
-from resampled_tbs.read_resampled_orbit import read_resampled_tbs
+from resampled_tbs.read_resampled_orbit import read_AMSR2_resampled_tbs
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
+
 
 NUM_LATS = 721
 NUM_LONS = 1440
@@ -52,22 +53,40 @@ def make_daily_ACCESS_tb_file(
     plot_example_map: bool = True,
     overwrite: bool = False,
 ) -> List[Path]:
+
     if satellite.lower() == "amsr2":
         orbit_times = read_amsr2_orbit_times()
+        from satellite_definitions.amsr2 import (
+            SAT_NAME,
+            REF_FREQ,
+            REF_FREQ_mapping,
+            REF_EIA,
+            CHANNEL_TO_FREQ_MAP,
+            CHANNEL_TO_POL_MAP,
+        )
+
+        assert SAT_NAME.lower() == satellite.lower()
+        NUM_FREQS = len(REF_FREQ)
+        NUM_POLS = 2
     else:
-        raise ValueError(f"Orbit Times for {satellite} not implemented yet")
+        raise ValueError(f"No satellite definition file for {satellite}")
 
     filename = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size,dataroot, "resamp_tbs"
+        current_day, satellite, target_size, dataroot, "resamp_tbs"
     )
     if filename.is_file() and not overwrite:
         print(f"daily file for {current_day} exists... skipping")
         return []
+    else:
+        try:
+            filename.unlink()
+        except FileNotFoundError:
+            pass
 
     # initialize arrays for daily data
     at_least_one_orbit = False
     tb_array_by_hour = np.full(
-        (NUM_LATS, NUM_LONS, NUM_HOURS, NUM_CHANNELS), np.nan, dtype=np.float32
+        (NUM_LATS, NUM_LONS, NUM_HOURS, NUM_FREQS, NUM_POLS), np.nan, dtype=np.float32
     )
     time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
@@ -81,10 +100,15 @@ def make_daily_ACCESS_tb_file(
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
         print(f"{orbit} ", end="")
+
         # get the times for this orbit, and convert to time within the day...
         try:
-            ob_time, filename = read_resampled_tbs(
-                satellite=satellite, channel="time", target_size=target_size,orbit=orbit, verbose=False
+            ob_time, filename = read_AMSR2_resampled_tbs(
+                satellite=satellite,
+                channel="time",
+                target_size=target_size,
+                orbit=orbit,
+                verbose=False,
             )
         except FileNotFoundError:
             print(f"No time file found for orbit: {orbit}")
@@ -107,8 +131,11 @@ def make_daily_ACCESS_tb_file(
             print("reading resampled tb files")
         for channel in channels:
             try:
-                tbs, filename = read_resampled_tbs(
-                    satellite=satellite, channel=channel, target_size=target_size,orbit=orbit
+                tbs, filename = read_AMSR2_resampled_tbs(
+                    satellite=satellite,
+                    channel=channel,
+                    target_size=target_size,
+                    orbit=orbit,
                 )
             except FileNotFoundError:
                 print(f"No file found for orbit: {orbit}, channel: {channel}")
@@ -117,7 +144,9 @@ def make_daily_ACCESS_tb_file(
             at_least_one_orbit = True
             # loop through the hours, saving the tbs and times in hour-long slices
             for hour in range(0, 24):
-                tb_slice = tb_array_by_hour[:, :, hour, channel - 1]
+                freq_index = CHANNEL_TO_FREQ_MAP[channel - 1]
+                pol_index = CHANNEL_TO_POL_MAP[channel - 1]
+                tb_slice = tb_array_by_hour[:, :, hour, freq_index, pol_index]
                 start_time_sec = hour * 3600.0
                 end_time_sec = start_time_sec + 3600.0
                 ok = np.all(
@@ -134,7 +163,7 @@ def make_daily_ACCESS_tb_file(
                             f"time_range({start_time_sec}:{end_time_sec}) "
                             f"Num Obs: {num_ok}"
                         )
-    
+
     if at_least_one_orbit:
         if plot_example_map:
             plot_global_map(tb_array_by_hour[:, :, 0, 5], vmin=0.0, vmax=330)
@@ -146,6 +175,7 @@ def make_daily_ACCESS_tb_file(
             version=version,
             tb_array_by_hour=tb_array_by_hour,
             time_array_by_hour=time_array_by_hour,
+            freq_list=REF_FREQ,
             file_list=file_list,
             dataroot=dataroot,
         )
@@ -177,8 +207,10 @@ if __name__ == "__main__":
         help="Last Day to process, as YYYY-MM-DD",
     )
     parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
-    parser.add_argument("target_size",choices=["30","70"],help="Size of target footprint in km")
-    parser.add_argument("version",help="version string - e.g. v01r00")
+    parser.add_argument(
+        "target_size", choices=["30", "70"], help="Size of target footprint in km"
+    )
+    parser.add_argument("version", help="version sting - e.g. v01r00")
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
@@ -197,7 +229,11 @@ if __name__ == "__main__":
     satellite = args.sensor.upper()
     target_size = int(args.target_size)
     version = args.version
-    channels = list(range(5, 13))
+
+    if target_size == 30:
+        channels = list(range(5, 13))
+    else:
+        channels = list(range(1, 13))
 
     day_to_do = START_DAY
     while day_to_do <= END_DAY:

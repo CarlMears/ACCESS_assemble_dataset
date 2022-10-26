@@ -7,8 +7,12 @@
         "source": "The MODIS Collection 6 1-km and 500-m Digital Elevation Model (DEM) and land/sea mask accessed through the SDP toolkit. The original DEM is from the GMTED2010 dataset and the land/sea mask is was derived by University of Maryland from MODIS 250-m data and the SRTM Water Body data"},
     "var":{
         "standard_name": "land fraction",
+        "long_name": "Land Fraction derived from MODIS land/water mask",
         "valid_min": "0.0",
         "valid_max": "1.0",
-        "units": "dimensionless"
+        "units": "dimensionless",
+        "missing_value": "-999.0",
+        "_FillValue": "-999.0",
+        "coordinates": "latitude longitude"
         }
 }

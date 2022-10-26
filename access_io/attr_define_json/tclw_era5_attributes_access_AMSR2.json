@@ -1,6 +1,0 @@
-{
-    "summary":  "Total Column Cloud Water corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
-    "keywords": "EARTH SCIENCE > ATMOSPHERE > CLOUDS > CLOUD MICROPHYSICS > CLOUD LIQUID WATER",
-    "title":    "Total Column Cloud Water from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-    "history":  "Created from ERA5 data downloaded from the Copernicus Climate Data Store"
-}
