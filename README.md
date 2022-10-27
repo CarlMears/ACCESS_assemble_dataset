@@ -214,7 +214,7 @@ python add_atmosphere_to_ACCESS_output.py L:/access 2012-07-11 amsr2
 ~~~
 The idea is that attributes that are added to the global attributes for the file are in the "global" part, and attributes for the specific variable are in the "var" part.  
 
-### .json file naming convertions
+### .json file naming conventions
 
 The files should be named with the following conventions:
 
