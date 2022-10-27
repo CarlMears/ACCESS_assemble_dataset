@@ -4,8 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
-
         {
             "name": "Python: Current File no Args",
             "type": "python",
@@ -15,23 +13,6 @@
             "justMyCode": true,
             "args": [],
         },
-
-
-        // {
-        //     "name": "make_daily_ACCESS_files.py",
-        //     "type": "python",
-        //     "request": "launch",
-        //     "program": "make_daily_ACCESS_files.py",
-        //     "args":["L:/access/amsr2_out_test",
-        //             "L:/access/_temp",
-        //             "2012-07-10",
-        //             "2012-07-12",
-        //             "amsr2",
-        //             "30",
-        //             "v00r01"],
-        //     "console": "integratedTerminal"
-        // },
-
         {
             "name": "Make Daily ACCESS Base (Tb) Files Linux.py",
             "type": "python",
@@ -39,15 +20,14 @@
             "program": "make_daily_ACCESS_files.py",
             "args":["/mnt/ops1p-ren/l/access/amsr2_out_test",
                     "/mnt/ops1p-ren/l/access/_temp",
-                    "2018-01-06",
-                    "2018-01-06",
+                    "2018-01-01",
+                    "2018-01-05",
                     "amsr2",
                     "30",
                     "v01r00",
                     "--overwrite"],
             "console": "integratedTerminal"
         },
-
         {"name": "Add Atmospheric Parameters Linux",
             "type": "python",
             "request": "launch",
@@ -55,31 +35,13 @@
             "args":["/mnt/ops1p-ren/l/access/amsr2_out_test",
                     "/mnt/ops1p-ren/l/access/amsr2_out_test",
                     "/mnt/a/data/_access_temp",
-                    "2018-01-06",
-                    "2018-01-06",
+                    "2018-01-01",
+                    "2018-01-05",
                     "amsr2",
                     "30",
                     "v00r01",
                     "--overwrite"],
             "console": "integratedTerminal"
-        },
-        {
-            "name": "Add Wind Emiss Linux",
-            "type": "python",
-            "request": "launch",
-            "program": "add_wind_emiss_ACCESS.py",
-            "args":["/mnt/ops1p-ren/l/ACCESS/amsr2_out_test",
-                    "/mnt/ops1p-ren/l/access/amsr2_out_test",
-                    "era5",
-                    "era5",
-                    "2018-01-06",
-                    "2018-01-06",
-                    "amsr2",
-                    "30",
-                    "v01r00",
-                    "--verbose"],
-            "console": "integratedTerminal",
-
         },
         {
             "name": "Add Land Fraction Linux",
@@ -88,8 +50,8 @@
             "program": "add_land_fraction_to_ACCESS_output.py",
             "args":["/mnt/ops1p-ren/l/access/amsr2_out_test",
                     "/mnt/ops1p-ren/l/access/_temp",
-                    "2018-01-06",
-                    "2018-01-06",
+                    "2018-01-01",
+                    "2018-01-05",
                     "amsr2",
                     "30",
                     "v01r00",
@@ -105,14 +67,32 @@
             "args":["/mnt/ops1p-ren/l/access/amsr2_out_test",
                     "/mnt/ops1p-ren/l/access/amsr2_out_test",
                     "/mnt/ops1p-ren/l/access/_temp",
-                    "2018-01-06",
-                    "2018-01-06",
+                    "2018-01-01",
+                    "2018-01-05",
                     "amsr2",
                     "30",
                     "v01r00",
                     "skt tclw u10n v10n tcwv",
                     "--overwrite"],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Add Wind Emiss Linux",
+            "type": "python",
+            "request": "launch",
+            "program": "add_wind_emiss_ACCESS.py",
+            "args":["/mnt/ops1p-ren/l/ACCESS/amsr2_out_test",
+                    "/mnt/ops1p-ren/l/access/amsr2_out_test",
+                    "era5",
+                    "era5",
+                    "2018-01-01",
+                    "2018-01-05",
+                    "amsr2",
+                    "30",
+                    "v01r00",
+                    "--verbose"],
+            "console": "integratedTerminal",
+
         },
 
         {
@@ -123,8 +103,8 @@
             "args":["/mnt/ops1p-ren/l/ACCESS/amsr2_out_test",
                     "/mnt/ops1p-ren/l/ACCESS/amsr2_out_test",
                     "/mnt/ops1p-ren/l/ACCESS/_temp",
-                    "2018-01-06",
-                    "2018-01-06",
+                    "2018-01-01",
+                    "2018-01-05",
                     "amsr2",
                     "30",
                     "--overwrite"],
