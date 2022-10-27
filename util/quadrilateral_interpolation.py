@@ -228,7 +228,8 @@ class InterpParallelogram:
 
 
 class InterpQuadrilateralFit:
-    """Interpolation in an arbitratry quadrilateral using a minimum curvature bi-quadratic
+    """Interpolation in an arbitratry quadrilateral
+    using a minimum curvature bi-quadratic
     interpolator"""
 
     """The function is in the form ax^2 + bxy + cy^2 + dx + ey + 1.
