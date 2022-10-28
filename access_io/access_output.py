@@ -1,7 +1,7 @@
 import datetime
 import os
 from pathlib import Path
-from typing import Optional, Sequence, Union
+from typing import Any, Optional, Sequence, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -415,8 +415,8 @@ def write_daily_ancillary_var_netcdf(
     target_size: int,
     anc_data: ArrayLike,
     anc_name: str,
-    anc_attrs: dict,
-    global_attrs: Union[dict, str],
+    anc_attrs: dict[str, Any],
+    global_attrs: Union[dict[str, Any], str],
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
 
@@ -507,8 +507,8 @@ def write_ocean_emiss_to_daily_ACCESS(
     current_day: datetime.date,
     satellite: str,
     target_size: int,
-    glb_attrs: dict,
-    var_attrs: dict,
+    glb_attrs: dict[str, Any],
+    var_attrs: dict[str, Any],
     dataroot: Path,
     outputroot: Path,
     verbose: bool = False,

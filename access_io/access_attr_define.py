@@ -3,7 +3,7 @@ import json
 import numpy as np
 import os
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 """
 The routines in this file define the attributes for the ACCESS project output file
@@ -20,11 +20,11 @@ elif os.name == "posix":
 
 
 def _convert_attrs_to_numbers(
-    attrs: dict,
+    attrs: dict[str, Any],
     int_converter: Callable = np.int32,
     float_converter: Callable = np.float32,
     keys_to_exclude: list[str] = ["key_to_exclude"],
-):
+) -> dict[str, Any]:
     for key in attrs.keys():
         if key in keys_to_exclude:
             continue
@@ -50,7 +50,7 @@ def _convert_attrs_to_numbers(
     return attrs
 
 
-def load_attrs(project: str = "", satellite: str = "", var: str = "") -> dict:
+def load_attrs(project: str = "", satellite: str = "", var: str = "") -> dict[str, Any]:
 
     if len(var) == 0:
         raise ValueError("var must be specified")
@@ -68,7 +68,7 @@ def load_attrs(project: str = "", satellite: str = "", var: str = "") -> dict:
     return attrs
 
 
-def load_access_attrs(satellite: str = "", var: str = "") -> dict:
+def load_access_attrs(satellite: str = "", var: str = "") -> dict[str, Any]:
 
     project = "access"
 
@@ -77,7 +77,7 @@ def load_access_attrs(satellite: str = "", var: str = "") -> dict:
 
 def common_global_attributes_access(
     date: datetime.datetime, satellite: str, target_size: int, version: str = "v00r00"
-) -> dict:
+) -> dict[str, Any]:
 
     attrs = load_access_attrs(var="common")
 
@@ -96,7 +96,9 @@ def common_global_attributes_access(
     return attrs
 
 
-def resamp_tb_attributes_access(satellite: str, version="v00r00"):
+def resamp_tb_attributes_access(
+    satellite: str, version="v00r00"
+) -> dict[str, Any]:
     attrs = load_access_attrs(satellite=satellite, var="resamp_tbs")
     attrs["global"]["date_created"] = datetime.datetime.now().isoformat()
     attrs["global"]["version"] = version
@@ -106,7 +108,7 @@ def resamp_tb_attributes_access(satellite: str, version="v00r00"):
     return attrs
 
 
-def atm_pars_era5_attributes_access(satellite: str, target_size: int, version="v00r00"):
+def atm_pars_era5_attributes_access(satellite: str, target_size: int, version="v00r00") -> dict[str, Any]:
 
     attrs = load_access_attrs(satellite=satellite, var="atm_pars_era5")
 
@@ -118,7 +120,9 @@ def atm_pars_era5_attributes_access(satellite: str, target_size: int, version="v
     return attrs
 
 
-def anc_var_attributes_access(satellite: str, var: str, version="v00r00"):
+def anc_var_attributes_access(
+    satellite: str, var: str, version="v00r00"
+) -> dict[str, Any]:
 
     attrs = load_access_attrs(satellite=satellite, var=var)
 
@@ -134,7 +138,9 @@ def anc_var_attributes_access(satellite: str, var: str, version="v00r00"):
     return attrs
 
 
-def coord_attributes_access(coord: str, date=None):
+def coord_attributes_access(
+    coord: str, date=None
+) -> dict[str, Any]:
 
     attrs = load_access_attrs(var=coord)
 
@@ -149,7 +155,7 @@ def coord_attributes_access(coord: str, date=None):
     return attrs
 
 
-def write_attrs(file, attrs, prefix=""):
+def write_attrs(file, attrs: dict[str, Any], prefix=""):
     for key in attrs.keys():
         if isinstance(attrs[key], dict):
             if file == "screen":

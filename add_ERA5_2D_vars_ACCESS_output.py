@@ -3,7 +3,7 @@ import datetime
 import git
 import os
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Any, Tuple, Union
 
 from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
@@ -25,8 +25,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     *,
     current_day: datetime.date,
     variable: Tuple[str, str],
-    glb_attrs: Union[dict, str],
-    var_attrs: dict,
+    glb_attrs: dict[str, Any],
+    var_attrs: dict[str, Any],
     satellite: str,
     target_size: int,
     dataroot: Path,
