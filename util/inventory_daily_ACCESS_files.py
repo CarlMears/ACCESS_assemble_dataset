@@ -7,7 +7,7 @@ import pandas as pd
 import xarray as xr
 
 # these packages are located in folders in the local path
-from access_io.access_output import get_access_output_filename
+from access_io.access_output import get_access_output_filename_daily_folder
 
 NUM_LATS = 721
 NUM_LONS = 1440
@@ -41,7 +41,9 @@ def inventory_daily_ACCESS_tb_file(
     verbose: bool = False,
 ) -> list[Any]:
 
-    filename = get_access_output_filename(current_day, satellite, dataroot)
+    filename = get_access_output_filename_daily_folder(
+        current_day, satellite, 0, dataroot, "UNKNOWN"
+    )
     if filename.is_file():
         ds = xr.open_dataset(filename)
         return list(ds.data_vars.keys())
