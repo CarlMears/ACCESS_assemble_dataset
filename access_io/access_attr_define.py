@@ -147,7 +147,7 @@ def coord_attributes_access(
 
     attrs = load_access_attrs(var=coord)
 
-    if coord == "hours":
+    if coord == "hours" and date is not None:
         attrs["units"] = f"hours since {date.isoformat()} 00:00:00.0"
 
     if coord == "time":
