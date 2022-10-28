@@ -1,6 +1,6 @@
 from datetime import date
 from pathlib import Path
-from typing import Collection, Dict
+from typing import Any, Collection
 
 import numpy as np
 import pandas as pd
@@ -39,7 +39,7 @@ def inventory_daily_ACCESS_tb_file(
     dataroot: Path,
     channels: Collection[int],
     verbose: bool = False,
-) -> Dict:
+) -> list[Any]:
 
     filename = get_access_output_filename(current_day, satellite, dataroot)
     if filename.is_file():

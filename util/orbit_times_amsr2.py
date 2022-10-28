@@ -38,7 +38,7 @@ def find_orbits_in_day(
     assert len(orbits) < 19  # This should always be true
 
     if verbose:
-        print(times_np64[orbits])  # type: ignore
+        print(times_np64[orbits])
     orbits += 1  # fix indexing offset in fortran file
     if verbose:
         print(orbits)

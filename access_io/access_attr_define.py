@@ -77,7 +77,7 @@ def load_access_attrs(satellite: str = "", var: str = "") -> dict[str, Any]:
 
 
 def common_global_attributes_access(
-    date: datetime.datetime, satellite: str, target_size: int, version: str = "v00r00"
+    date: datetime.date, satellite: str, target_size: int, version: str = "v00r00"
 ) -> dict[str, Any]:
 
     attrs = load_access_attrs(var="common")

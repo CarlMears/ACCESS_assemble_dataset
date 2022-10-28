@@ -40,7 +40,7 @@ class OkToSkipDay(Exception):
 class DailyRtm:
     """RTM results for the entire day."""
 
-    def __init__(self, date_to_load: datetime.datetime, data_root: Path):
+    def __init__(self, date_to_load: date, data_root: Path):
 
         filename = (
             f"era5_tbs_{date_to_load.year}-"

@@ -173,7 +173,7 @@ def write_daily_lf_netcdf(
 
     if filename.is_file() and not overwrite:
         print(f"daily file for {date} exists... skipping")
-        return []
+        return
     else:
         try:
             filename.unlink()
@@ -400,8 +400,11 @@ def write_daily_tb_netcdf(
         time[:, :, :] = time_to_put
 
         fill_val = np.float32(tb_attrs["_FillValue"])
-        tbs_to_put = np.nan_to_num(
-            tb_array_by_hour, nan=fill_val, posinf=fill_val, neginf=fill_val
+        tbs_to_put = np.nan_to_num(  # type: ignore
+            tb_array_by_hour,
+            nan=fill_val,
+            posinf=fill_val,
+            neginf=fill_val,
         ).astype(np.float32)
         tbs[:, :, :, :, :] = tbs_to_put
 
