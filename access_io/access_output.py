@@ -1,7 +1,7 @@
 import datetime
 import os
 from pathlib import Path
-from typing import Any, Optional, Sequence, Union
+from typing import Any, Literal, Optional, Sequence, Union
 
 import numpy as np
 from netCDF4 import Variable
@@ -417,7 +417,7 @@ def write_daily_ancillary_var_netcdf(
     anc_data: NDArray[Any],
     anc_name: str,
     anc_attrs: dict[str, Any],
-    global_attrs: Union[dict[str, Any], str],
+    global_attrs: Union[dict[str, Any], Literal["copy"]],
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
 
