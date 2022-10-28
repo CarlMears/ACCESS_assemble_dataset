@@ -21,8 +21,8 @@ elif os.name == "posix":
 
 def _convert_attrs_to_numbers(
     attrs: dict[str, Any],
-    int_converter: Callable = np.int32,
-    float_converter: Callable = np.float32,
+    int_converter: Callable[[str], Any] = np.int32,
+    float_converter: Callable[[str], Any] = np.float32,
     keys_to_exclude: list[str] = ["key_to_exclude"],
 ) -> dict[str, Any]:
     for key in attrs.keys():
@@ -38,8 +38,8 @@ def _convert_attrs_to_numbers(
                 attrs[key] = value_int
             except ValueError:  # maybe too big for int32 - try int64
                 try:
-                    value_int = np.int64(value)
-                    attrs[key] = value_int
+                    value_int64 = np.int64(value)
+                    attrs[key] = value_int64
                 except ValueError:
                     try:
                         value_flt = float_converter(value)
