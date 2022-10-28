@@ -2,7 +2,7 @@ import datetime
 import json
 import os
 from pathlib import Path
-from typing import Any, Callable, Literal, Optional, TextIO, Union
+from typing import Any, Callable, Literal, Optional, TextIO, Union, cast
 
 import numpy as np
 
@@ -66,7 +66,7 @@ def load_attrs(project: str = "", satellite: str = "", var: str = "") -> dict[st
     with open(path_to_file) as json_file:
         attrs = json.load(json_file)
 
-    return attrs
+    return cast(dict[str, Any], attrs)
 
 
 def load_access_attrs(satellite: str = "", var: str = "") -> dict[str, Any]:
