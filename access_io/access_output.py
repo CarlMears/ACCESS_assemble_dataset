@@ -5,7 +5,7 @@ from typing import Any, Optional, Sequence, Union
 
 import numpy as np
 from netCDF4 import Variable
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 from rss_lock.locked_dataset import LockedDataset
 
 from access_io.access_attr_define import (  # atm_pars_era5_attributes_access,
@@ -254,10 +254,10 @@ def write_daily_tb_netcdf(
     satellite: str,
     target_size: int,
     version: str,
-    tb_array_by_hour: ArrayLike,
-    time_array_by_hour: ArrayLike,
+    tb_array_by_hour: NDArray[Any],
+    time_array_by_hour: NDArray[Any],
     dataroot: Path = ACCESS_ROOT,
-    freq_list: ArrayLike,
+    freq_list: NDArray[Any],
     file_list: Optional[Sequence[Path]],
 ) -> None:
 
@@ -414,7 +414,7 @@ def write_daily_ancillary_var_netcdf(
     date: datetime.date,
     satellite: str,
     target_size: int,
-    anc_data: ArrayLike,
+    anc_data: NDArray[Any],
     anc_name: str,
     anc_attrs: dict[str, Any],
     global_attrs: Union[dict[str, Any], str],

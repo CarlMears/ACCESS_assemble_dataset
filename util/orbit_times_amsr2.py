@@ -1,9 +1,10 @@
 import datetime
 import os
 from pathlib import Path
+from typing import Any
 
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import NDArray
 
 from util.numpy_date_utils import convert_to_np_datetime64
 
@@ -15,14 +16,14 @@ elif os.name == "posix":
 
 def read_amsr2_orbit_times(
     filename_orb: Path = AMSR2_ORBIT_FILE,
-) -> ArrayLike:
+) -> NDArray[Any]:
     times = np.fromfile(filename_orb, dtype=np.float64)
     return convert_to_np_datetime64(times, ref_year=1993)
 
 
 def find_orbits_in_day(
-    *, times_np64: ArrayLike, date: datetime.date, verbose: bool = False
-) -> ArrayLike:
+    *, times_np64: NDArray[Any], date: datetime.date, verbose: bool = False
+) -> NDArray[Any]:
     target_day_begin_np64 = np.datetime64(f"{date:%Y-%m-%d}T00:00")
     target_day_end_np64 = target_day_begin_np64 + np.timedelta64(24, "h")
 
