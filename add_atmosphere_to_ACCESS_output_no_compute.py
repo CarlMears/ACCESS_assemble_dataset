@@ -4,24 +4,26 @@ ERA5 data is downloaded if missing.
 """
 
 import argparse
-import git
+import datetime
+import os
 from datetime import date
 from pathlib import Path
 
+import git
 import numpy as np
-
 from netCDF4 import Dataset
 from rss_lock.locked_dataset import LockedDataset
-import os
-import datetime
 
-from access_io.access_output import get_access_output_filename_daily_folder
-from access_io.access_output import set_or_create_attr
-from access_io.access_attr_define import common_global_attributes_access
-from access_io.access_attr_define import atm_pars_era5_attributes_access
-
-from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
+from access_io.access_attr_define import (
+    atm_pars_era5_attributes_access,
+    common_global_attributes_access,
+)
+from access_io.access_output import (
+    get_access_output_filename_daily_folder,
+    set_or_create_attr,
+)
 from satellite_definitions.amsr2 import REF_FREQ_mapping
+from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 # Reference frequencies (in GHz) to use
 # REF_FREQ = np.array([6.9, 7.3, 10.7, 18.7, 23.8, 37.0], np.float32)

@@ -1,6 +1,6 @@
+import datetime
 import os
 from pathlib import Path
-import datetime
 
 import numpy as np
 from numpy.typing import ArrayLike

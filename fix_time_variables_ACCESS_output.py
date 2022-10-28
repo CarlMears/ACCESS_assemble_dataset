@@ -7,9 +7,7 @@ from pathlib import Path
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
 
-from access_io.access_output import (
-    get_access_output_filename,
-)
+from access_io.access_output import get_access_output_filename
 
 
 def fix_time_in_ACCESS_output(
