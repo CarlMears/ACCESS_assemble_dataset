@@ -3,7 +3,7 @@ import json
 import numpy as np
 import os
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal, Optional, TextIO, Union
 
 """
 The routines in this file define the attributes for the ACCESS project output file
@@ -97,7 +97,7 @@ def common_global_attributes_access(
 
 
 def resamp_tb_attributes_access(
-    satellite: str, version="v00r00"
+    satellite: str, version: str = "v00r00"
 ) -> dict[str, Any]:
     attrs = load_access_attrs(satellite=satellite, var="resamp_tbs")
     attrs["global"]["date_created"] = datetime.datetime.now().isoformat()
@@ -108,7 +108,9 @@ def resamp_tb_attributes_access(
     return attrs
 
 
-def atm_pars_era5_attributes_access(satellite: str, target_size: int, version="v00r00") -> dict[str, Any]:
+def atm_pars_era5_attributes_access(
+    satellite: str, target_size: int, version: str = "v00r00"
+) -> dict[str, Any]:
 
     attrs = load_access_attrs(satellite=satellite, var="atm_pars_era5")
 
@@ -121,7 +123,7 @@ def atm_pars_era5_attributes_access(satellite: str, target_size: int, version="v
 
 
 def anc_var_attributes_access(
-    satellite: str, var: str, version="v00r00"
+    satellite: str, var: str, version: str = "v00r00"
 ) -> dict[str, Any]:
 
     attrs = load_access_attrs(satellite=satellite, var=var)
@@ -139,7 +141,7 @@ def anc_var_attributes_access(
 
 
 def coord_attributes_access(
-    coord: str, date=None
+    coord: str, date: Optional[datetime.date] = None
 ) -> dict[str, Any]:
 
     attrs = load_access_attrs(var=coord)
@@ -155,7 +157,9 @@ def coord_attributes_access(
     return attrs
 
 
-def write_attrs(file, attrs: dict[str, Any], prefix=""):
+def write_attrs(
+    file: Union[Literal["screen"], TextIO], attrs: dict[str, Any], prefix: str = ""
+) -> None:
     for key in attrs.keys():
         if isinstance(attrs[key], dict):
             if file == "screen":

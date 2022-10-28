@@ -92,7 +92,7 @@ class DailyRtm:
 
 
 def write_atmosphere_to_daily_ACCESS(
-    current_day,
+    current_day: date,
     satellite: str,
     target_size: int,
     dataroot: Path,

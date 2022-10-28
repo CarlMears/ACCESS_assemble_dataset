@@ -6,6 +6,7 @@ from typing import Any, Optional, Sequence, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
+from netCDF4 import Variable
 from rss_lock.locked_dataset import LockedDataset
 
 from access_io.access_attr_define import (
@@ -70,7 +71,7 @@ class OkToSkipDay(Exception):
     pass
 
 
-def set_or_create_attr(var, attr_name, attr_value):
+def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
     """seems like something like this should be part
     of the interface but I can not find it"""
 
