@@ -1,20 +1,20 @@
-{   "name": {"value": "rain_rate_imerg","type": "str"},
-    "type": {"value": "np.float32","type": "str"},
+{   "name":  "rain_rate_imerg",
     "global":{
-        "summary": {"value": "Rain Rate corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature","type": "str"},
-        "keywords": {"value": "EARTH SCIENCE > ATMOSPHERE > PRECIPITATION > PRECIPITATION RATE","type": "str"},
-        "title": {"value": "IMERG Rain Rate, resampled to circular gaussian footprints 0.25 degree Earth grid at satellite overpass times", "type": "str"},      
-        "history": {"value": "Created from on-line IMERG data from the CMR EarthData API","type": "str"},
-        "source": {"value": "Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan (2019), GPM IMERG Final Precipitation L3 Half Hourly 0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences Data and Information Services Center (GES DISC), 10.5067/GPM/IMERG/3B-HH/06","type": "str"}
+        "summary":  "Rain Rate corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
+        "keywords":  "EARTH SCIENCE > ATMOSPHERE > PRECIPITATION > PRECIPITATION RATE",
+        "title":  "IMERG Rain Rate, resampled to circular gaussian footprints 0.25 degree Earth grid at satellite overpass times",    
+        "history":  "Created from on-line IMERG data from the CMR EarthData API",
+        "source":  "Huffman, G.J., E.F. Stocker, D.T. Bolvin, E.J. Nelkin, Jackson Tan (2019), GPM IMERG Final Precipitation L3 Half Hourly 0.1 degree x 0.1 degree V06, Greenbelt, MD, Goddard Earth Sciences Data and Information Services Center (GES DISC), 10.5067/GPM/IMERG/3B-HH/06",
+        "cell_method": "FILLED AT RUNTIME"
     },
     "var":{
-        "standard_name": {"value": "rainfall_rate","type": "str"},
-        "long_name": {"value": "rainfall rate derived from IMERGE Rain product","type": "str"},
-        "valid_min": {"value": "0.0","type": "inherited"},
-        "valid_max": {"value": "50.0","type": "inherited"},
-        "units": {"value": "mm/hr","type": "str"},
-        "missing_value": {"value": "-999.0","type": "inherited"},
-        "_FillValue": {"value": "-999.0","type": "inherited"},
-        "coordinates": {"value": "latitude longitude hours","type": "str"}
-        }
+        "standard_name":  "rainfall_rate",
+        "long_name":  "rainfall rate derived from IMERGE Rain product",
+        "valid_min":  0.0,
+        "valid_max":  50.0,
+        "units":  "mm/hr",
+        "missing_value":  -999.0,
+        "_FillValue":  -999.0,
+        "coordinates":  "latitude longitude"
+    }
 }

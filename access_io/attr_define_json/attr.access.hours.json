@@ -1,5 +1,5 @@
 {
-    "standard_name": {"value": "time","type": "str"},
-    "valid_min": {"value": "0","type": "np.int32"},
-    "valid_max": {"value": "23","type": "np.int32"}
+    "standard_name": "time",
+    "valid_min": 0,
+    "valid_max": 23
 }

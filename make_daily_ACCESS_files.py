@@ -4,6 +4,7 @@ from typing import Collection, List
 
 import matplotlib.pyplot as plt
 import numpy as np
+import git
 
 # must be installed from rss_plotting package
 from rss_plotting.global_map import plot_global_map
@@ -52,6 +53,8 @@ def make_daily_ACCESS_tb_file(
     verbose: bool = False,
     plot_example_map: bool = True,
     overwrite: bool = False,
+    script_name: str = "unavailable",
+    commit: str = "unavailable",
 ) -> List[Path]:
 
     if satellite.lower() == "amsr2":
@@ -161,6 +164,7 @@ def make_daily_ACCESS_tb_file(
                             f"time_range({start_time_sec}:{end_time_sec}) "
                             f"Num Obs: {num_ok}"
                         )
+    print(" ")  # force next line
 
     if at_least_one_orbit:
         if plot_example_map:
@@ -176,6 +180,8 @@ def make_daily_ACCESS_tb_file(
             freq_list=REF_FREQ,
             file_list=file_list,
             dataroot=dataroot,
+            script_name=script_name,
+            commit=commit,
         )
     return file_list
 
@@ -233,9 +239,12 @@ if __name__ == "__main__":
     else:
         channels = list(range(1, 13))
 
+    script_name = parser.prog
+    repo = git.Repo(search_parent_directories=True)
+    commit = repo.head.object.hexsha
+
     day_to_do = START_DAY
     while day_to_do <= END_DAY:
-        print(f"{day_to_do}")
         make_daily_ACCESS_tb_file(
             current_day=day_to_do,
             satellite=satellite,
@@ -246,6 +255,8 @@ if __name__ == "__main__":
             verbose=args.verbose,
             plot_example_map=args.plot_map,
             overwrite=args.overwrite,
+            script_name=script_name,
+            commit=commit,
         )
         if args.plot_map:
             plt.show()

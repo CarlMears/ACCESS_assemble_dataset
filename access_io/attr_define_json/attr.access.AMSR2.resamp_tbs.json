@@ -1,23 +1,22 @@
 
-{   "name": {"value": "resampled_brightness_temperature","type": "str"},
-    "type": {"value": "np.float32","type": "str"},
+{   "name": "resampled_brightness_temperature",
     "global": {
-            "summary": {"value": "Remote Sensing Systems (RSS) Resampled brightness temperature intercalibrated and homogenized brightness temperature polar-orbiting resampled to a regular Earth grid","type": "str"},
-            "keyword": {"value": "EARTH SCIENCE > SPECTRAL/ENGINEERING > MICROWAVE > BRIGHTNESS TEMPERATURE","type": "str"},
-            "title":   {"value": "Resampled brightness temperatures","type": "str"},
-            "history": {"value": "Created Resampled Brightness Temperature from RSS AMSR2 L1A data","type": "str"},
-            "platform": {"value": "GCOM-W1, JAXA","type": "str"},
-            "sensor": {"value": "AMSR2 > Advanced Microwave Scanning Radiometer 2","type": "str"}
+            "summary": "Remote Sensing Systems (RSS) Resampled brightness temperature intercalibrated and homogenized brightness temperature polar-orbiting resampled to a regular Earth grid",
+            "keyword": "EARTH SCIENCE > SPECTRAL/ENGINEERING > MICROWAVE > BRIGHTNESS TEMPERATURE",
+            "title":   "Resampled brightness temperatures",
+            "history": "Created Resampled Brightness Temperature from RSS AMSR2 L1A data",
+            "platform": "GCOM-W1, JAXA",
+            "sensor": "AMSR2 > Advanced Microwave Scanning Radiometer 2",
+            "cell_method": "FILLED AT RUNTIME"
     },
     "var":    {
-        "name": {"value": "brightness_temperature","type": "str"},
-        "long_name": {"value": "resampled brightness temperature on a lat/lon grid","type": "str"},
-        "units": {"value": "degrees kelvin","type": "str"},
-        "valid_min": {"value": 50.0,"type": "inherited"},
-        "valid_max": {"value": 350.0,"type": "inherited"},
-        "missing_value": {"value": -999.0,"type": "inherited"},
-        "_FillValue": {"value": -999.0,"type": "inherited"},
-        "coordinates": {"value": "latitude longitude","type": "str"},
-        "channel_names": {"value": "6V 6H 7V 7H 11V 11H 19V 19H 24V 24H 37V 37H 89V 89H","type": "str"}
+        "name": "brightness_temperature",
+        "long_name": "resampled brightness temperature on a lat/lon grid",
+        "units": "degrees kelvin",
+        "valid_min": 50.0,
+        "valid_max": 350.0,
+        "missing_value": -999.0,
+        "_FillValue": -999.0,
+        "coordinates": "latitude longitude"
     }
 }

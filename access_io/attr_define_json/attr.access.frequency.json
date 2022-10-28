@@ -1,7 +1,7 @@
 {
-   "standard_name": {"value": "frequency","type": "str"},
-   "long_name": {"value": "satellite observation frequency","type": "str"},
-   "units": {"value": "GHz","type": "str"},
-   "valid_min": {"value": "1.0","type": "np.float32"},
-   "valid_max": {"value": "300.0","type": "np.float32"}
+   "standard_name": "frequency",
+   "long_name": "satellite observation frequency",
+   "units": "GHz",
+   "valid_min": 1.0,
+   "valid_max": 300.0
 }

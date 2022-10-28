@@ -15,7 +15,6 @@ from access_io.access_output import write_daily_ancillary_var_netcdf
 from access_io.access_attr_define import (
     common_global_attributes_access,
     anc_var_attributes_access,
-    write_attrs,
 )
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
@@ -203,7 +202,8 @@ if __name__ == "__main__":
         "target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
     parser.add_argument("version", help="version sting - e.g. v01r00")
-    parser.add_argument("variable")
+    parser.add_argument("-v", "--variables", nargs="*", default=[])
+
     parser.add_argument(
         "--overwrite", help="overwrite exisitng files", action="store_true"
     )
@@ -222,10 +222,9 @@ if __name__ == "__main__":
     satellite = args.sensor.upper()
     target_size = int(args.target_size)
     version = args.version
-    var_list = args.variable
+    var_list = args.variables
     overwrite = args.overwrite
-    var_list = var_list.split()
-
+    print(var_list)
     script_name = parser.prog
     repo = git.Repo(search_parent_directories=True)
     commit = repo.head.object.hexsha
@@ -254,7 +253,6 @@ if __name__ == "__main__":
             continue
 
         date = START_DAY
-        debug_attrs = True
         while date <= END_DAY:
             print(f"Processing: {date}")
 
@@ -272,12 +270,6 @@ if __name__ == "__main__":
             # keep the variable decription parts in var_attrs
 
             var_attrs = var_attrs["var"]
-
-            if debug_attrs:
-                print("----Global----")
-                write_attrs("screen", glb_attrs, prefix="GLB: ")
-                print("----Var----")
-                write_attrs("screen", var_attrs, prefix="VAR: ")
 
             add_ERA5_single_level_variable_to_ACCESS_output(
                 current_day=date,

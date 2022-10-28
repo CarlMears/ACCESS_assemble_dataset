@@ -1,5 +1,7 @@
 {
-    "standard_name": {"value": "polarization","type": "str"},
-    "long_name": {"value": "polarization index","type": "str"},
-    "pol_mapping": {"value": "0 = V-pol, 1 = H-Pol","type": "str"}
+    "standard_name":  "polarization",
+    "long_name":  "polarization index",
+    "pol_mapping":"0 = V-pol, 1 = H-Pol",
+    "valid_min": 0,
+    "valid_max": 1
 }

@@ -1,7 +1,7 @@
 {
-    "standard_name": {"value": "latitude","type": "str"},
-    "long_name": {"value": "latitude","type": "str"},
-    "units": {"value": "degrees_north","type": "str"},
-    "valid_min": {"value": "-90.0","type": "np.float32"},
-    "valid_max": {"value": "90.0","type": "np.float32"}
+    "standard_name": "latitude",
+    "long_name": "latitude",
+    "units": "degrees_north",
+    "valid_min": -90.0,
+    "valid_max": 90.0
 }
