@@ -136,9 +136,7 @@ def write_atmosphere_to_daily_ACCESS(
                 current_day, satellite, target_size, version=version
             )
 
-            atm_attrs = atm_pars_era5_attributes_access(
-                satellite, target_size=target_size, version=version
-            )
+            atm_attrs = atm_pars_era5_attributes_access(satellite, version=version)
 
             glb_attrs.update(atm_attrs["global"])
             glb_attrs["script_name"] = script_name

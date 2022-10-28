@@ -110,7 +110,7 @@ def resamp_tb_attributes_access(
 
 
 def atm_pars_era5_attributes_access(
-    satellite: str, target_size: int, version: str = "v00r00"
+    satellite: str, version: str = "v00r00"
 ) -> dict[str, Any]:
 
     attrs = load_access_attrs(satellite=satellite, var="atm_pars_era5")
