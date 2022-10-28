@@ -104,7 +104,7 @@ def get_access_output_filename_daily_folder(
             / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
         )
 
-
+'''
 def replace_var_in_daily_tb_netcdf(
     *,
     date: datetime.date,
@@ -153,7 +153,7 @@ def replace_var_in_daily_tb_netcdf(
         v.coordinates = "latitude longitude hours"
 
         v[:, :, :] = var
-
+'''
 
 def write_daily_lf_netcdf(
     *,
@@ -478,10 +478,10 @@ def write_daily_ancillary_var_netcdf(
             )
 
             # convert numerical attributes to numbers
-            attrs_to_convert_to_floats = ["valid_max", "valid_min", "v_fill"]
-            for attr_to_convert in attrs_to_convert_to_floats:
-                if attr_to_convert in anc_attrs.keys():
-                    anc_attrs[attr_to_convert] = np.float32(anc_attrs[attr_to_convert])
+            # attrs_to_convert_to_floats = ["valid_max", "valid_min", "v_fill"]
+            # for attr_to_convert in attrs_to_convert_to_floats:
+            #     if attr_to_convert in anc_attrs.keys():
+            #         anc_attrs[attr_to_convert] = np.float32(anc_attrs[attr_to_convert])
 
             for key in anc_attrs.keys():
                 if (

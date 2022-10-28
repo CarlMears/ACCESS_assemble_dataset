@@ -1,7 +1,6 @@
 {
-    "standard_name": "longitude",
-    "long_name": "longitude",
-    "units": "degrees_east",
-    "valid_min": "0.0",
-    "valid_max": "360.0"
+    "long_name": {"value":"longitude","type": "str"},
+    "units": {"value":"degrees_east","type": "str"},
+    "valid_min": {"value":"0.0","type": "np.float32"},
+    "valid_max": {"value":"360.0","type": "np.float32"}
 }

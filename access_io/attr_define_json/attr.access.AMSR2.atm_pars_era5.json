@@ -1,38 +1,37 @@
-{
+{   "name": {"value": "resampled_brightness_temperature","type": "str"},
+    "type": {"value": "np.float32","type": "str"},
     "global":{
-        "summary" : "Atmospheric radiation parameters corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
-        "keywords": ["EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > SPECTRAL IRRADIANCE",
-                 "EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE"
-                ],
-        "title": "Atmospheric radiation parameters computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-        "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model"
+        "summary" : {"value": "Atmospheric radiation parameters corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature","type": "str"},
+        "keywords": {"value": "EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > SPECTRAL IRRADIANCE, EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE","type": "str"},    
+        "title": {"value": "Atmospheric radiation parameters computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time","type": "str"},
+        "history": {"value": "Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model","type": "str"}
             },
     "downwelling_tb":{
-        "standard_name": "brightness temperature",
-        "long_name": "downwelling atmospheric brightness temperature",
-        "units": "kelvin",
-        "_FillValue": "-999.0",
-        "missing_value": "-999.0",
-        "valid_min": "0.0",
-        "valid_max": "250.0"
+        "standard_name": {"value": "brightness temperature","type": "str"},
+        "long_name": {"value": "downwelling atmospheric brightness temperature","type": "str"},
+        "units": {"value": "kelvin","type": "str"},
+        "_FillValue": {"value": -999.0,"type": "inherited"},
+        "missing_value": {"value": -999.0,"type": "inherited"},
+        "valid_min": {"value": 0.0,"type": "inherited"},
+        "valid_max": {"value": 250.0,"type": "inherited"}
     },
     "upwelling_tb":{
-        "standard_name": "brightness temperature",
-        "long_name": "upwelling atmospheric brightness temperature",
-        "units": "kelvin",
-        "_FillValue": "-999.0",
-        "missing_value": "-999.0",
-        "valid_min": "0.0",
-        "valid_max": "250.0"
+        "standard_name": {"value": "brightness temperature","type": "str"},
+        "long_name": {"value": "upwelling atmospheric brightness temperature","type": "str"},
+        "units": {"value": "kelvin","type": "str"},
+        "_FillValue": {"value": -999.0,"type": "inherited"},
+        "missing_value": {"value": -999.0,"type": "inherited"},
+        "valid_min": {"value": 0.0,"type": "inherited"},
+        "valid_max": {"value": 250.0,"type": "inherited"}
     },
     "transmissivity":{
-        "standard_name": "transmissivity",
-        "long_name": "atmospheric transmissivty",
-        "units": "dimensionless",
-        "_FillValue": "-999.0",
-        "missing_value": "-999.0",
-        "valid_min": "0.0",
-        "valid_max": "1.0"
+        "standard_name": {"value": "transmissivity","type": "str"},
+        "long_name": {"value": "atmospheric transmissivty","type": "str"},
+        "units": {"value": "dimensionless","type": "str"},
+        "_FillValue": {"value": "-999.0","type": "inherited"},
+        "missing_value": {"value": "-999.0","type": "inherited"},
+        "valid_min": {"value": "0.0","type": "inherited"},
+        "valid_max": {"value": "1.0","type": "inherited"}
     }
 }
 
