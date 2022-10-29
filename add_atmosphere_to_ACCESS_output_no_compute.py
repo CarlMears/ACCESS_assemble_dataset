@@ -4,6 +4,7 @@ ERA5 data is downloaded if missing.
 """
 
 import argparse
+from contextlib import suppress
 import git
 from datetime import date
 from pathlib import Path
@@ -156,10 +157,8 @@ def write_atmosphere_to_daily_ACCESS(
                 else:
                     print(f"File {atm_filename_final} exists, skipping")
                     return
-            try:
+            with suppress(FileNotFoundError):
                 atm_filename.unlink()
-            except FileNotFoundError:
-                pass
 
             with LockedDataset(atm_filename, mode="w") as trg:
                 for name, dim in root_grp.dimensions.items():
@@ -238,11 +237,8 @@ def write_atmosphere_to_daily_ACCESS(
     except FileNotFoundError:
         raise OkToSkipDay
 
-    print()
-    try:
+    with suppress(FileNotFoundError):
         atm_filename_final.unlink()
-    except FileNotFoundError:
-        pass
 
     os.rename(atm_filename, atm_filename_final)
 

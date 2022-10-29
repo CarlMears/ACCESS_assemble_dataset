@@ -11,26 +11,6 @@ era5_vars_to_include="-v skt tclw u10n v10n tcwv"
 wind_source=era5
 version=test_01
 
-python make_daily_ACCESS_files.py \
-                    $output_root \
-                    $temp_root \
-                    $start_date \
-                    $end_date \
-                    $satellite \
-                    $target_size \
-                    $version \
-                    --overwrite
-
-python add_atmosphere_to_ACCESS_output_no_compute.py \
-                    $access_root \
-                    $output_root \
-                    $rmt_data_root \
-                    $start_date \
-                    $end_date \
-                    $satellite \
-                    $target_size \
-                    $version \
-                    --overwrite
 
 python add_land_fraction_to_ACCESS_output.py \
                     $output_root \
@@ -42,6 +22,38 @@ python add_land_fraction_to_ACCESS_output.py \
                     $version \
                     $land_mask_source \
                     --overwrite
+
+# python make_daily_ACCESS_files.py \
+#                     $output_root \
+#                     $temp_root \
+#                     $start_date \
+#                     $end_date \
+#                     $satellite \
+#                     $target_size \
+#                     $version \
+#                     --overwrite
+
+# python add_atmosphere_to_ACCESS_output_no_compute.py \
+#                     $access_root \
+#                     $output_root \
+#                     $rmt_data_root \
+#                     $start_date \
+#                     $end_date \
+#                     $satellite \
+#                     $target_size \
+#                     $version \
+#                     --overwrite
+
+# python add_land_fraction_to_ACCESS_output.py \
+#                     $output_root \
+#                     $temp_root \
+#                     $start_date \
+#                     $end_date \
+#                     $satellite \
+#                     $target_size \
+#                     $version \
+#                     $land_mask_source \
+#                     --overwrite
 
 python add_ERA5_2D_vars_ACCESS_output.py \
                     $access_root \

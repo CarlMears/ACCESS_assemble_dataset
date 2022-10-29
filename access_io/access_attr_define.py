@@ -3,6 +3,7 @@ import json
 import numpy as np
 import os
 from pathlib import Path
+from typing import Optional, Any
 
 
 """
@@ -32,112 +33,64 @@ float32_attributes = [
 ]
 
 
-# def _convert_attrs_to_numbers(
-#     attrs: dict,
-#     int_converter: Callable = np.int32,
-#     float_converter: Callable = np.float32,
-#     keys_to_exclude: list[str] = ["key_to_exclude"],
-# ):
-#     for key in attrs.keys():
-#         if key in keys_to_exclude:
-#             continue
-#         value = attrs[key]
-#         try:
-#             _ = attrs[key].keys()  # determine if dictionary-like, e.g. has keys()
-#             attrs[key] = _convert_attrs_to_numbers(value)
-#         except AttributeError:
-#             try:
-#                 value_int = int_converter(value)
-#                 attrs[key] = value_int
-#             except ValueError:  # maybe too big for int32 - try int64
+# def parse_attrs(raw_attrs, inherited_type=None):
+#     dict_out = {}
+#     for key, item in raw_attrs.items():
+#         if isinstance(item, dict):
+#             if (
+#                 "value" in item.keys()
+#             ):  # bottom level - should have "value" and "type" keys
 #                 try:
-#                     value_int = np.int64(value)
-#                     attrs[key] = value_int
-#                 except ValueError:
-#                     try:
-#                         value_flt = float_converter(value)
-#                         attrs[key] = value_flt
-#                     except ValueError:
-#                         pass
-
-#     return attrs
-
-
-# def load_attrs(project: str = "", satellite: str = "", var: str = "") -> dict:
-
-#     if len(var) == 0:
-#         raise ValueError("var must be specified")
-
-#     filename = "attr."
-#     if len(project) > 0:
-#         filename = f"{filename}{project}."
-#     if len(satellite) > 0:
-#         filename = f"{filename}{satellite.upper()}."
-#     filename = f"{filename}{var}.json"
-#     path_to_file = _attr_define_root / filename
-#     with open(path_to_file) as json_file:
-#         attrs = json.load(json_file)
-
-#     return attrs
+#                     type_str = item["type"]
+#                 except AttributeError:
+#                     raise AttributeError(f"'type' missing from {key}")
+#                 if type_str == "inherited":
+#                     if inherited_type in _allowed_numeric_types:
+#                         type_str = inherited_type
+#                     else:
+#                         raise ValueError(
+#                             f"Invalid Inherited type {inherited_type} in parse_attrs"
+#                         )
+#                 if type_str in _allowed_numeric_types:
+#                     bare_type = type_str.split(".")[1]  # strip off the "np."
+#                     val = np.asarray(
+#                         item["value"], dtype=np.dtype(getattr(np, bare_type))
+#                     )
+#                     dict_out[key] = val
+#                 elif type_str == "str":
+#                     if key == "type":
+#                         inherited_type = item["value"]
+#                     else:
+#                         dict_out[key] = item["value"]
+#                 else:
+#                     raise ValueError(f"type: {type_str} invalid")
+#             else:
+#                 dict_out[key] = parse_attrs(item, inherited_type=inherited_type)
+#     return dict_out
 
 
-def parse_attrs(raw_attrs, inherited_type=None):
-    dict_out = {}
-    for key, item in raw_attrs.items():
-        if isinstance(item, dict):
-            if (
-                "value" in item.keys()
-            ):  # bottom level - should have "value" and "type" keys
-                try:
-                    type_str = item["type"]
-                except AttributeError:
-                    raise AttributeError(f"'type' missing from {key}")
-                if type_str == "inherited":
-                    if inherited_type in _allowed_numeric_types:
-                        type_str = inherited_type
-                    else:
-                        raise ValueError(
-                            f"Invalid Inherited type {inherited_type} in parse_attrs"
-                        )
-                if type_str in _allowed_numeric_types:
-                    bare_type = type_str.split(".")[1]  # strip off the "np."
-                    val = np.asarray(
-                        item["value"], dtype=np.dtype(getattr(np, bare_type))
-                    )
-                    dict_out[key] = val
-                elif type_str == "str":
-                    if key == "type":
-                        inherited_type = item["value"]
-                    else:
-                        dict_out[key] = item["value"]
-                else:
-                    raise ValueError(f"type: {type_str} invalid")
-            else:
-                dict_out[key] = parse_attrs(item, inherited_type=inherited_type)
-    return dict_out
-
-
-def load_attrs(project: str = "", satellite: str = "", var: str = "") -> dict:
+def load_attrs(
+    *, project: Optional[str] = None, satellite: Optional[str] = None, var: str
+) -> dict[str, Any]:
 
     if len(var) == 0:
         raise ValueError("var must be specified")
 
     filename = "attr."
-    if len(project) > 0:
+    if project is not None:
         filename = f"{filename}{project}."
-    if len(satellite) > 0:
+    if satellite is not None:
         filename = f"{filename}{satellite.upper()}."
+
     filename = f"{filename}{var}.json"
     path_to_file = _attr_define_root / filename
     with open(path_to_file) as json_file:
         attrs = json.load(json_file)
 
-    # attrs = parse_attrs(attrs_raw)
-
     return attrs
 
 
-def load_access_attrs(satellite: str = "", var: str = "") -> dict:
+def load_access_attrs(*, satellite: Optional[str] = None, var: str) -> dict:
 
     project = "access"
 
@@ -217,12 +170,15 @@ def anc_var_attributes_access(
     return attrs
 
 
-def coord_attributes_access(coord: str, date=None, dtype=np.float32):
+def coord_attributes_access(
+    coord: str, date: datetime.date = None, dtype=np.float32
+) -> dict[str, Any]:
 
     attrs = load_access_attrs(var=coord)
 
-    if coord == "hours":
+    if coord == "hours" and date is not None:
         attrs["units"] = f"hours since {date.isoformat()} 00:00:00.0"
+
     attrs = fix_attr_types(attrs, dtype)
     return attrs
 

@@ -1,3 +1,4 @@
+from contextlib import suppress
 from datetime import date
 from pathlib import Path
 from typing import Collection, List
@@ -79,10 +80,8 @@ def make_daily_ACCESS_tb_file(
         print(f"daily file for {current_day} exists... skipping")
         return []
     else:
-        try:
+        with suppress(FileNotFoundError):
             filename.unlink()
-        except FileNotFoundError:
-            pass
 
     # initialize arrays for daily data
     at_least_one_orbit = False

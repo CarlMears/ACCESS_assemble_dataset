@@ -1,4 +1,5 @@
 import argparse
+from contextlib import suppress
 import datetime
 import git
 import os
@@ -51,11 +52,12 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         print(f"base file for {current_day} does not exist, skipping")
         return
 
-    if var_filename_final.is_file():
-        if not force_overwrite:
+    if not force_overwrite:
+        if var_filename_final.is_file():
             print(f"{variable[0]} file for {current_day} exists, skipping to next day")
             return
-        else:
+    else:
+        with suppress(FileNotFoundError):
             var_filename_final.unlink()
 
     try:

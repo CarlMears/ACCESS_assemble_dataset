@@ -72,6 +72,7 @@
                     "amsr2",
                     "30",
                     "v01r00",
+                    "-v",
                     "skt tclw u10n v10n tcwv",
                     "--overwrite"],
             "console": "integratedTerminal"

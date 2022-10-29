@@ -1,3 +1,4 @@
+from contextlib import suppress
 import datetime
 import os
 from pathlib import Path
@@ -175,10 +176,8 @@ def write_daily_lf_netcdf(
         print(f"daily file for {date} exists... skipping")
         return []
     else:
-        try:
+        with suppress(FileNotFoundError):
             filename.unlink()
-        except FileNotFoundError:
-            pass
 
     os.makedirs(filename.parent, exist_ok=True)
 
@@ -205,7 +204,7 @@ def write_daily_lf_netcdf(
     lon_attrs = coord_attributes_access("longitude", np.float32)
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
-    os.makedirs(filename.parents, exist_ok=True)
+    os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
 
         set_all_attrs(nc_out, global_attrs)
@@ -270,7 +269,6 @@ def write_daily_tb_netcdf(
     num_pol = 2
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
-    os.makedirs(filename.parents, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
 
         # set the global_attributes
@@ -407,10 +405,8 @@ def write_daily_ancillary_var_netcdf(
     var_filename_final = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, anc_name
     )
-    try:
+    with suppress(FileNotFoundError):
         var_filename.unlink()
-    except FileNotFoundError:
-        pass
 
     with LockedDataset(var_filename, "w", 60) as nc_out:
         with LockedDataset(base_filename, "r", 60) as root_grp:
@@ -444,7 +440,7 @@ def write_daily_ancillary_var_netcdf(
             new_var = nc_out.createVariable(
                 anc_name,
                 np.float32,
-                nc_out.variables["time"].dimensions,
+                root_grp.variables["time"].dimensions,
                 zlib=True,
                 fill_value=np.float32(anc_attrs["_FillValue"]),
             )
@@ -459,11 +455,9 @@ def write_daily_ancillary_var_netcdf(
             new_var[:, :, :] = anc_data[:, :, :]
 
     # everything written -- rename to final file name
-    try:
-        # delete the final file to make room for the new one
+    with suppress(FileNotFoundError):
         var_filename_final.unlink()
-    except FileNotFoundError:
-        pass
+
     var_filename.rename(var_filename_final)
 
 
