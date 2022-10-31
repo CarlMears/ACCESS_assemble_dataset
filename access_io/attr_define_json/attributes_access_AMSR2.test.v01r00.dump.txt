@@ -1,0 +1,243 @@
+common:Conventions              :  CF-1.8: <class 'str'>
+common:standard_name_vocabulary :  CF Standard Name Table (v78, 21 September 2: <class 'str'>
+common:date_issued              :  2022-10-01: <class 'str'>
+common:keywords_vocabulary      :  NASA Global Change Master Directory (GCMD) : <class 'str'>
+common:cdm_data_type            :  Grid: <class 'str'>
+common:program                  :  NASA ACCESS-0031 > Machine Learning Dataset: <class 'str'>
+common:creator_name             :  Carl Mears: <class 'str'>
+common:creator_url              :  http://www.remss.com/ : <class 'str'>
+common:creator_email            :  mears@remss.com: <class 'str'>
+common:institution              :  Remote Sensing Systems: <class 'str'>
+common:processing_level         :  NASA Level 4: <class 'str'>
+common:references               :  None: <class 'str'>
+common:geospatial_lat_min       :  -90.0: <class 'numpy.ndarray'>: float32
+common:geospatial_lat_max       :  90.0: <class 'numpy.ndarray'>: float32
+common:geospatial_lon_min       :  0.0: <class 'numpy.ndarray'>: float32
+common:geospatial_lon_max       :  359.9999: <class 'numpy.ndarray'>: float32
+common:geospatial_lat_units     :  degrees_north: <class 'str'>
+common:geospatial_lon_units     :  degrees_east: <class 'str'>
+common:time_coverage_duration   :  P24H: <class 'str'>
+common:license                  :  This work is licensed under the Creative Co: <class 'str'>
+common:contributor_name         :  Carl Mears: <class 'str'>
+common:contributor_role         :  Principal investigator of ACCESS project wh: <class 'str'>
+common:summary                  :  Remote Sensing Systems (RSS) Resampled brig: <class 'str'>
+common:title                    :  Resampled AMSR2 brightness temperatures: <class 'str'>
+common:date_created             :  2022-10-28T20:15:31.642412: <class 'str'>
+common:spatial_resolution       :  30 km X 30 km: <class 'str'>
+common:time_coverage_start      :  2013-04-11T23:30:00: <class 'str'>
+common:time_coverage_end        :  2013-04-12T23:30:00: <class 'str'>
+common:version                  :  v01r00: <class 'str'>
+resampled_brightness_temperaturename                     :  resampled_brightne: <class 'str'>
+---global---
+resampled_brightness_temperature global:summary                  :  Remote Sen: <class 'str'>
+resampled_brightness_temperature global:keyword                  :  EARTH SCIE: <class 'str'>
+resampled_brightness_temperature global:title                    :  Resampled : <class 'str'>
+resampled_brightness_temperature global:history                  :  Created Re: <class 'str'>
+resampled_brightness_temperature global:platform                 :  GCOM-W1, J: <class 'str'>
+resampled_brightness_temperature global:sensor                   :  AMSR2 > Ad: <class 'str'>
+resampled_brightness_temperature global:cell_method              :  FILLED AT : <class 'str'>
+resampled_brightness_temperature global:version                  :  v01r00: <class 'str'>
+---var---
+resampled_brightness_temperature var:name                     :  brightness_te: <class 'str'>
+resampled_brightness_temperature var:long_name                :  resampled bri: <class 'str'>
+resampled_brightness_temperature var:units                    :  degrees kelvi: <class 'str'>
+resampled_brightness_temperature var:valid_min                :  50.0: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature var:valid_max                :  350.0: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature var:missing_value            :  -999.0: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature var:_FillValue               :  -999.0: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature var:coordinates              :  latitude long: <class 'str'>
+resampled_brightness_temperaturename                     :  resampled_brightne: <class 'str'>
+---global---
+resampled_brightness_temperature global:summary                  :  Atmospheri: <class 'str'>
+resampled_brightness_temperature global:keywords                 :  EARTH SCIE: <class 'str'>
+resampled_brightness_temperature global:title                    :  Atmospheri: <class 'str'>
+resampled_brightness_temperature global:history                  :  Created fr: <class 'str'>
+resampled_brightness_temperature global:version                  :  v01r00: <class 'str'>
+resampled_brightness_temperature global:date_accessed            :  2022-10-28: <class 'str'>
+---downwelling_tb---
+resampled_brightness_temperature downwelling_tb:standard_name            :  br: <class 'str'>
+resampled_brightness_temperature downwelling_tb:long_name                :  do: <class 'str'>
+resampled_brightness_temperature downwelling_tb:units                    :  ke: <class 'str'>
+resampled_brightness_temperature downwelling_tb:_FillValue               :  -9: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature downwelling_tb:missing_value            :  -9: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature downwelling_tb:valid_min                :  0.: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature downwelling_tb:valid_max                :  25: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature downwelling_tb:coordinates              :  la: <class 'str'>
+---upwelling_tb---
+resampled_brightness_temperature upwelling_tb:standard_name            :  brig: <class 'str'>
+resampled_brightness_temperature upwelling_tb:long_name                :  upwe: <class 'str'>
+resampled_brightness_temperature upwelling_tb:units                    :  kelv: <class 'str'>
+resampled_brightness_temperature upwelling_tb:_FillValue               :  -999: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature upwelling_tb:missing_value            :  -999: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature upwelling_tb:valid_min                :  0.0: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature upwelling_tb:valid_max                :  250.: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature upwelling_tb:coordinates              :  lati: <class 'str'>
+---transmissivity---
+resampled_brightness_temperature transmissivity:standard_name            :  tr: <class 'str'>
+resampled_brightness_temperature transmissivity:long_name                :  at: <class 'str'>
+resampled_brightness_temperature transmissivity:units                    :  di: <class 'str'>
+resampled_brightness_temperature transmissivity:_FillValue               :  -9: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature transmissivity:missing_value            :  -9: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature transmissivity:valid_min                :  0.: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature transmissivity:valid_max                :  1.: <class 'numpy.ndarray'>: float32
+resampled_brightness_temperature transmissivity:coordinates              :  la: <class 'str'>
+rain_rate_imerg: rain_rate_imergname                     :  rain_rate_imerg: <class 'str'>
+---global---
+rain_rate_imerg: rain_rate_imerg global:summary                  :  Rain Rate : <class 'str'>
+rain_rate_imerg: rain_rate_imerg global:keywords                 :  EARTH SCIE: <class 'str'>
+rain_rate_imerg: rain_rate_imerg global:title                    :  IMERG Rain: <class 'str'>
+rain_rate_imerg: rain_rate_imerg global:history                  :  Created fr: <class 'str'>
+rain_rate_imerg: rain_rate_imerg global:source                   :  Huffman, G: <class 'str'>
+rain_rate_imerg: rain_rate_imerg global:cell_method              :  FILLED AT : <class 'str'>
+rain_rate_imerg: rain_rate_imerg global:version                  :  v01r00: <class 'str'>
+rain_rate_imerg: rain_rate_imerg global:creation-date            :  2022-10-28: <class 'str'>
+---var---
+rain_rate_imerg: rain_rate_imerg var:standard_name            :  rainfall_rate: <class 'str'>
+rain_rate_imerg: rain_rate_imerg var:long_name                :  rainfall rate: <class 'str'>
+rain_rate_imerg: rain_rate_imerg var:valid_min                :  0.0: <class 'numpy.ndarray'>: float32
+rain_rate_imerg: rain_rate_imerg var:valid_max                :  50.0: <class 'numpy.ndarray'>: float32
+rain_rate_imerg: rain_rate_imerg var:units                    :  mm/hr: <class 'str'>
+rain_rate_imerg: rain_rate_imerg var:missing_value            :  -999.0: <class 'numpy.ndarray'>: float32
+rain_rate_imerg: rain_rate_imerg var:_FillValue               :  -999.0: <class 'numpy.ndarray'>: float32
+rain_rate_imerg: rain_rate_imerg var:coordinates              :  latitude long: <class 'str'>
+ocean emissivity: ocean_emiss_era5name                     :  ocean emissivity: <class 'str'>
+---global---
+ocean emissivity: ocean_emiss_era5 global:summary                  :  Calculat: <class 'str'>
+ocean emissivity: ocean_emiss_era5 global:keywords                 :  EARTH SC: <class 'str'>
+ocean emissivity: ocean_emiss_era5 global:title                    :  Ocean Su: <class 'str'>
+ocean emissivity: ocean_emiss_era5 global:history                  :  Created : <class 'str'>
+ocean emissivity: ocean_emiss_era5 global:reference                :  Meissner: <class 'str'>
+ocean emissivity: ocean_emiss_era5 global:source                   :  (For Win: <class 'str'>
+ocean emissivity: ocean_emiss_era5 global:version                  :  v01r00: <class 'str'>
+ocean emissivity: ocean_emiss_era5 global:creation-date            :  2022-10-: <class 'str'>
+---var---
+ocean emissivity: ocean_emiss_era5 var:standard_name            :  ocean emiss: <class 'str'>
+ocean emissivity: ocean_emiss_era5 var:long_name                :  ocean emiss: <class 'str'>
+ocean emissivity: ocean_emiss_era5 var:valid_min                :  0.0: <class 'numpy.ndarray'>: float32
+ocean emissivity: ocean_emiss_era5 var:valid_max                :  1.0: <class 'numpy.ndarray'>: float32
+ocean emissivity: ocean_emiss_era5 var:units                    :  dimensionle: <class 'str'>
+ocean emissivity: ocean_emiss_era5 var:_FillValue               :  -999.0: <class 'numpy.ndarray'>: float32
+ocean emissivity: ocean_emiss_era5 var:missing_value            :  -999.0: <class 'numpy.ndarray'>: float32
+ocean emissivity: ocean_emiss_era5 var:coordinates              :  latitude lo: <class 'str'>
+skin temperature: skt_era5name                     :  skin temperature: <class 'str'>
+---global---
+skin temperature: skt_era5 global:summary                  :  Skin Temperature: <class 'str'>
+skin temperature: skt_era5 global:keywords                 :  EARTH SCIENCE > : <class 'str'>
+skin temperature: skt_era5 global:title                    :  ERA5 skin temper: <class 'str'>
+skin temperature: skt_era5 global:history                  :  Created from ERA: <class 'str'>
+skin temperature: skt_era5 global:source                   :  Hersbach, H., Be: <class 'str'>
+skin temperature: skt_era5 global:version                  :  v01r00: <class 'str'>
+skin temperature: skt_era5 global:creation-date            :  2022-10-28 20:15: <class 'str'>
+---var---
+skin temperature: skt_era5 var:standard_name            :  surface_temperature: <class 'str'>
+skin temperature: skt_era5 var:long_name                :  skin temperature in: <class 'str'>
+skin temperature: skt_era5 var:valid_min                :  150.0: <class 'numpy.ndarray'>: float32
+skin temperature: skt_era5 var:valid_max                :  400.0: <class 'numpy.ndarray'>: float32
+skin temperature: skt_era5 var:units                    :  kelvin: <class 'str'>
+skin temperature: skt_era5 var:_FillValue               :  -999.0: <class 'numpy.ndarray'>: float32
+skin temperature: skt_era5 var:missing_value            :  -999.0: <class 'numpy.ndarray'>: float32
+skin temperature: skt_era5 var:coordinates              :  latitude longitude: <class 'str'>
+total column cloud water: tclw_era5name                     :  total column cl: <class 'str'>
+---global---
+total column cloud water: tclw_era5 global:summary                  :  Total C: <class 'str'>
+total column cloud water: tclw_era5 global:keywords                 :  EARTH S: <class 'str'>
+total column cloud water: tclw_era5 global:title                    :  Total C: <class 'str'>
+total column cloud water: tclw_era5 global:history                  :  Created: <class 'str'>
+total column cloud water: tclw_era5 global:source                   :  Hersbac: <class 'str'>
+total column cloud water: tclw_era5 global:version                  :  v01r00: <class 'str'>
+total column cloud water: tclw_era5 global:creation-date            :  2022-10: <class 'str'>
+---var---
+total column cloud water: tclw_era5 var:standard_name            :  atmosphere: <class 'str'>
+total column cloud water: tclw_era5 var:long_name                :  Total colu: <class 'str'>
+total column cloud water: tclw_era5 var:valid_min                :  0.0: <class 'numpy.ndarray'>: float32
+total column cloud water: tclw_era5 var:valid_max                :  20.0: <class 'numpy.ndarray'>: float32
+total column cloud water: tclw_era5 var:units                    :  kg/m^2: <class 'str'>
+total column cloud water: tclw_era5 var:_FillValue               :  -999.0: <class 'numpy.ndarray'>: float32
+total column cloud water: tclw_era5 var:missing_value            :  -999.0: <class 'numpy.ndarray'>: float32
+total column cloud water: tclw_era5 var:coordinates              :  latitude l: <class 'str'>
+total column water vapor: tcwv_era5name                     :  total column wa: <class 'str'>
+---global---
+total column water vapor: tcwv_era5 global:summary                  :  Total C: <class 'str'>
+total column water vapor: tcwv_era5 global:keywords                 :  EARTH S: <class 'str'>
+total column water vapor: tcwv_era5 global:title                    :  Total C: <class 'str'>
+total column water vapor: tcwv_era5 global:history                  :  Created: <class 'str'>
+total column water vapor: tcwv_era5 global:source                   :  Hersbac: <class 'str'>
+total column water vapor: tcwv_era5 global:version                  :  v01r00: <class 'str'>
+total column water vapor: tcwv_era5 global:creation-date            :  2022-10: <class 'str'>
+---var---
+total column water vapor: tcwv_era5 var:standard_name            :  atmosphere: <class 'str'>
+total column water vapor: tcwv_era5 var:long_name                :  Total colu: <class 'str'>
+total column water vapor: tcwv_era5 var:valid_min                :  0.0: <class 'numpy.ndarray'>: float32
+total column water vapor: tcwv_era5 var:valid_max                :  120.0: <class 'numpy.ndarray'>: float32
+total column water vapor: tcwv_era5 var:units                    :  kg/m^2: <class 'str'>
+total column water vapor: tcwv_era5 var:_FillValue               :  999.0: <class 'numpy.ndarray'>: float32
+total column water vapor: tcwv_era5 var:missing_value            :  -999.0: <class 'numpy.ndarray'>: float32
+total column water vapor: tcwv_era5 var:coordinates              :  latitude l: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5name                     :  zonal neut: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5type                     :  np.float32: <class 'str'>
+---global---
+zonal neutral winds from ERA5: u10n_era5 global:summary                  :  Ea: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 global:keywords                 :  EA: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 global:title                    :  10: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 global:history                  :  Cr: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 global:source                   :  He: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 global:version                  :  v0: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 global:creation-date            :  20: <class 'str'>
+---var---
+zonal neutral winds from ERA5: u10n_era5 var:standard_name            :  eastw: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 var:long_name                :  10m u: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 var:valid_min                :  -100.: <class 'numpy.ndarray'>: float32
+zonal neutral winds from ERA5: u10n_era5 var:valid_max                :  100.0: <class 'numpy.ndarray'>: float32
+zonal neutral winds from ERA5: u10n_era5 var:units                    :  m/s: <class 'str'>
+zonal neutral winds from ERA5: u10n_era5 var:_FillValue               :  -999.: <class 'numpy.ndarray'>: float32
+zonal neutral winds from ERA5: u10n_era5 var:missing_value            :  -999.: <class 'numpy.ndarray'>: float32
+zonal neutral winds from ERA5: u10n_era5 var:coordinates              :  latit: <class 'str'>
+meridional neutral winds from ERA5: v10n_era5name                     :  merid: <class 'str'>
+---global---
+meridional neutral winds from ERA5: v10n_era5 global:summary                  :  Northward wind corresponding to Remote Sensing Systems (RSS) Resampled brightness temperat: <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 global:keywords                 :  EARTH SCIENCE > OCEANS > OCEAN WINDS > SURFACE WINDS, EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC WINDS > SURFACE WI: <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 global:title                    :  10m neutral meridional winds from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass t: <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 global:history                  :  Created from ERA5 data downloaded from the Copernicus Climate Data St: <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 global:source                   :  Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. 2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803. ERA5 hourly data on single levels from 1959 to present. 0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. Dataset DOI: 10.24381/cds.adbb2: <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 global:version                  :  v01: <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 global:creation-date            :  2022-10-28 20:15:31.658: <class 'str'>
+---var---
+meridional neutral winds from ERA5: v10n_era5 var:standard_name            :  : <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 var:long_name                :  : <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 var:valid_min                :  : <class 'numpy.ndarray'>: float32
+meridional neutral winds from ERA5: v10n_era5 var:valid_max                :  : <class 'numpy.ndarray'>: float32
+meridional neutral winds from ERA5: v10n_era5 var:units                    :  : <class 'str'>
+meridional neutral winds from ERA5: v10n_era5 var:_FillValue               :  : <class 'numpy.ndarray'>: float32
+meridional neutral winds from ERA5: v10n_era5 var:missing_value            :  : <class 'numpy.ndarray'>: float32
+meridional neutral winds from ERA5: v10n_era5 var:coordinates              :  : <class 'str'>
+coord: frequencystandard_name            :  frequency: <class 'str'>
+coord: frequencylong_name                :  satellite observation frequency: <class 'str'>
+coord: frequencyunits                    :  GHz: <class 'str'>
+coord: frequencyvalid_min                :  1.0: <class 'numpy.ndarray'>: float32
+coord: frequencyvalid_max                :  300.0: <class 'numpy.ndarray'>: float32
+coord: hoursstandard_name            :  time: <class 'str'>
+coord: hoursvalid_min                :  0.0: <class 'numpy.ndarray'>: float32
+coord: hoursvalid_max                :  23.0: <class 'numpy.ndarray'>: float32
+coord: hoursunits                    :  hours since 2013-04-12 00:00:00.0: <class 'str'>
+coord: latitudestandard_name            :  latitude: <class 'str'>
+coord: latitudelong_name                :  latitude: <class 'str'>
+coord: latitudeunits                    :  degrees_north: <class 'str'>
+coord: latitudevalid_min                :  -90.0: <class 'numpy.ndarray'>: float32
+coord: latitudevalid_max                :  90.0: <class 'numpy.ndarray'>: float32
+coord: longitudelong_name                :  longitude: <class 'str'>
+coord: longitudeunits                    :  degrees_east: <class 'str'>
+coord: longitudevalid_min                :  0.0: <class 'numpy.ndarray'>: float32
+coord: longitudevalid_max                :  360.0: <class 'numpy.ndarray'>: float32
+coord: polarizationstandard_name            :  polarization: <class 'str'>
+coord: polarizationlong_name                :  polarization index: <class 'str'>
+coord: polarizationpol_mapping              :  0 = V-pol, 1 = H-Pol: <class 'str'>
+coord: polarizationvalid_min                :  0.0: <class 'numpy.ndarray'>: float32
+coord: polarizationvalid_max                :  1.0: <class 'numpy.ndarray'>: float32
+coord: timestandard_name            :  time: <class 'str'>
+coord: timelong_name                :  time of satellite observation: <class 'str'>
+coord: timeunits                    :  seconds since 1900-01-01 00:00:00.0: <class 'str'>
+coord: timemissing                  :  -999999: <class 'str'>
+coord: time_FillValue               :  -999999.0: <class 'numpy.ndarray'>: float32
+coord: timevalid_min                :  0.0: <class 'numpy.ndarray'>: float32
+coord: timevalid_max                :  6324480000.0: <class 'numpy.ndarray'>: float32
+coord: timecoordinates              :  latitude longitude: <class 'str'>

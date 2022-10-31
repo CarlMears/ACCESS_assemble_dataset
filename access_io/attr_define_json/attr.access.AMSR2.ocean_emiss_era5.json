@@ -1,21 +1,21 @@
-    {
+    {   "name":  "ocean emissivity",
         "global": {
-            "summary" : "Calculated Ocean Emissivity using Remote Sensing Systems (RSS)surface model for AMSR2",
-            "keywords": "EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > EMISSIVITY",
-            "title":    "Ocean Surface Emissivity calculated from ERA5 neutral stability winds on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
-            "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS surface radiation model",
-            "reference" : "Meissner, T, FJ Wentz, 2012, The emissivity of the ocean surface between 6 - 90 GHz over a large range of wind speeds and Earth incidence angles, IEEE Transactions on Geoscience and Remote Sensing, 50, 3004-3026.",
-            "source":    "(For Wind Data) Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. 2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803. ERA5 hourly data on single levels from 1959 to present. Skin Temperature.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. Dataset DOI: 10.24381/cds.adbb2d47 "
+            "summary":   "Calculated Ocean Emissivity using Remote Sensing Systems (RSS)surface model for AMSR2",
+            "keywords":  "EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > EMISSIVITY",
+            "title":     "Ocean Surface Emissivity calculated from ERA5 neutral stability winds on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
+            "history":   "Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS surface radiation model",
+            "reference":  "Meissner, T, FJ Wentz, 2012, The emissivity of the ocean surface between 6 - 90 GHz over a large range of wind speeds and Earth incidence angles, IEEE Transactions on Geoscience and Remote Sensing, 50, 3004-3026.",
+            "source":     "(For Wind Data) Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. 2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803. ERA5 hourly data on single levels from 1959 to present. Skin Temperature.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. Dataset DOI: 10.24381/cds.adbb2d47 "
         },
         "var": {
-            "standard_name": "ocean emissivity",
-            "long_name":     "ocean emissivity derived from ERA5 surface winds",
-            "valid_min":     "0.0",
-            "valid_max":     "1.0",
-            "units":         "dimensionless",
-            "_FillValue":    "-999.0",
-            "missing_value": "-999.0",
-            "coordinates": "latitude longitude hours freq pol"
+            "standard_name":  "ocean emissivity",
+            "long_name":      "ocean emissivity derived from ERA5 surface winds",
+            "valid_min":      0.0,
+            "valid_max":      1.0,
+            "units":          "dimensionless",
+            "_FillValue":     -999.0,
+            "missing_value":  -999.0,
+            "coordinates":   "latitude longitude"
         }
     }
 

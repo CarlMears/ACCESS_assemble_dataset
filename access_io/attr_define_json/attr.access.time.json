@@ -1,9 +1,10 @@
 {
-    "standard_name": "time",
-    "long_name": "time of satellite observation",
-    "units": "seconds since 1900-01-01 00:00:00.0",
-    "missing": "-999999",
-    "valid_min": "0",
-    "valid_max": "6324480000",
-    "coordinates": "latitude longitude"
+    "standard_name":  "time",
+    "long_name":  "time of satellite observation",
+    "units":  "seconds since 1900-01-01 00:00:00.0",
+    "missing":  "-999999",
+    "_FillValue": "-999999",
+    "valid_min":  0,
+    "valid_max":  6324480000,
+    "coordinates":  "latitude longitude"
 }

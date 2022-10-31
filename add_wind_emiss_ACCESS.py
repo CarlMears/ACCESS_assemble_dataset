@@ -1,4 +1,5 @@
 import argparse
+from contextlib import suppress
 import datetime
 import git
 from pathlib import Path
@@ -115,10 +116,9 @@ if __name__ == "__main__":
         "access_root", type=Path, help="Root directory to ACCESS project"
     )
     parser.add_argument(
-        "access_root_output",
+        "output_root",
         type=Path,
-        help="""directory to output data for ACCESS project.
-                 If not provided, use access_root""",
+        help="directory to output data",
     )
 
     parser.add_argument("wind", choices=["era5"], help="Source of wind info")
@@ -142,15 +142,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--verbose", help="enable more verbose screen output", action="store_true"
     )
+    parser.add_argument(
+        "--overwrite", help="enable more verbose screen output", action="store_true"
+    )
 
     args = parser.parse_args()
     access_root: Path = args.access_root
-    output_root: Path = args.access_root_output
+    output_root: Path = args.output_root
     wind_source = args.wind
     sst_source = args.sst
     version = args.version
     satellite = args.sensor
     target_size = int(args.target_size)
+    overwrite = args.overwrite
 
     script_name = parser.prog
     repo = git.Repo(search_parent_directories=True)
@@ -161,6 +165,22 @@ if __name__ == "__main__":
     satellite = args.sensor.upper()
     date = START_DAY
 while date <= END_DAY:
+
+    emiss_filename_final = get_access_output_filename_daily_folder(
+        date, satellite, target_size, output_root, "ocean_emiss_era5"
+    )
+
+    base_filename = get_access_output_filename_daily_folder(
+        date, satellite, target_size, access_root, "resamp_tbs"
+    )
+
+    if overwrite:
+        with suppress(FileNotFoundError):
+            emiss_filename_final.unlink()
+    else:
+        if emiss_filename_final.is_file():
+            print(f"emiss file: {emiss_filename_final} exists -> skipping {date}")
+            continue
 
     ocean_emiss = calc_emissivity_maps(
         date=date, wind_source="era5", sst_source="era5", target_size=target_size
@@ -175,7 +195,7 @@ while date <= END_DAY:
 
     # add the global part of these to the global_attrs
     glb_attrs.update(var_attrs["global"])
-
+    glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
     glb_attrs["script_name"] = script_name
     glb_attrs["commit"] = commit
 

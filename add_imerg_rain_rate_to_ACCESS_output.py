@@ -106,6 +106,7 @@ def write_imerg_rain_rate_for_ACCESS(
         "time: closest 30-min IMERG file; "
         f"area: weighted average over {footprint_diameter_km}km gaussian footprint"
     )
+    global_attrs["corresponding_resampled_tb_file"] = base_filename.name
     global_attrs["commit"] = commit
     global_attrs["script_name"] = script_name
 

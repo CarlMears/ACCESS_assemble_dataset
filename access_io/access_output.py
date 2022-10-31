@@ -1,7 +1,13 @@
+from contextlib import suppress
 import datetime
 import os
 from pathlib import Path
+<<<<<<< access_io/access_output.py
 from typing import Any, Literal, Optional, Sequence, Union
+=======
+from typing import Optional, Sequence, Any
+from netCDF4 import Variable
+>>>>>>> access_io/access_output.py
 
 import numpy as np
 from netCDF4 import Variable
@@ -68,6 +74,7 @@ class OkToSkipDay(Exception):
     pass
 
 
+<<<<<<< access_io/access_output.py
 def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
     """seems like something like this should be part
     of the interface but I can not find it"""
@@ -79,6 +86,12 @@ def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
     var.UnusedNameAttribute = attr_value
     var.renameAttribute("UnusedNameAttribute", attr_name)
     return
+=======
+def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
+    for name, value in attrs.items():
+        if name != "_FillValue":
+            var.setncattr(name, value)
+>>>>>>> access_io/access_output.py
 
 
 def get_access_output_filename_daily_folder(
@@ -103,6 +116,7 @@ def get_access_output_filename_daily_folder(
         )
 
 
+"""
 def replace_var_in_daily_tb_netcdf(
     *,
     date: datetime.date,
@@ -151,6 +165,7 @@ def replace_var_in_daily_tb_netcdf(
         v.coordinates = "latitude longitude hours"
 
         v[:, :, :] = var
+"""
 
 
 def write_daily_lf_netcdf(
@@ -163,6 +178,8 @@ def write_daily_lf_netcdf(
     land_fraction: ArrayLike,
     dataroot: Path = ACCESS_ROOT,
     overwrite: bool,
+    script_name: str,
+    commit: str,
 ) -> None:
 
     tb_fill = -999.0
@@ -175,10 +192,8 @@ def write_daily_lf_netcdf(
         print(f"daily file for {date} exists... skipping")
         return
     else:
-        try:
+        with suppress(FileNotFoundError):
             filename.unlink()
-        except FileNotFoundError:
-            pass
 
     os.makedirs(filename.parent, exist_ok=True)
 
@@ -198,12 +213,17 @@ def write_daily_lf_netcdf(
         "cell_method"
     ] = f"area: resampled to {target_size}km guassian footprint"
 
+    global_attrs["script_name"] = script_name
+    global_attrs["commit"] = commit
+
+    lat_attrs = coord_attributes_access("latitude", np.float32)
+    lon_attrs = coord_attributes_access("longitude", np.float32)
+
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
+    os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
 
-        for key in global_attrs.keys():
-            value = global_attrs[key]
-            set_or_create_attr(nc_out, key, value)
+        set_all_attrs(nc_out, global_attrs)
 
         nc_out.createDimension("latitude", NUM_LATS)
         nc_out.createDimension("longitude", NUM_LONS)
@@ -224,19 +244,9 @@ def write_daily_lf_netcdf(
             least_significant_digit=3,
         )
 
-        lat_attrs = coord_attributes_access("latitude")
-        for key in lat_attrs.keys():
-            value = lat_attrs[key]
-            set_or_create_attr(latitude, key, value)
-
-        lon_attrs = coord_attributes_access("longitude")
-        for key in lon_attrs.keys():
-            value = lon_attrs[key]
-            set_or_create_attr(longitude, key, value)
-
-        for key in var_attrs.keys():
-            value = var_attrs[key]
-            set_or_create_attr(lf, key, value)
+        set_all_attrs(latitude, lat_attrs)
+        set_all_attrs(longitude, lon_attrs)
+        set_all_attrs(lf, var_attrs)
 
         latitude[:] = lats
         longitude[:] = lons
@@ -259,6 +269,8 @@ def write_daily_tb_netcdf(
     dataroot: Path = ACCESS_ROOT,
     freq_list: NDArray[Any],
     file_list: Optional[Sequence[Path]],
+    script_name: str = "unavailable",
+    commit: str = "unavailable",
 ) -> None:
 
     filename = get_access_output_filename_daily_folder(
@@ -278,9 +290,11 @@ def write_daily_tb_netcdf(
         # set the global_attributes
 
         glb_attrs = common_global_attributes_access(
-            date, satellite, target_size, version
+            date, satellite, target_size, version, tb_array_by_hour.dtype
         )
-        tb_attrs = resamp_tb_attributes_access(satellite, version)
+        tb_attrs = resamp_tb_attributes_access(
+            satellite, version, tb_array_by_hour.dtype
+        )
 
         glb_attrs.update(tb_attrs["global"])
         tb_attrs = tb_attrs["var"]
@@ -290,17 +304,16 @@ def write_daily_tb_netcdf(
             "cell_method"
         ] = f"area: resampled to {target_size}km guassian footprint"
         glb_attrs["date_accessed"] = f"{datetime.datetime.today()}"
-        glb_attrs["creation_date"] = f"{datetime.datetime.today()}"
+        glb_attrs["date_created"] = f"{datetime.datetime.today()}"
 
-        for key in glb_attrs.keys():
-            value = glb_attrs[key]
-            set_or_create_attr(nc_out, key, value)
-
-        nc_out.id = filename.name
-
+        glb_attrs["id"] = filename.name
         if file_list is not None:
             source_string = ", ".join(str(p) for p in file_list)
-            nc_out.source = source_string
+            glb_attrs["source"] = source_string
+
+        glb_attrs["script_name"] = script_name
+        glb_attrs["commit"] = commit
+        set_all_attrs(nc_out, glb_attrs)
 
         # create Dimensions
         nc_out.createDimension("latitude", NUM_LATS)
@@ -347,40 +360,21 @@ def write_daily_tb_netcdf(
 
         # set coordinate attributes from .json files
 
-        lat_attrs = coord_attributes_access("latitude")
-        for key in lat_attrs.keys():
-            value = lat_attrs[key]
-            set_or_create_attr(latitude, key, value)
+        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
+        freq_attrs = coord_attributes_access("frequency", dtype=np.float32)
+        pol_attrs = coord_attributes_access("polarization", dtype=np.int32)
+        time_attrs = coord_attributes_access("time", dtype=np.int64)
 
-        lon_attrs = coord_attributes_access("longitude")
-        for key in lon_attrs.keys():
-            value = lon_attrs[key]
-            set_or_create_attr(longitude, key, value)
+        set_all_attrs(latitude, lat_attrs)
+        set_all_attrs(longitude, lon_attrs)
+        set_all_attrs(hours, hours_attrs)
+        set_all_attrs(freq, freq_attrs)
+        set_all_attrs(pol, pol_attrs)
+        set_all_attrs(time, time_attrs)
 
-        hours_attrs = coord_attributes_access("hours", date=date)
-        for key in hours_attrs.keys():
-            value = hours_attrs[key]
-            set_or_create_attr(hours, key, value)
-
-        freq_attrs = coord_attributes_access("frequency")
-        for key in freq_attrs.keys():
-            value = freq_attrs[key]
-            set_or_create_attr(freq, key, value)
-
-        pol_attrs = coord_attributes_access("polarization")
-        for key in pol_attrs.keys():
-            value = pol_attrs[key]
-            set_or_create_attr(pol, key, value)
-
-        time_attrs = coord_attributes_access("time")
-        for key in time_attrs.keys():
-            value = time_attrs[key]
-            set_or_create_attr(time, key, value)
-
-        # set tb attributes from .json file
-        for key in tb_attrs.keys():
-            value = tb_attrs[key]
-            set_or_create_attr(tbs, key, value)
+        set_all_attrs(tbs, tb_attrs)
 
         # write the coordinate data
         latitude[:] = lats
@@ -416,8 +410,13 @@ def write_daily_ancillary_var_netcdf(
     target_size: int,
     anc_data: NDArray[Any],
     anc_name: str,
+<<<<<<< access_io/access_output.py
     anc_attrs: dict[str, Any],
     global_attrs: Union[dict[str, Any], Literal["copy"]],
+=======
+    anc_attrs: dict,
+    global_attrs: dict,
+>>>>>>> access_io/access_output.py
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
 
@@ -430,10 +429,8 @@ def write_daily_ancillary_var_netcdf(
     var_filename_final = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, anc_name
     )
-    try:
+    with suppress(FileNotFoundError):
         var_filename.unlink()
-    except FileNotFoundError:
-        pass
 
     with LockedDataset(var_filename, "w", 60) as nc_out:
         with LockedDataset(base_filename, "r", 60) as root_grp:
@@ -444,15 +441,9 @@ def write_daily_ancillary_var_netcdf(
                         name, len(dim) if not dim.isunlimited() else None
                     )
 
-            if global_attrs == "copy":
-                # Copy the global attributes
-                nc_out.setncatts({a: root_grp.getncattr(a) for a in root_grp.ncattrs()})
-            else:
-                for key in global_attrs.keys():
-                    value = global_attrs[key]
-                    set_or_create_attr(nc_out, key, value)
+            set_all_attrs(nc_out, global_attrs)
 
-            for var_name in ["time", "hours", "longitude", "latitude"]:
+            for var_name in ["hours", "longitude", "latitude"]:
                 # Create the time and dimension variables in the output file
                 var_in = root_grp[var_name]
                 nc_out.createVariable(
@@ -464,7 +455,7 @@ def write_daily_ancillary_var_netcdf(
                     {a: var_in.getncattr(a) for a in var_in.ncattrs()}
                 )
 
-                # Copy the time values
+                # Copy the data values
                 nc_out.variables[var_name][:] = root_grp.variables[var_name][:]
 
             # make the ancillary variable with the same dimensions as the
@@ -473,16 +464,10 @@ def write_daily_ancillary_var_netcdf(
             new_var = nc_out.createVariable(
                 anc_name,
                 np.float32,
-                nc_out.variables["time"].dimensions,
+                root_grp.variables["time"].dimensions,
                 zlib=True,
                 fill_value=np.float32(anc_attrs["_FillValue"]),
             )
-
-            # convert numerical attributes to numbers
-            attrs_to_convert_to_floats = ["valid_max", "valid_min", "v_fill"]
-            for attr_to_convert in attrs_to_convert_to_floats:
-                if attr_to_convert in anc_attrs.keys():
-                    anc_attrs[attr_to_convert] = np.float32(anc_attrs[attr_to_convert])
 
             for key in anc_attrs.keys():
                 if (
@@ -494,11 +479,9 @@ def write_daily_ancillary_var_netcdf(
             new_var[:, :, :] = anc_data[:, :, :]
 
     # everything written -- rename to final file name
-    try:
-        # delete the final file to make room for the new one
+    with suppress(FileNotFoundError):
         var_filename_final.unlink()
-    except FileNotFoundError:
-        pass
+
     var_filename.rename(var_filename_final)
 
 
@@ -524,12 +507,13 @@ def write_ocean_emiss_to_daily_ACCESS(
     base_filename = get_access_output_filename_daily_folder(
         current_day, satellite, target_size, dataroot, "resamp_tbs"
     )
+    emiss_filename_final = get_access_output_filename_daily_folder(
+        current_day, satellite, target_size, outputroot, "ocean_emiss_era5"
+    )
+
     try:
         with LockedDataset(base_filename, "r") as root_grp:
 
-            emiss_filename_final = get_access_output_filename_daily_folder(
-                current_day, satellite, target_size, outputroot, "ocean_emiss_era5"
-            )
             os.makedirs(emiss_filename_final.parent, exist_ok=True)
 
             with LockedDataset(emiss_filename_final, mode="w") as trg:
@@ -543,9 +527,7 @@ def write_ocean_emiss_to_daily_ACCESS(
                 trg.createDimension("freq", len(REF_FREQ))
                 trg.createDimension("pol", 2)
 
-                for key in glb_attrs.keys():
-                    value = glb_attrs[key]
-                    set_or_create_attr(trg, key, value)
+                set_all_attrs(trg, glb_attrs)
 
                 for var_name in ["hours", "longitude", "latitude", "freq", "pol"]:
                     # Create the time and dimension variables in the output file
@@ -575,15 +557,10 @@ def write_ocean_emiss_to_daily_ACCESS(
                         zlib=True,
                         least_significant_digit=least_significant_digit,
                     )
-
-                    for key in var_attrs.keys():
-                        value = var_attrs[key]
-                        set_or_create_attr(trg[varname], key, value)
-
+                    set_all_attrs(trg, var_attrs)
                     trg[varname][:, :, :, :, :] = ocean_emiss
 
                     print(f"finished writing {varname}")
-                    print()
 
     except FileNotFoundError:
         raise OkToSkipDay

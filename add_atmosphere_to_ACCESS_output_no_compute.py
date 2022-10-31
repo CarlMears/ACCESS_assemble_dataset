@@ -4,8 +4,8 @@ ERA5 data is downloaded if missing.
 """
 
 import argparse
-import datetime
-import os
+from contextlib import suppress
+import git
 from datetime import date
 from pathlib import Path
 
@@ -13,6 +13,13 @@ import git
 import numpy as np
 from netCDF4 import Dataset
 from rss_lock.locked_dataset import LockedDataset
+import os
+import datetime
+
+from access_io.access_output import get_access_output_filename_daily_folder
+from access_io.access_output import set_all_attrs
+from access_io.access_attr_define import common_global_attributes_access
+from access_io.access_attr_define import atm_pars_era5_attributes_access
 
 from access_io.access_attr_define import (
     atm_pars_era5_attributes_access,
@@ -133,12 +140,15 @@ def write_atmosphere_to_daily_ACCESS(
             rtm_data = DailyRtm(current_day, temproot)
 
             glb_attrs = common_global_attributes_access(
-                current_day, satellite, target_size, version=version
+                current_day, satellite, target_size, version=version, dtype=np.float32
             )
 
-            atm_attrs = atm_pars_era5_attributes_access(satellite, version=version)
+            atm_attrs = atm_pars_era5_attributes_access(
+                satellite, target_size=target_size, version=version, dtype=np.float32
+            )
 
             glb_attrs.update(atm_attrs["global"])
+            glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
             glb_attrs["script_name"] = script_name
             glb_attrs["commit"] = commit
 
@@ -155,10 +165,8 @@ def write_atmosphere_to_daily_ACCESS(
                 else:
                     print(f"File {atm_filename_final} exists, skipping")
                     return
-            try:
+            with suppress(FileNotFoundError):
                 atm_filename.unlink()
-            except FileNotFoundError:
-                pass
 
             with LockedDataset(atm_filename, mode="w") as trg:
                 for name, dim in root_grp.dimensions.items():
@@ -170,9 +178,7 @@ def write_atmosphere_to_daily_ACCESS(
                 trg.createDimension("freq", len(REF_FREQ))
 
                 # Set global attributes
-                for key in glb_attrs.keys():
-                    value = glb_attrs[key]
-                    set_or_create_attr(trg, key, value)
+                set_all_attrs(trg, glb_attrs)
 
                 for var_name in ["time", "hours", "longitude", "latitude", "freq"]:
                     # Create the time and dimension variables in the output file
@@ -208,10 +214,12 @@ def write_atmosphere_to_daily_ACCESS(
                         zlib=True,
                         least_significant_digit=least_significant_digit,
                     )
-                    for key in var_attrs.keys():
-                        if key != "_FillValue":
-                            value = var_attrs[key]
-                            set_or_create_attr(trg[varname], key, value)
+
+                    set_all_attrs(trg[varname], var_attrs)
+                    # for key in var_attrs.keys():
+                    #     if key != "_FillValue":
+                    #         value = var_attrs[key]
+                    #         set_or_create_attr(trg[varname], key, value)
 
                     for freq_index, freq in enumerate(REF_FREQ):
                         var = getattr(rtm_data, varname)[
@@ -237,11 +245,8 @@ def write_atmosphere_to_daily_ACCESS(
     except FileNotFoundError:
         raise OkToSkipDay
 
-    print()
-    try:
+    with suppress(FileNotFoundError):
         atm_filename_final.unlink()
-    except FileNotFoundError:
-        pass
 
     os.rename(atm_filename, atm_filename_final)
 
