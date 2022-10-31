@@ -1,7 +1,4 @@
-from access_io.access_output import (
-    get_access_output_filename,
-    get_access_output_filename_daily_folder,
-)
+from access_io.access_output import get_access_output_filename_daily_folder
 import os
 from pathlib import Path
 import datetime
@@ -21,11 +18,11 @@ possible_extra_vars = ["rainfall_rate", "skt"]
 date_to_do = start_date
 while date_to_do <= end_date:
 
-    old_file = get_access_output_filename(
-        date_to_do, satellite, access_root, "resamp_tbs"
+    old_file = get_access_output_filename_daily_folder(
+        date_to_do, satellite, 0, access_root, "resamp_tbs"
     )
     new_file = get_access_output_filename_daily_folder(
-        date_to_do, satellite, access_root, "resamp_tbs"
+        date_to_do, satellite, 0, access_root, "resamp_tbs"
     )
 
     print(f"Old File {old_file}")

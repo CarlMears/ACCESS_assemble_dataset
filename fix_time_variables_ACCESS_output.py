@@ -7,16 +7,16 @@ from pathlib import Path
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
 
-from access_io.access_output import (
-    get_access_output_filename,
-)
+from access_io.access_output import get_access_output_filename_daily_folder
 
 
 def fix_time_in_ACCESS_output(
     *, current_day: datetime.date, satellite: str, dataroot: Path
 ) -> None:
 
-    filename = get_access_output_filename(current_day, satellite, dataroot)
+    filename = get_access_output_filename_daily_folder(
+        current_day, satellite, 0, dataroot, "UNKNOWN"
+    )
     try:
         with netcdf_dataset(filename, "r+") as root_grp:
 

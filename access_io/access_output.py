@@ -2,22 +2,24 @@ from contextlib import suppress
 import datetime
 import os
 from pathlib import Path
+<<<<<<< access_io/access_output.py
+from typing import Any, Literal, Optional, Sequence, Union
+=======
 from typing import Optional, Sequence, Any
 from netCDF4 import Variable
+>>>>>>> access_io/access_output.py
 
 import numpy as np
-from numpy.typing import ArrayLike
-
+from netCDF4 import Variable
+from numpy.typing import ArrayLike, NDArray
 from rss_lock.locked_dataset import LockedDataset
 
-from access_io.access_attr_define import (
-    common_global_attributes_access,
-    resamp_tb_attributes_access,
-    coord_attributes_access,
-    # atm_pars_era5_attributes_access,
+from access_io.access_attr_define import (  # atm_pars_era5_attributes_access,
     anc_var_attributes_access,
+    common_global_attributes_access,
+    coord_attributes_access,
+    resamp_tb_attributes_access,
 )
-
 
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
@@ -72,10 +74,24 @@ class OkToSkipDay(Exception):
     pass
 
 
+<<<<<<< access_io/access_output.py
+def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
+    """seems like something like this should be part
+    of the interface but I can not find it"""
+
+    if attr_name in var.ncattrs():
+        if attr_name != "_FillValue":
+            var.setncattr(attr_name, attr_value)
+        return
+    var.UnusedNameAttribute = attr_value
+    var.renameAttribute("UnusedNameAttribute", attr_name)
+    return
+=======
 def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
     for name, value in attrs.items():
         if name != "_FillValue":
             var.setncattr(name, value)
+>>>>>>> access_io/access_output.py
 
 
 def get_access_output_filename_daily_folder(
@@ -174,7 +190,7 @@ def write_daily_lf_netcdf(
 
     if filename.is_file() and not overwrite:
         print(f"daily file for {date} exists... skipping")
-        return []
+        return
     else:
         with suppress(FileNotFoundError):
             filename.unlink()
@@ -248,10 +264,10 @@ def write_daily_tb_netcdf(
     satellite: str,
     target_size: int,
     version: str,
-    tb_array_by_hour: ArrayLike,
-    time_array_by_hour: ArrayLike,
+    tb_array_by_hour: NDArray[Any],
+    time_array_by_hour: NDArray[Any],
     dataroot: Path = ACCESS_ROOT,
-    freq_list: ArrayLike,
+    freq_list: NDArray[Any],
     file_list: Optional[Sequence[Path]],
     script_name: str = "unavailable",
     commit: str = "unavailable",
@@ -378,8 +394,11 @@ def write_daily_tb_netcdf(
         time[:, :, :] = time_to_put
 
         fill_val = np.float32(tb_attrs["_FillValue"])
-        tbs_to_put = np.nan_to_num(
-            tb_array_by_hour, nan=fill_val, posinf=fill_val, neginf=fill_val
+        tbs_to_put = np.nan_to_num(  # type: ignore
+            tb_array_by_hour,
+            nan=fill_val,
+            posinf=fill_val,
+            neginf=fill_val,
         ).astype(np.float32)
         tbs[:, :, :, :, :] = tbs_to_put
 
@@ -389,10 +408,15 @@ def write_daily_ancillary_var_netcdf(
     date: datetime.date,
     satellite: str,
     target_size: int,
-    anc_data: ArrayLike,
+    anc_data: NDArray[Any],
     anc_name: str,
+<<<<<<< access_io/access_output.py
+    anc_attrs: dict[str, Any],
+    global_attrs: Union[dict[str, Any], Literal["copy"]],
+=======
     anc_attrs: dict,
     global_attrs: dict,
+>>>>>>> access_io/access_output.py
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
 
@@ -467,8 +491,8 @@ def write_ocean_emiss_to_daily_ACCESS(
     current_day: datetime.date,
     satellite: str,
     target_size: int,
-    glb_attrs: dict,
-    var_attrs: dict,
+    glb_attrs: dict[str, Any],
+    var_attrs: dict[str, Any],
     dataroot: Path,
     outputroot: Path,
     verbose: bool = False,

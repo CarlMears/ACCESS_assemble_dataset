@@ -28,38 +28,27 @@ flake8:
   script:
     - flake8 --count .
 
-# pycodestyle:
-#   stage: test
-#   needs: []
-#   before_script:
-#     - python --version
-#     - pip install --upgrade pip
-#     - pip install pycodestyle
-#   script:
-#     - pycodestyle -v --show-source .
-
-# mypy:
-#   stage: test
-#   allow_failure: true
-#   needs: []
-#   before_script:
-#     - pip install --upgrade pip
-#     - pip install lxml mypy types-requests
-#   script:
-#     - >
-#       mypy --ignore-missing-imports --pretty --show-error-context
-#       --junit-xml mypy.junit.xml
-#       --cobertura-xml-report .
-#       --lineprecision-report .
-#       ./
-#     # TODO: maybe enable the --strict flag later
-#   artifacts:
-#     paths:
-#       - mypy.junit.xml
-#       - cobertura.xml
-#       - lineprecision.txt
-#     reports:
-#       junit: mypy.junit.xml
-#       coverage_report:
-#         coverage_format: cobertura
-#         path: cobertura.xml
+mypy:
+  stage: test
+  allow_failure: true
+  needs: []
+  before_script:
+    - pip install --upgrade pip
+    - pip install mypy lxml types-requests numpy xarray pyproj GitPython
+  script:
+    - >
+      mypy
+      --junit-xml mypy.junit.xml
+      --cobertura-xml-report .
+      --lineprecision-report .
+      ./
+  artifacts:
+    paths:
+      - mypy.junit.xml
+      - cobertura.xml
+      - lineprecision.txt
+    reports:
+      junit: mypy.junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: cobertura.xml

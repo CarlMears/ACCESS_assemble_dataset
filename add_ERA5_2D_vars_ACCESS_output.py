@@ -1,23 +1,22 @@
 import argparse
 from contextlib import suppress
 import datetime
-import git
 import os
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Any, Tuple
 
-from netCDF4 import Dataset as netcdf_dataset
+import git
 import numpy as np
-
-from era5_request.era5_requests import era5_hourly_single_level_request
-from access_io.access_output import get_access_output_filename_daily_folder
-from access_io.access_output import write_daily_ancillary_var_netcdf
+from netCDF4 import Dataset as netcdf_dataset
 
 from access_io.access_attr_define import (
-    common_global_attributes_access,
     anc_var_attributes_access,
 )
-
+from access_io.access_output import (
+    get_access_output_filename_daily_folder,
+    write_daily_ancillary_var_netcdf,
+)
+from era5_request.era5_requests import era5_hourly_single_level_request
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 
@@ -25,8 +24,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     *,
     current_day: datetime.date,
     variable: Tuple[str, str],
-    glb_attrs: Union[dict, str],
-    var_attrs: dict,
+    glb_attrs: dict[str, Any],
+    var_attrs: dict[str, Any],
     satellite: str,
     target_size: int,
     dataroot: Path,

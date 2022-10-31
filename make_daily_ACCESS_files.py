@@ -1,7 +1,7 @@
 from contextlib import suppress
 from datetime import date
 from pathlib import Path
-from typing import Collection, List
+from typing import Collection
 
 import matplotlib.pyplot as plt
 import numpy as np

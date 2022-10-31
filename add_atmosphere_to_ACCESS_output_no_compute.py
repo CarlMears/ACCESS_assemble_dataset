@@ -9,8 +9,8 @@ import git
 from datetime import date
 from pathlib import Path
 
+import git
 import numpy as np
-
 from netCDF4 import Dataset
 from rss_lock.locked_dataset import LockedDataset
 import os
@@ -21,8 +21,16 @@ from access_io.access_output import set_all_attrs
 from access_io.access_attr_define import common_global_attributes_access
 from access_io.access_attr_define import atm_pars_era5_attributes_access
 
-from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
+from access_io.access_attr_define import (
+    atm_pars_era5_attributes_access,
+    common_global_attributes_access,
+)
+from access_io.access_output import (
+    get_access_output_filename_daily_folder,
+    set_or_create_attr,
+)
 from satellite_definitions.amsr2 import REF_FREQ_mapping
+from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 # Reference frequencies (in GHz) to use
 # REF_FREQ = np.array([6.9, 7.3, 10.7, 18.7, 23.8, 37.0], np.float32)
@@ -39,7 +47,7 @@ class OkToSkipDay(Exception):
 class DailyRtm:
     """RTM results for the entire day."""
 
-    def __init__(self, date_to_load: datetime.datetime, data_root: Path):
+    def __init__(self, date_to_load: date, data_root: Path):
 
         filename = (
             f"era5_tbs_{date_to_load.year}-"
@@ -93,7 +101,7 @@ class DailyRtm:
 
 
 def write_atmosphere_to_daily_ACCESS(
-    current_day,
+    current_day: date,
     satellite: str,
     target_size: int,
     dataroot: Path,
