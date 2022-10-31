@@ -63,6 +63,8 @@ def add_land_fraction_to_ACCESS_output(
             land_fraction=land_fraction_np,
             dataroot=dataroot,
             overwrite=overwrite,
+            script_name=script_name,
+            commit=commit,
         )
 
     except FileNotFoundError:
@@ -78,7 +80,7 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
-        "access_root", type=Path, help="Root directory to ACCESS project"
+        "output_root", type=Path, help="Root directory to write output data"
     )
     parser.add_argument(
         "temp_root", type=Path, help="Root directory store temporary files"
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     script_name = parser.prog
     commit = str(subprocess.check_output(["git", "rev-parse", "HEAD"]))
 
-    access_root: Path = args.access_root
+    output_root: Path = args.output_root
     temp_root: Path = args.temp_root
 
     START_DAY = args.start_date
@@ -130,7 +132,7 @@ if __name__ == "__main__":
             target_size=target_size,
             version=args.version,
             lf_version=args.lf_version,
-            dataroot=access_root,
+            dataroot=output_root,
             overwrite=args.overwrite,
             script_name=script_name,
             commit=commit,

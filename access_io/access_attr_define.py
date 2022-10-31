@@ -3,80 +3,119 @@ import json
 import numpy as np
 import os
 from pathlib import Path
-from typing import Callable
+from typing import Optional, Any
+
 
 """
 The routines in this file define the attributes for the ACCESS project output file
 Constant attributes are read in from the .json files in attr_define_root
 """
 if os.name == "nt":
-    attr_define_root = Path(
+    _attr_define_root = Path(
         "M:/job_access/python/dataset_assembly/access_io/attr_define_json"
     )
 elif os.name == "posix":
-    attr_define_root = Path(
+    _attr_define_root = Path(
         "/mnt/ops1p-ren/m/job_access/python/dataset_assembly/access_io/attr_define_json"
     )
 
+_allowed_numeric_types = ["np.float32", "np.float64", "np.int32", "np.int64"]
 
-def _convert_attrs_to_numbers(
-    attrs: dict,
-    int_converter: Callable = np.int32,
-    float_converter: Callable = np.float32,
-    keys_to_exclude: list[str] = ["key_to_exclude"],
-):
-    for key in attrs.keys():
-        if key in keys_to_exclude:
-            continue
-        value = attrs[key]
-        try:
-            _ = attrs[key].keys()  # determine if dictionary-like, e.g. has keys()
-            attrs[key] = _convert_attrs_to_numbers(value)
-        except AttributeError:
-            try:
-                value_int = int_converter(value)
-                attrs[key] = value_int
-            except ValueError:  # maybe too big for int32 - try int64
-                try:
-                    value_int = np.int64(value)
-                    attrs[key] = value_int
-                except ValueError:
-                    try:
-                        value_flt = float_converter(value)
-                        attrs[key] = value_flt
-                    except ValueError:
-                        pass
+# the types of these attrs are set to match the type of the variable
+matched_attributes = ["valid_min", "valid_max", "_FillValue", "missing_value"]
 
-    return attrs
+# the types of these attrs are set to np.float32
+float32_attributes = [
+    "geospatial_lat_min",
+    "geospatial_lat_max",
+    "geospatial_lon_min",
+    "geospatial_lon_max",
+]
 
 
-def load_attrs(project: str = "", satellite: str = "", var: str = "") -> dict:
+# def parse_attrs(raw_attrs, inherited_type=None):
+#     dict_out = {}
+#     for key, item in raw_attrs.items():
+#         if isinstance(item, dict):
+#             if (
+#                 "value" in item.keys()
+#             ):  # bottom level - should have "value" and "type" keys
+#                 try:
+#                     type_str = item["type"]
+#                 except AttributeError:
+#                     raise AttributeError(f"'type' missing from {key}")
+#                 if type_str == "inherited":
+#                     if inherited_type in _allowed_numeric_types:
+#                         type_str = inherited_type
+#                     else:
+#                         raise ValueError(
+#                             f"Invalid Inherited type {inherited_type} in parse_attrs"
+#                         )
+#                 if type_str in _allowed_numeric_types:
+#                     bare_type = type_str.split(".")[1]  # strip off the "np."
+#                     val = np.asarray(
+#                         item["value"], dtype=np.dtype(getattr(np, bare_type))
+#                     )
+#                     dict_out[key] = val
+#                 elif type_str == "str":
+#                     if key == "type":
+#                         inherited_type = item["value"]
+#                     else:
+#                         dict_out[key] = item["value"]
+#                 else:
+#                     raise ValueError(f"type: {type_str} invalid")
+#             else:
+#                 dict_out[key] = parse_attrs(item, inherited_type=inherited_type)
+#     return dict_out
+
+
+def load_attrs(
+    *, project: Optional[str] = None, satellite: Optional[str] = None, var: str
+) -> dict[str, Any]:
 
     if len(var) == 0:
         raise ValueError("var must be specified")
 
     filename = "attr."
-    if len(project) > 0:
+    if project is not None:
         filename = f"{filename}{project}."
-    if len(satellite) > 0:
+    if satellite is not None:
         filename = f"{filename}{satellite.upper()}."
+
     filename = f"{filename}{var}.json"
-    path_to_file = attr_define_root / filename
+    path_to_file = _attr_define_root / filename
     with open(path_to_file) as json_file:
         attrs = json.load(json_file)
 
     return attrs
 
 
-def load_access_attrs(satellite: str = "", var: str = "") -> dict:
+def load_access_attrs(*, satellite: Optional[str] = None, var: str) -> dict:
 
     project = "access"
 
     return load_attrs(project=project, satellite=satellite, var=var)
 
 
+def fix_attr_types(attrs: dict, var_dtype):
+    for att_name, value in attrs.items():
+        if isinstance(value, dict):
+            fix_attr_types(value, var_dtype)
+        else:
+            if att_name in matched_attributes:
+                attrs[att_name] = np.asarray(value, dtype=var_dtype)
+            elif att_name in float32_attributes:
+                attrs[att_name] = np.asarray(value, dtype=np.float32)
+
+    return attrs
+
+
 def common_global_attributes_access(
-    date: datetime.datetime, satellite: str, target_size: int, version: str = "v00r00"
+    date: datetime.datetime,
+    satellite: str,
+    target_size: int,
+    version: str = "v00r00",
+    dtype=np.float32,
 ) -> dict:
 
     attrs = load_access_attrs(var="common")
@@ -90,35 +129,34 @@ def common_global_attributes_access(
     attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
     attrs["time_coverage_start"] = start_date.isoformat()
     attrs["time_coverage_end"] = end_date.isoformat()
+    attrs["version"] = version
 
-    attrs = _convert_attrs_to_numbers(attrs)
-
+    attrs = fix_attr_types(attrs, dtype)
     return attrs
 
 
-def resamp_tb_attributes_access(satellite: str, version="v00r00"):
+def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float32):
+
     attrs = load_access_attrs(satellite=satellite, var="resamp_tbs")
-    attrs["global"]["date_created"] = datetime.datetime.now().isoformat()
     attrs["global"]["version"] = version
-
-    attrs = _convert_attrs_to_numbers(attrs)
-
+    attrs = fix_attr_types(attrs, dtype)
     return attrs
 
 
-def atm_pars_era5_attributes_access(satellite: str, target_size: int, version="v00r00"):
+def atm_pars_era5_attributes_access(
+    satellite: str, target_size: int, version="v00r00", dtype=np.float32
+):
 
     attrs = load_access_attrs(satellite=satellite, var="atm_pars_era5")
-
     attrs["global"]["version"] = version
     attrs["global"]["date_accessed"] = f"{datetime.datetime.now()}"
-
-    attrs = _convert_attrs_to_numbers(attrs)
-
+    attrs = fix_attr_types(attrs, dtype)
     return attrs
 
 
-def anc_var_attributes_access(satellite: str, var: str, version="v00r00"):
+def anc_var_attributes_access(
+    satellite: str, var: str, version="v00r00", dtype=np.float32
+):
 
     attrs = load_access_attrs(satellite=satellite, var=var)
 
@@ -128,111 +166,177 @@ def anc_var_attributes_access(satellite: str, var: str, version="v00r00"):
     else:
         attrs["version"] = version
         attrs["creation-date"] = f"{datetime.datetime.now()}"
-
-    attrs = _convert_attrs_to_numbers(attrs)
-
+    attrs = fix_attr_types(attrs, dtype)
     return attrs
 
 
-def coord_attributes_access(coord: str, date=None):
+def coord_attributes_access(
+    coord: str, date: datetime.date = None, dtype=np.float32
+) -> dict[str, Any]:
 
     attrs = load_access_attrs(var=coord)
 
-    if coord == "hours":
+    if coord == "hours" and date is not None:
         attrs["units"] = f"hours since {date.isoformat()} 00:00:00.0"
 
-    if coord == "time":
-        attrs = _convert_attrs_to_numbers(attrs, int_converter=np.int64)
-    else:
-        attrs = _convert_attrs_to_numbers(attrs)
-
+    attrs = fix_attr_types(attrs, dtype)
     return attrs
 
 
-def write_attrs(file, attrs, prefix=""):
+def attrs_as_string(attrs, prefix=""):
+    out_str = ""
     for key in attrs.keys():
         if isinstance(attrs[key], dict):
-            if file == "screen":
-                print(f"{prefix}---{key}---")
-            else:
-                file.write(f"---{key}---\n")
-            write_attrs(file, attrs[key], prefix=f"{prefix} {key}:")
+            out_str += f"---{key}---\n"
+            s = attrs_as_string(attrs[key], prefix=f"{prefix} {key}:")
+            out_str += s
         else:
             attr_as_truncated_string = str(attrs[key])[0 : 50 - len(prefix)]
-            if file == "screen":
-                print(f"{prefix}{key:25}:  {attr_as_truncated_string}")
-            else:
-                file.write(f"{prefix}{key:25}:  {attr_as_truncated_string}\n")
+            type_str = str(type(attrs[key]))
+            if "numpy" in type_str:
+                type_str += f": {attrs[key].dtype}"
+            out_str += f"{prefix}{key:25}:  {attr_as_truncated_string}: {type_str}\n"
+    return out_str
 
 
 if __name__ == "__main__":
     # exercise the code
 
+    project = "access"
     satellite = "AMSR2"
-    version = "v0r01"
+    version = "v01r00"
 
-    filename = attr_define_root / f"attributes_access_{satellite}.test.{version}.txt"
-    with open(filename, "w") as file:
-        date = datetime.date(2021, 3, 12)
-        target_size = 70
-        version = "v100r01"
-        attrs = common_global_attributes_access(
-            date, satellite, target_size, version=version
-        )
-        file.write("--------------------------\n")
-        file.write("ACCESS Common Attributes\n")
-        file.write("--------------------------\n")
-        write_attrs(file, attrs)
+    AMSR2_vars = [
+        "atm_pars_era5",
+        "land_fraction_modis",
+        "ocean_emiss_era5",
+        "rain_rate_imerg",
+        "resamp_tbs",
+        "skt_era5",
+        "tclw_era5",
+        "tcwv_era5",
+        "u10n_era5",
+        "v10n_era5",
+    ]
+    access_vars = [
+        "common",
+        "frequency",
+        "hours",
+        "latitude",
+        "longitude",
+        "polarization",
+        "time",
+    ]
 
-        satellite = "AMSR2"
-        attrs = resamp_tb_attributes_access(satellite, version=version)
-        file.write("--------------------------\n")
-        file.write("ACCESS Resamp Tbs Attributes\n")
-        file.write("--------------------------\n")
-        write_attrs(file, attrs)
+    print("Testing loading json files")
+    for var in access_vars:
+        try:
+            attrs = load_attrs(project=project, var=var)
+        except Exception as e:
+            print(e)
+            print(f"Test Failed: Could not read attr.{project}.{var}.json")
+            raise
 
-        attrs = atm_pars_era5_attributes_access(satellite, version=version)
-        file.write("--------------------------\n")
-        file.write("Atm Pars Attributes\n")
-        file.write("--------------------------\n")
-        write_attrs(file, attrs)
+    for var in AMSR2_vars:
+        try:
+            attrs = load_attrs(project=project, satellite=satellite, var=var)
+        except Exception as e:
+            print(e)
+            print(f"Test Failed: Could not read attr.{project}.{var}.json")
+            raise
 
-        var_list = [
-            "v10n_era5",
+    print("PASSED: Testing loading json files")
+
+    print("Testing Attribute Routines and dumping attributes")
+
+    filename = (
+        _attr_define_root / f"attributes_access_{satellite}.test.{version}.dump.txt"
+    )
+    print(f"dump filename: {filename}")
+
+    with open(filename, "w") as f:
+        date = datetime.date(2013, 4, 12)
+        target_size = 30
+        try:
+            attrs = common_global_attributes_access(
+                date=date, satellite=satellite, target_size=target_size, version=version
+            )
+            f.write(attrs_as_string(attrs, prefix="common:"))
+
+        except Exception as e:
+            print(e)
+            print(
+                "Test Failed: Could not load common attrs:."
+                + f"{project}.{satellite}.{var}.json"
+            )
+            raise
+
+        try:
+            attrs = resamp_tb_attributes_access(satellite=satellite, version=version)
+            f.write(attrs_as_string(attrs, prefix=attrs["name"]))
+        except Exception as e:
+            print(e)
+            print(
+                "Test Failed: Could not load resamp_tbs attrs:."
+                + f"{project}.{satellite}.resamp_tbs.json"
+            )
+            raise
+
+        try:
+            attrs = atm_pars_era5_attributes_access(
+                satellite=satellite, target_size=target_size, version=version
+            )
+            f.write(attrs_as_string(attrs, prefix=attrs["name"]))
+
+        except Exception as e:
+            print(e)
+            print(
+                "Test Failed: Could not load atm_par_era5 attrs:"
+                + f".{project}.{satellite}.atm_pars_era5.json"
+            )
+            raise
+
+        anc_var_names = [
+            "rain_rate_imerg",
             "ocean_emiss_era5",
             "skt_era5",
-            "imerg_rr",
-            "tcwv_era5",
             "tclw_era5",
+            "tcwv_era5",
+            "u10n_era5",
+            "v10n_era5",
+        ]
+        for var in anc_var_names:
+            try:
+                attrs = anc_var_attributes_access(
+                    satellite=satellite, var=var, version=version
+                )
+                f.write(attrs_as_string(attrs, prefix=attrs["name"] + ": " + var))
+            except Exception as e:
+                print(e)
+                print(
+                    "Test Failed: Could not load anc attrs:"
+                    + f".{project}.{satellite}.{var}.json"
+                )
+                raise
+
+        coord_var_names = [
+            "frequency",
+            "hours",
+            "latitude",
+            "longitude",
+            "polarization",
+            "time",
         ]
 
-        glb_required_attributes = ["summary", "keywords", "title", "history", "source"]
-        var_required_attributes = [
-            "standard_name",
-            "long_name",
-            "valid_min",
-            "valid_max",
-            "units",
-            "_FillValue",
-            "missing_value",
-        ]
-
-        for var in var_list:
-            attrs = anc_var_attributes_access(satellite, var, version=version)
-            file.write("--------------------------")
-            file.write(f"ACCESS {var} Attributes")
-            file.write("--------------------------")
-            write_attrs(file, attrs)
-
-        print("-----------------------------------------------------")
-        print("-- Testing for Required Attributes in .json files ---")
-        print("-----------------------------------------------------")
-        for var in var_list:
-            attrs = anc_var_attributes_access(satellite, var, version=version)
-            for required_attr in glb_required_attributes:
-                if required_attr not in attrs["global"].keys():
-                    print(f"required attribite: {required_attr} missing for {var}")
-
-            for required_attr in var_required_attributes:
-                if required_attr not in attrs["var"].keys():
-                    print(f"required attribite: {required_attr} missing for {var}")
+        for var in coord_var_names:
+            try:
+                attrs = coord_attributes_access(coord=var, date=date)
+                f.write(attrs_as_string(attrs, prefix="coord: " + var))
+            except Exception as e:
+                print(e)
+                print(
+                    "Test Failed: Could not load coord attrs:"
+                    + f"attr.{project}.{var}.json"
+                )
+                raise
+    print("All Tests PASSED")

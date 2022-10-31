@@ -1,5 +1,5 @@
 {
     "standard_name": "time",
-    "valid_min": "0",
-    "valid_max": "23"
+    "valid_min": 0,
+    "valid_max": 23
 }

@@ -1,20 +1,21 @@
 
-{   "global": {
+{   "name": "zonal neutral winds from ERA5",
+    "type": "np.float32",
+    "global": {
         "summary" : "Eastward windcorresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
-        "keywords": ["EARTH SCIENCE > OCEANS > OCEAN WINDS > SURFACE WINDS",
-                    "EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC WINDS > SURFACE WINDS"],
+        "keywords": "EARTH SCIENCE > OCEANS > OCEAN WINDS > SURFACE WINDS, EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC WINDS > SURFACE WINDS",
         "title": "10m neutral zonal winds from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
         "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store",
-        "source":    "Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. 2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803. ERA5 hourly data on single levels from 1959 to present. Skin Temperature.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. Dataset DOI: 10.24381/cds.adbb2d47"
+        "source":    "Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. 2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803. ERA5 hourly data on single levels from 1959 to present. 0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. Dataset DOI: 10.24381/cds.adbb2d47"
     },
     "var": {
         "standard_name": "eastward_wind",
         "long_name": "10m u component of neutral wind interpolated from hourly ERA5 output",
-        "valid_min": "-100.0",
-        "valid_max": "100.0",
+        "valid_min": -100.0,
+        "valid_max": 100.0,
         "units": "m/s",
-        "_FillValue": "-999.0",
-        "missing_value": "-999.0",
+        "_FillValue": -999.0,
+        "missing_value": -999.0,
         "coordinates": "latitude longitude hours"
     }
 }
