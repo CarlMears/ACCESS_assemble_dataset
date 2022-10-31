@@ -200,9 +200,9 @@ python add_atmosphere_to_ACCESS_output.py L:/access 2012-07-11 amsr2
  ~~~json
  {
     "global":{
-        "summary": "Modis Land Mask resampled to gaussian footprints",
+        "summary": "Modis Land Mask resampled to Gaussian footprints",
         "keywords": "EARTH SCIENCE > LAND SURFACE > LAND USE/LAND COVER > LAND/OCEAN/ICE MASK",
-        "title": "Modis Land Mask resampled to circulargaussian footprintsgaussian footprints 0.25 degree Earth grid",
+        "title": "Modis Land Mask resampled to circular Gaussian footprints 0.25 degree Earth grid",
         "history": "Created from on-line MODIS data from the CMR EarthData API"},
     "var":{
         "standard_name": "land fraction",

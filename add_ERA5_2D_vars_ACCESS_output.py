@@ -114,10 +114,10 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         hour_index1 = 24 * (current_day.day - 1)
         hour_index2 = hour_index1 + 24
         ds1 = netcdf_dataset(file1)
-        var_first_day = ds1[variable[1]][hour_index1:hour_index2, :, :]
+        var_first_day = ds1[variable[0]][hour_index1:hour_index2, :, :]
 
         ds2 = netcdf_dataset(file2)
-        var_next_day = ds2[variable[1]][0, :, :]
+        var_next_day = ds2[variable[0]][0, :, :]
         var = np.concatenate((var_first_day, var_next_day[np.newaxis, :, :]), axis=0)
 
     # file1 modification time as a datetime.datetime object

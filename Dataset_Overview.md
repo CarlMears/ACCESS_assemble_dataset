@@ -24,7 +24,7 @@ A more precise time-of-observation is contained in the "time" variable.  The var
 
 Each base file also contains land-fraction for each resampled footprint, constructed by averaging a MODIS-derived land/water mask over the resampled footprint.
 
-The target footprints are circular gaussians with the FWHM diameter denoted by the "footprint size", e.g. a "30 km footprint" means a gaussian with FWHW of 30 km.
+The target footprints are circular gaussians with the FWHM diameter denoted by the "footprint size", e.g. a "30 km footprint" means a Gaussian with FWHW of 30 km.
 
 ## Channels Available
 * AMSR2, 30 km - 11,19,24,37,89 GHz (V and H polarization)

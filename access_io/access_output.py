@@ -195,7 +195,7 @@ def write_daily_lf_netcdf(
     var_attrs = lf_attrs["var"]
     global_attrs[
         "cell_method"
-    ] = f"area: resampled to {target_size}km guassian footprint"
+    ] = f"area: resampled to {target_size}km Gaussian footprint"
 
     global_attrs["script_name"] = script_name
     global_attrs["commit"] = commit
@@ -286,7 +286,7 @@ def write_daily_tb_netcdf(
         glb_attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
         glb_attrs[
             "cell_method"
-        ] = f"area: resampled to {target_size}km guassian footprint"
+        ] = f"area: resampled to {target_size}km Gaussian footprint"
         glb_attrs["date_accessed"] = f"{datetime.datetime.today()}"
         glb_attrs["date_created"] = f"{datetime.datetime.today()}"
 
