@@ -47,19 +47,19 @@ AVAILABLE_CHANNELS = [
     "89H",
 ]
 
-def get_mtime_multi_try(path_to_file,max_num_trys=10):
+
+def get_mtime_multi_try(path_to_file, max_num_trys=10):
 
     num_so_far = 0
-    while num_so_far < max_num_try:
+    while num_so_far < max_num_trys:
         try:
             mtime = path_to_file.stat().st_mtime
             return mtime
-        except:
-            #catch all errors
+        except Exception:
+            # catch all errors
             num_so_far += 1
-    
-    raise IOError(f'Problem getting mtime for {path_to_file}')
-    
+
+    raise IOError(f"Problem getting mtime for {path_to_file}")
 
 
 def decide_not_to_process(
@@ -73,25 +73,25 @@ def decide_not_to_process(
     update: bool,
 ):
 
-    '''Logic to determine if a daily Tb file needs to be reprocessed
-       If the daily file does not exist:
-            process
-       If the daily file exists:
-            If overwrite -> process
-            If update:
-                If any of the Tb orbit files (or the time file) are newer than
-                the daily file -> process
-            Else:
-                don't process
-            If neither overwrite or update are True:
-                don't process
-    '''
+    """Logic to determine if a daily Tb file needs to be reprocessed
+    If the daily file does not exist:
+         process
+    If the daily file exists:
+         If overwrite -> process
+         If update:
+             If any of the Tb orbit files (or the time file) are newer than
+             the daily file -> process
+         Else:
+             don't process
+         If neither overwrite or update are True:
+             don't process
+    """
 
     if filename.is_file():
         if overwrite:
             with suppress(FileNotFoundError):
                 filename.unlink()
-            return False  #force overwrite
+            return False  # force overwrite
         else:
             if update:
                 tb_day_file_time = filename.stat().st_mtime
@@ -120,13 +120,15 @@ def decide_not_to_process(
                 if need_to_update:
                     with suppress(FileNotFoundError):
                         filename.unlink()
-                    return False #At least 1 Tb orbit files are newer than the daily file
+                    return (
+                        False  # At least 1 Tb orbit files are newer than the daily file
+                    )
                 else:
-                    return True  #Up to date
+                    return True  # Up to date
             else:
-                return True # don't update because update not set
+                return True  # don't update because update not set
     else:
-        return False  #daily file does not exist
+        return False  # daily file does not exist
 
 
 def redo_attrs_daily_ACCESS_tb_file(

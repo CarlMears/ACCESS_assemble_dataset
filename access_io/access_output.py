@@ -561,8 +561,6 @@ def write_ocean_emiss_to_daily_ACCESS(
     verbose: bool = False,
 ) -> None:
 
-    if verbose:
-        print(f"Opening base file for {satellite} on {current_day} in {dataroot}")
 
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
@@ -610,7 +608,7 @@ def write_ocean_emiss_to_daily_ACCESS(
                 for varname, long_name, units in [
                     ("emissivity", "ocean surface emissivity", None),
                 ]:
-                    print(f"starting writing {varname}")
+                    print(f"starting writing {varname} to {emiss_filename_final}")
                     least_significant_digit = 3
                     trg.createVariable(
                         varname,

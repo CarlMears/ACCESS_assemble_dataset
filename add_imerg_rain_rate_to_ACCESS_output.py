@@ -88,14 +88,16 @@ def write_imerg_rain_rate_for_ACCESS(
         current_day, satellite, footprint_diameter_km, outputroot, var
     )
 
-    if need_to_process(date=current_day, 
-                       satellite=satellite, 
-                       target_size=footprint_diameter_km, 
-                       dataroot=dataroot, 
-                       outputroot=outputroot,
-                       var=var,
-                       overwrite=overwrite,
-                       update=update):
+    if need_to_process(
+        date=current_day,
+        satellite=satellite,
+        target_size=footprint_diameter_km,
+        dataroot=dataroot,
+        outputroot=outputroot,
+        var=var,
+        overwrite=overwrite,
+        update=update,
+    ):
 
         with suppress(FileNotFoundError):
             imerge_filename_final.unlink()
@@ -139,7 +141,9 @@ def write_imerg_rain_rate_for_ACCESS(
         rr_for_access = np.roll(rr_for_access, 720, axis=1)
 
         version = "v01r00"
-        rr_attrs = anc_var_attributes_access(satellite, "rain_rate_imerg", version=version)
+        rr_attrs = anc_var_attributes_access(
+            satellite, "rain_rate_imerg", version=version
+        )
         global_attrs = common_global_attributes_access(
             date, satellite, footprint_diameter_km, version=version
         )
@@ -172,11 +176,10 @@ def write_imerg_rain_rate_for_ACCESS(
             dataroot=dataroot,
         )
     else:
-        print(f'No processing needed for  {var} on {date}')
+        print(f"No processing needed for  {var} on {date}")
 
 
 if __name__ == "__main__":
-
 
     parser = argparse.ArgumentParser(
         description=(
@@ -213,7 +216,9 @@ if __name__ == "__main__":
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
     parser.add_argument(
-        "--update", help="force overwrite if file older than base file", action="store_true"
+        "--update",
+        help="force overwrite if file older than base file",
+        action="store_true",
     )
 
     parser.add_argument(

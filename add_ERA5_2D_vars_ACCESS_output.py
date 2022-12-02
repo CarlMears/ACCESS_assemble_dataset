@@ -18,7 +18,8 @@ from access_io.access_attr_define import (
 )
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
-from util.file_times import get_mtime_multi_try,need_to_process
+from util.file_times import need_to_process
+
 
 def add_ERA5_single_level_variable_to_ACCESS_output(
     *,
@@ -49,14 +50,16 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         current_day, satellite.lower(), target_size, dataroot, anc_name
     )
 
-    if need_to_process(date=current_day, 
-                       satellite=satellite, 
-                       target_size=target_size, 
-                       dataroot=dataroot, 
-                       outputroot=outputroot,
-                       var=anc_name,
-                       overwrite=overwrite,
-                       update=update):
+    if need_to_process(
+        date=current_day,
+        satellite=satellite,
+        target_size=target_size,
+        dataroot=dataroot,
+        outputroot=outputroot,
+        var=anc_name,
+        overwrite=overwrite,
+        update=update,
+    ):
 
         if not base_filename.is_file():
             print(f"base file for {current_day} does not exist, skipping")
@@ -64,7 +67,9 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
         if not (overwrite or update):
             if var_filename_final.is_file():
-                print(f"{variable[0]} file for {current_day} exists, skipping to next day")
+                print(
+                    f"{variable[0]} file for {current_day} exists, skipping to next day"
+                )
                 return
         else:
             with suppress(FileNotFoundError):
@@ -77,7 +82,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 try:
                     times = root_grp.variables["time"][:, :, :]
                     times = (
-                        times - (current_day - datetime.date(1900, 1, 1)).total_seconds()
+                        times
+                        - (current_day - datetime.date(1900, 1, 1)).total_seconds()
                     )
                 except KeyError:
                     raise ValueError(f'Error finding "time" in {base_filename}')
@@ -129,7 +135,9 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
             ds2 = netcdf_dataset(file2)
             var_next_day = ds2[variable[0]][0, :, :]
-            var = np.concatenate((var_first_day, var_next_day[np.newaxis, :, :]), axis=0)
+            var = np.concatenate(
+                (var_first_day, var_next_day[np.newaxis, :, :]), axis=0
+            )
 
         # file1 modification time as a datetime.datetime object
         mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
@@ -179,7 +187,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             dataroot=outputroot,
         )
     else:
-        print(f'No processing needed for {anc_name} on {current_day}')
+        print(f"No processing needed for {anc_name} on {current_day}")
 
 
 if __name__ == "__main__":
@@ -224,7 +232,9 @@ if __name__ == "__main__":
         "--overwrite", help="overwrite exisitng files", action="store_true"
     )
     parser.add_argument(
-        "--update", help="overwrite exisitng files is older than base file", action="store_true"
+        "--update",
+        help="overwrite exisitng files is older than base file",
+        action="store_true",
     )
     parser.add_argument(
         "--verbose", help="enable more verbose screen output", action="store_true"
@@ -274,7 +284,6 @@ if __name__ == "__main__":
 
         date = START_DAY
         while date <= END_DAY:
-            
 
             # common global_attributes for the project
             glb_attrs = common_global_attributes_access(

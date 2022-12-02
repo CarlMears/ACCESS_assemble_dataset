@@ -148,7 +148,9 @@ if __name__ == "__main__":
         "--overwrite", help="overwrite output file no matter what", action="store_true"
     )
     parser.add_argument(
-        "--update", help="overwrite output file if older than base file", action="store_true"
+        "--update",
+        help="overwrite output file if older than base file",
+        action="store_true",
     )
 
     args = parser.parse_args()
@@ -179,25 +181,28 @@ while date <= END_DAY:
     base_filename = get_access_output_filename_daily_folder(
         date, satellite, target_size, access_root, "resamp_tbs"
     )
-    var="ocean_emiss_era5"
-    if need_to_process(date=date, 
-                       satellite=satellite, 
-                       target_size=target_size, 
-                       dataroot=access_root, 
-                       outputroot=output_root,
-                       var=var,
-                       overwrite=overwrite,
-                       update=update):
+    var = "ocean_emiss_era5"
+    if need_to_process(
+        date=date,
+        satellite=satellite,
+        target_size=target_size,
+        dataroot=access_root,
+        outputroot=output_root,
+        var=var,
+        overwrite=overwrite,
+        update=update,
+    ):
         with suppress(FileNotFoundError):
             emiss_filename_final.unlink()
-    
 
         ocean_emiss = calc_emissivity_maps(
             date=date, wind_source="era5", sst_source="era5", target_size=target_size
         )
 
         # common global_attributes for the project
-        glb_attrs = common_global_attributes_access(date, satellite, target_size, version)
+        glb_attrs = common_global_attributes_access(
+            date, satellite, target_size, version
+        )
 
         # variable-specific attributes
         var = "ocean_emiss"
@@ -225,6 +230,6 @@ while date <= END_DAY:
             verbose=True,
         )
     else:
-        print(f'No Processing Needed for {var} on {date}')
+        print(f"No Processing Needed for {var} on {date}")
 
     date = date + datetime.timedelta(days=1.0)

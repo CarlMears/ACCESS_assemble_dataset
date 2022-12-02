@@ -22,7 +22,7 @@ from access_io.access_attr_define import common_global_attributes_access
 from access_io.access_attr_define import atm_pars_era5_attributes_access
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
-from util.file_times import get_mtime_multi_try,need_to_process
+from util.file_times import need_to_process
 from satellite_definitions.amsr2 import REF_FREQ_mapping
 
 # Reference frequencies (in GHz) to use
@@ -93,8 +93,6 @@ class DailyRtm:
         self.time_in_day = np.arange(0, 25) * 3600.0
 
 
-
-
 def write_atmosphere_to_daily_ACCESS(
     current_day,
     satellite: str,
@@ -112,14 +110,16 @@ def write_atmosphere_to_daily_ACCESS(
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
 
-    if need_to_process(date=current_day, 
-                       satellite=satellite, 
-                       target_size=target_size, 
-                       dataroot=dataroot, 
-                       outputroot=outputroot,
-                       var="atm_par_era5",
-                       overwrite=overwrite,
-                       update=update):
+    if need_to_process(
+        date=current_day,
+        satellite=satellite,
+        target_size=target_size,
+        dataroot=dataroot,
+        outputroot=outputroot,
+        var="atm_par_era5",
+        overwrite=overwrite,
+        update=update,
+    ):
 
         if verbose:
             print(f"Opening data for {satellite} on {current_day} in {dataroot}")
@@ -145,11 +145,18 @@ def write_atmosphere_to_daily_ACCESS(
                 rtm_data = DailyRtm(current_day, temproot)
 
                 glb_attrs = common_global_attributes_access(
-                    current_day, satellite, target_size, version=version, dtype=np.float32
+                    current_day,
+                    satellite,
+                    target_size,
+                    version=version,
+                    dtype=np.float32,
                 )
 
                 atm_attrs = atm_pars_era5_attributes_access(
-                    satellite, target_size=target_size, version=version, dtype=np.float32
+                    satellite,
+                    target_size=target_size,
+                    version=version,
+                    dtype=np.float32,
                 )
 
                 glb_attrs.update(atm_attrs["global"])
@@ -165,7 +172,7 @@ def write_atmosphere_to_daily_ACCESS(
                 )
 
                 if atm_filename_final.is_file():
-                    if (overwrite or update):
+                    if overwrite or update:
                         atm_filename_final.unlink()
                     else:
                         print(f"File {atm_filename_final} exists, skipping")
@@ -203,7 +210,11 @@ def write_atmosphere_to_daily_ACCESS(
                     for varname, long_name, units in [
                         ("transmissivity", "atmospheric transmissivity", None),
                         ("upwelling_tb", "upwelling brightness temperature", "kelvin"),
-                        ("downwelling_tb", "downwelling brightness temperature", "kelvin"),
+                        (
+                            "downwelling_tb",
+                            "downwelling brightness temperature",
+                            "kelvin",
+                        ),
                     ]:
                         var_attrs = atm_attrs[varname]
                         print(f"starting writing {varname}", end="")
@@ -243,7 +254,9 @@ def write_atmosphere_to_daily_ACCESS(
                                 var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
                                     var, var_times, time_map
                                 )
-                                trg[varname][:, :, hour_index, freq_index] = var_at_time_map
+                                trg[varname][
+                                    :, :, hour_index, freq_index
+                                ] = var_at_time_map
                                 print(".", end="")
                         print()
                         print(f"finished writing {varname}")
@@ -255,7 +268,7 @@ def write_atmosphere_to_daily_ACCESS(
 
         os.rename(atm_filename, atm_filename_final)
     else:
-        print(f'No Processing needed for atmosperic parameters on {current_day}')
+        print(f"No Processing needed for atmosperic parameters on {current_day}")
 
 
 if __name__ == "__main__":
