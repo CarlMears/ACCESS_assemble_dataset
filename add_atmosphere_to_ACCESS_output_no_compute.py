@@ -22,6 +22,7 @@ from access_io.access_attr_define import common_global_attributes_access
 from access_io.access_attr_define import atm_pars_era5_attributes_access
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
+from util.file_times import get_mtime_multi_try,need_to_process
 from satellite_definitions.amsr2 import REF_FREQ_mapping
 
 # Reference frequencies (in GHz) to use
@@ -92,6 +93,8 @@ class DailyRtm:
         self.time_in_day = np.arange(0, 25) * 3600.0
 
 
+
+
 def write_atmosphere_to_daily_ACCESS(
     current_day,
     satellite: str,
@@ -104,143 +107,155 @@ def write_atmosphere_to_daily_ACCESS(
     commit: str,
     verbose: bool = False,
     overwrite: bool = False,
+    update: bool = False,
 ) -> None:
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
 
-    if verbose:
-        print(f"Opening data for {satellite} on {current_day} in {dataroot}")
+    if need_to_process(date=current_day, 
+                       satellite=satellite, 
+                       target_size=target_size, 
+                       dataroot=dataroot, 
+                       outputroot=outputroot,
+                       var="atm_par_era5",
+                       overwrite=overwrite,
+                       update=update):
 
-    base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, dataroot, "resamp_tbs"
-    )
-    try:
+        if verbose:
+            print(f"Opening data for {satellite} on {current_day} in {dataroot}")
 
-        with LockedDataset(base_filename, "r") as root_grp:
+        base_filename = get_access_output_filename_daily_folder(
+            current_day, satellite, target_size, dataroot, "resamp_tbs"
+        )
+        try:
 
-            if verbose:
-                print(
-                    f"Reading ERA5 computed RTM data {satellite} "
-                    + f"on {current_day} in {temproot}"
+            with LockedDataset(base_filename, "r") as root_grp:
+
+                if verbose:
+                    print(
+                        f"Reading ERA5 computed RTM data {satellite} "
+                        + f"on {current_day} in {temproot}"
+                    )
+
+                # num_lats = root_grp["latitude"].shape[0]
+                # num_lons = root_grp["longitude"].shape[0]
+                # num_hours = root_grp["hours"].shape[0]
+                # num_chan = len(REF_FREQ)
+
+                rtm_data = DailyRtm(current_day, temproot)
+
+                glb_attrs = common_global_attributes_access(
+                    current_day, satellite, target_size, version=version, dtype=np.float32
                 )
 
-            # num_lats = root_grp["latitude"].shape[0]
-            # num_lons = root_grp["longitude"].shape[0]
-            # num_hours = root_grp["hours"].shape[0]
-            # num_chan = len(REF_FREQ)
+                atm_attrs = atm_pars_era5_attributes_access(
+                    satellite, target_size=target_size, version=version, dtype=np.float32
+                )
 
-            rtm_data = DailyRtm(current_day, temproot)
+                glb_attrs.update(atm_attrs["global"])
+                glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
+                glb_attrs["script_name"] = script_name
+                glb_attrs["commit"] = commit
 
-            glb_attrs = common_global_attributes_access(
-                current_day, satellite, target_size, version=version, dtype=np.float32
-            )
+                atm_filename = get_access_output_filename_daily_folder(
+                    current_day, satellite, target_size, outputroot, "atm_par_era5_temp"
+                )
+                atm_filename_final = get_access_output_filename_daily_folder(
+                    current_day, satellite, target_size, outputroot, "atm_par_era5"
+                )
 
-            atm_attrs = atm_pars_era5_attributes_access(
-                satellite, target_size=target_size, version=version, dtype=np.float32
-            )
+                if atm_filename_final.is_file():
+                    if (overwrite or update):
+                        atm_filename_final.unlink()
+                    else:
+                        print(f"File {atm_filename_final} exists, skipping")
+                        return
+                with suppress(FileNotFoundError):
+                    atm_filename.unlink()
 
-            glb_attrs.update(atm_attrs["global"])
-            glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
-            glb_attrs["script_name"] = script_name
-            glb_attrs["commit"] = commit
+                with LockedDataset(atm_filename, mode="w") as trg:
+                    for name, dim in root_grp.dimensions.items():
+                        if name in ["hours", "latitude", "longitude"]:
+                            trg.createDimension(
+                                name, len(dim) if not dim.isunlimited() else None
+                            )
 
-            atm_filename = get_access_output_filename_daily_folder(
-                current_day, satellite, target_size, outputroot, "atm_par_era5_temp"
-            )
-            atm_filename_final = get_access_output_filename_daily_folder(
-                current_day, satellite, target_size, outputroot, "atm_par_era5"
-            )
+                    trg.createDimension("freq", len(REF_FREQ))
 
-            if atm_filename_final.is_file():
-                if overwrite:
-                    atm_filename_final.unlink()
-                else:
-                    print(f"File {atm_filename_final} exists, skipping")
-                    return
-            with suppress(FileNotFoundError):
-                atm_filename.unlink()
+                    # Set global attributes
+                    set_all_attrs(trg, glb_attrs)
 
-            with LockedDataset(atm_filename, mode="w") as trg:
-                for name, dim in root_grp.dimensions.items():
-                    if name in ["hours", "latitude", "longitude"]:
-                        trg.createDimension(
-                            name, len(dim) if not dim.isunlimited() else None
+                    for var_name in ["time", "hours", "longitude", "latitude", "freq"]:
+                        # Create the time and dimension variables in the output file
+                        var_in = root_grp[var_name]
+                        trg.createVariable(
+                            var_name, var_in.dtype, var_in.dimensions, zlib=True
                         )
 
-                trg.createDimension("freq", len(REF_FREQ))
+                        # Copy the attributes
+                        trg.variables[var_name].setncatts(
+                            {a: var_in.getncattr(a) for a in var_in.ncattrs()}
+                        )
+                        trg[var_name][:] = var_in[:]
 
-                # Set global attributes
-                set_all_attrs(trg, glb_attrs)
+                    dimensions_out = ("latitude", "longitude", "hours", "freq")
 
-                for var_name in ["time", "hours", "longitude", "latitude", "freq"]:
-                    # Create the time and dimension variables in the output file
-                    var_in = root_grp[var_name]
-                    trg.createVariable(
-                        var_name, var_in.dtype, var_in.dimensions, zlib=True
-                    )
+                    for varname, long_name, units in [
+                        ("transmissivity", "atmospheric transmissivity", None),
+                        ("upwelling_tb", "upwelling brightness temperature", "kelvin"),
+                        ("downwelling_tb", "downwelling brightness temperature", "kelvin"),
+                    ]:
+                        var_attrs = atm_attrs[varname]
+                        print(f"starting writing {varname}", end="")
+                        if varname == "transmissivity":
+                            least_significant_digit = 3
+                        else:
+                            least_significant_digit = 2
+                        trg.createVariable(
+                            varname,
+                            np.float32,
+                            dimensions_out,
+                            fill_value=var_attrs["_FillValue"],
+                            zlib=True,
+                            least_significant_digit=least_significant_digit,
+                        )
 
-                    # Copy the attributes
-                    trg.variables[var_name].setncatts(
-                        {a: var_in.getncattr(a) for a in var_in.ncattrs()}
-                    )
-                    trg[var_name][:] = var_in[:]
+                        set_all_attrs(trg[varname], var_attrs)
+                        # for key in var_attrs.keys():
+                        #     if key != "_FillValue":
+                        #         value = var_attrs[key]
+                        #         set_or_create_attr(trg[varname], key, value)
 
-                dimensions_out = ("latitude", "longitude", "hours", "freq")
+                        for freq_index, freq in enumerate(REF_FREQ):
+                            var = getattr(rtm_data, varname)[
+                                :, :, :, REF_FREQ_mapping[freq_index]
+                            ]
+                            var = np.moveaxis(var, -1, 0)
+                            var_times = rtm_data.time_in_day
+                            for hour_index in range(len(root_grp["hours"][:])):
+                                time_map = root_grp["time"][:, :, hour_index]
+                                time_map = (
+                                    time_map
+                                    - (
+                                        current_day - datetime.date(1900, 1, 1)
+                                    ).total_seconds()
+                                )
+                                var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
+                                    var, var_times, time_map
+                                )
+                                trg[varname][:, :, hour_index, freq_index] = var_at_time_map
+                                print(".", end="")
+                        print()
+                        print(f"finished writing {varname}")
+        except FileNotFoundError:
+            raise OkToSkipDay
 
-                for varname, long_name, units in [
-                    ("transmissivity", "atmospheric transmissivity", None),
-                    ("upwelling_tb", "upwelling brightness temperature", "kelvin"),
-                    ("downwelling_tb", "downwelling brightness temperature", "kelvin"),
-                ]:
-                    var_attrs = atm_attrs[varname]
-                    print(f"starting writing {varname}", end="")
-                    if varname == "transmissivity":
-                        least_significant_digit = 3
-                    else:
-                        least_significant_digit = 2
-                    trg.createVariable(
-                        varname,
-                        np.float32,
-                        dimensions_out,
-                        fill_value=var_attrs["_FillValue"],
-                        zlib=True,
-                        least_significant_digit=least_significant_digit,
-                    )
+        with suppress(FileNotFoundError):
+            atm_filename_final.unlink()
 
-                    set_all_attrs(trg[varname], var_attrs)
-                    # for key in var_attrs.keys():
-                    #     if key != "_FillValue":
-                    #         value = var_attrs[key]
-                    #         set_or_create_attr(trg[varname], key, value)
-
-                    for freq_index, freq in enumerate(REF_FREQ):
-                        var = getattr(rtm_data, varname)[
-                            :, :, :, REF_FREQ_mapping[freq_index]
-                        ]
-                        var = np.moveaxis(var, -1, 0)
-                        var_times = rtm_data.time_in_day
-                        for hour_index in range(len(root_grp["hours"][:])):
-                            time_map = root_grp["time"][:, :, hour_index]
-                            time_map = (
-                                time_map
-                                - (
-                                    current_day - datetime.date(1900, 1, 1)
-                                ).total_seconds()
-                            )
-                            var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
-                                var, var_times, time_map
-                            )
-                            trg[varname][:, :, hour_index, freq_index] = var_at_time_map
-                            print(".", end="")
-                    print()
-                    print(f"finished writing {varname}")
-    except FileNotFoundError:
-        raise OkToSkipDay
-
-    with suppress(FileNotFoundError):
-        atm_filename_final.unlink()
-
-    os.rename(atm_filename, atm_filename_final)
+        os.rename(atm_filename, atm_filename_final)
+    else:
+        print(f'No Processing needed for atmosperic parameters on {current_day}')
 
 
 if __name__ == "__main__":
@@ -279,6 +294,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
+    parser.add_argument(
+        "--update", help="force overwrite file older than base", action="store_true"
+    )
 
     args = parser.parse_args()
 
@@ -293,6 +311,7 @@ if __name__ == "__main__":
     satellite = args.sensor
     version = args.version
     overwrite = args.overwrite
+    update = args.update
 
     script_name = parser.prog
     repo = git.Repo(search_parent_directories=True)
@@ -308,6 +327,9 @@ if __name__ == "__main__":
     print(f"Version:     {version}")
     if overwrite:
         print("Overwriting old files")
+    else:
+        if update:
+            print("Updating older files by overwriting")
     print()
     print(f"Script Name: {script_name}")
     print(f"git Commit: {commit}")
@@ -325,6 +347,7 @@ if __name__ == "__main__":
                 version=version,
                 verbose=True,
                 overwrite=overwrite,
+                update=update,
                 script_name=script_name,
                 commit=commit,
             )

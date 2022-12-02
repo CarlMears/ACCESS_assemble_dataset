@@ -29,6 +29,34 @@ AVAILABLE_CHANNELS = [
     "89H",
 ]
 
+def get_resampled_file_name(satellite: str,
+                            channel: Union[str, int],
+                            target_size: int,
+                            orbit: int,
+                            dataroot: Path = ACCESS_ROOT):
+
+    orbit_lower, orbit_upper = get_AMSR2_orbit_range(orbit)
+    orbit_dir = dataroot.joinpath(
+        f"{satellite}_tb_orbits", f"r{orbit_lower:05d}_{orbit_upper:05d}"
+    )
+
+    if isinstance(channel,int):
+        if ((channel >= 0) and (channel <=99)):
+            channel_str = f'ch{channel:02d}'
+        else:
+            raise ValueError('Channel out of range')
+    elif isinstance(channel,str):
+        channel_str = channel
+    else:
+        raise ValueError('Channel type not valid')
+     
+    if channel_str == "time":
+        filename = orbit_dir / f"r{orbit:05d}.time.nc"
+    else:
+        filename = (
+            orbit_dir / f"r{orbit:05d}.grid_tb.{channel_str}.{target_size:03d}km.nc"
+        )
+    return filename
 
 def get_AMSR2_orbit_range(orbit: int) -> Tuple[int, int]:
     """Return the lower/upper bounds to an orbit.
@@ -71,16 +99,11 @@ def read_AMSR2_resampled_tbs(
         else:
             raise ValueError(f"Channel {channel} not valid")
 
-    orbit_lower, orbit_upper = get_AMSR2_orbit_range(orbit)
-    orbit_dir = dataroot.joinpath(
-        f"{satellite}_tb_orbits", f"r{orbit_lower:05d}_{orbit_upper:05d}"
-    )
-    if channel_str == "time":
-        filename = orbit_dir / f"r{orbit:05d}.time.nc"
-    else:
-        filename = (
-            orbit_dir / f"r{orbit:05d}.grid_tb.ch{channel:02d}.{target_size:03d}km.nc"
-        )
+    filename = get_resampled_file_name(satellite=satellite,
+                            channel=channel,
+                            target_size=target_size,
+                            orbit=orbit,
+                            dataroot=dataroot)
     if verbose:
         print(filename)
     ds = xr.open_dataset(filename)

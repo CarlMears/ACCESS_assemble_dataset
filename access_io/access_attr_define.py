@@ -129,7 +129,13 @@ def common_global_attributes_access(
     attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
     attrs["time_coverage_start"] = start_date.isoformat()
     attrs["time_coverage_end"] = end_date.isoformat()
-    attrs["version"] = version
+    if version is not None:
+        attrs["version"] = version
+    else:
+        try:
+            del attrs["version"]
+        except KeyError:
+            pass
 
     attrs = fix_attr_types(attrs, dtype)
     return attrs
@@ -138,7 +144,9 @@ def common_global_attributes_access(
 def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float32):
 
     attrs = load_access_attrs(satellite=satellite, var="resamp_tbs")
-    attrs["global"]["version"] = version
+    if version is not None:
+        attrs["global"]["version"] = version
+
     attrs = fix_attr_types(attrs, dtype)
     return attrs
 

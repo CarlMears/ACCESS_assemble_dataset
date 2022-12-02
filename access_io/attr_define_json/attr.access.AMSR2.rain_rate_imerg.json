@@ -9,7 +9,7 @@
     },
     "var":{
         "standard_name":  "rainfall_rate",
-        "long_name":  "rainfall rate derived from IMERGE Rain product",
+        "long_name":  "rainfall rate derived from IMERG Rain product",
         "valid_min":  0.0,
         "valid_max":  50.0,
         "units":  "mm/hr",

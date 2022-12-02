@@ -74,7 +74,7 @@ class OkToSkipDay(Exception):
 
 def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
     for name, value in attrs.items():
-        if name != "_FillValue":
+        if (name != "_FillValue") and (value is not None):
             var.setncattr(name, value)
 
 
@@ -384,6 +384,64 @@ def write_daily_tb_netcdf(
         tbs[:, :, :, :, :] = tbs_to_put
 
 
+def edit_attrs_daily_tb_netcdf(
+    *,
+    date: datetime.date,
+    satellite: str,
+    target_size: int,
+    version: str,
+    tb_array_by_hour: ArrayLike,
+    time_array_by_hour: ArrayLike,
+    dataroot: Path = ACCESS_ROOT,
+    freq_list: ArrayLike,
+    file_list: Optional[Sequence[Path]],
+    script_name: str = "unavailable",
+    commit: str = "unavailable",
+) -> None:
+
+    filename = get_access_output_filename_daily_folder(
+        date, satellite, target_size, dataroot, "resamp_tbs"
+    )
+
+    # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
+    with LockedDataset(filename, "r+", 60) as nc_out:
+
+        # set the global_attributes
+        try:
+            data_type = tb_array_by_hour.dtype
+        except AttributeError:
+            data_type = np.float32
+
+        glb_attrs = common_global_attributes_access(
+            date, satellite, target_size, version, data_type
+        )
+        tb_attrs = resamp_tb_attributes_access(satellite, version, data_type)
+
+        glb_attrs.update(tb_attrs["global"])
+        tb_attrs = tb_attrs["var"]
+
+        glb_attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
+        glb_attrs[
+            "cell_method"
+        ] = f"area: resampled to {target_size}km Gaussian footprint"
+        set_all_attrs(nc_out, glb_attrs)
+        set_all_attrs(nc_out["brightness_temperature"], tb_attrs)
+
+        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
+        freq_attrs = coord_attributes_access("frequency", dtype=np.float32)
+        pol_attrs = coord_attributes_access("polarization", dtype=np.int32)
+        time_attrs = coord_attributes_access("time", dtype=np.int64)
+
+        set_all_attrs(nc_out["latitude"], lat_attrs)
+        set_all_attrs(nc_out["longitude"], lon_attrs)
+        set_all_attrs(nc_out["hours"], hours_attrs)
+        set_all_attrs(nc_out["freq"], freq_attrs)
+        set_all_attrs(nc_out["pol"], pol_attrs)
+        set_all_attrs(nc_out["time"], time_attrs)
+
+
 def write_daily_ancillary_var_netcdf(
     *,
     date: datetime.date,
@@ -459,6 +517,35 @@ def write_daily_ancillary_var_netcdf(
         var_filename_final.unlink()
 
     var_filename.rename(var_filename_final)
+
+
+def edit_attrs_daily_ancillary_var_netcdf(
+    *,
+    date: datetime.date,
+    satellite: str,
+    target_size: int,
+    anc_data: ArrayLike,
+    anc_name: str,
+    anc_attrs: dict,
+    global_attrs: dict,
+    dataroot: Path = ACCESS_ROOT,
+) -> None:
+
+    var_filename_final = get_access_output_filename_daily_folder(
+        date, satellite.lower(), target_size, dataroot, anc_name
+    )
+
+    with LockedDataset(var_filename_final, "r+", 60) as nc_out:
+        set_all_attrs(nc_out, global_attrs)
+        set_all_attrs(nc_out.variables[anc_name], anc_attrs)
+
+        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
+
+        set_all_attrs(nc_out.variables["latitude"], lat_attrs)
+        set_all_attrs(nc_out.variables["longitude"], lon_attrs)
+        set_all_attrs(nc_out.variables["hours"], hours_attrs)
 
 
 def write_ocean_emiss_to_daily_ACCESS(

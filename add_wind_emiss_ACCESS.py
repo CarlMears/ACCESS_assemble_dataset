@@ -14,6 +14,8 @@ from access_io.access_attr_define import (
     anc_var_attributes_access,
 )  # old version
 
+from util.file_times import need_to_process
+
 from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
 
 # these are for debugging only
@@ -143,7 +145,10 @@ if __name__ == "__main__":
         "--verbose", help="enable more verbose screen output", action="store_true"
     )
     parser.add_argument(
-        "--overwrite", help="enable more verbose screen output", action="store_true"
+        "--overwrite", help="overwrite output file no matter what", action="store_true"
+    )
+    parser.add_argument(
+        "--update", help="overwrite output file if older than base file", action="store_true"
     )
 
     args = parser.parse_args()
@@ -155,6 +160,7 @@ if __name__ == "__main__":
     satellite = args.sensor
     target_size = int(args.target_size)
     overwrite = args.overwrite
+    update = args.update
 
     script_name = parser.prog
     repo = git.Repo(search_parent_directories=True)
@@ -173,46 +179,52 @@ while date <= END_DAY:
     base_filename = get_access_output_filename_daily_folder(
         date, satellite, target_size, access_root, "resamp_tbs"
     )
-
-    if overwrite:
+    var="ocean_emiss_era5"
+    if need_to_process(date=date, 
+                       satellite=satellite, 
+                       target_size=target_size, 
+                       dataroot=access_root, 
+                       outputroot=output_root,
+                       var=var,
+                       overwrite=overwrite,
+                       update=update):
         with suppress(FileNotFoundError):
             emiss_filename_final.unlink()
+    
+
+        ocean_emiss = calc_emissivity_maps(
+            date=date, wind_source="era5", sst_source="era5", target_size=target_size
+        )
+
+        # common global_attributes for the project
+        glb_attrs = common_global_attributes_access(date, satellite, target_size, version)
+
+        # variable-specific attributes
+        var = "ocean_emiss"
+        var_attrs = anc_var_attributes_access(satellite, var + "_era5", version)
+
+        # add the global part of these to the global_attrs
+        glb_attrs.update(var_attrs["global"])
+        glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
+        glb_attrs["script_name"] = script_name
+        glb_attrs["commit"] = commit
+
+        # keep the variable decription parts in var_attrs
+
+        var_attrs = var_attrs["var"]
+
+        write_ocean_emiss_to_daily_ACCESS(
+            ocean_emiss=ocean_emiss,
+            current_day=date,
+            satellite=satellite,
+            target_size=target_size,
+            glb_attrs=glb_attrs,
+            var_attrs=var_attrs,
+            dataroot=access_root,
+            outputroot=output_root,
+            verbose=True,
+        )
     else:
-        if emiss_filename_final.is_file():
-            print(f"emiss file: {emiss_filename_final} exists -> skipping {date}")
-            continue
-
-    ocean_emiss = calc_emissivity_maps(
-        date=date, wind_source="era5", sst_source="era5", target_size=target_size
-    )
-
-    # common global_attributes for the project
-    glb_attrs = common_global_attributes_access(date, satellite, target_size, version)
-
-    # variable-specific attributes
-    var = "ocean_emiss"
-    var_attrs = anc_var_attributes_access(satellite, var + "_era5", version)
-
-    # add the global part of these to the global_attrs
-    glb_attrs.update(var_attrs["global"])
-    glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
-    glb_attrs["script_name"] = script_name
-    glb_attrs["commit"] = commit
-
-    # keep the variable decription parts in var_attrs
-
-    var_attrs = var_attrs["var"]
-
-    write_ocean_emiss_to_daily_ACCESS(
-        ocean_emiss=ocean_emiss,
-        current_day=date,
-        satellite=satellite,
-        target_size=target_size,
-        glb_attrs=glb_attrs,
-        var_attrs=var_attrs,
-        dataroot=access_root,
-        outputroot=output_root,
-        verbose=True,
-    )
+        print(f'No Processing Needed for {var} on {date}')
 
     date = date + datetime.timedelta(days=1.0)

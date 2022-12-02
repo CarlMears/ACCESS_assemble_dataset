@@ -2,6 +2,7 @@ from contextlib import suppress
 from datetime import date
 from pathlib import Path
 from typing import Collection, List
+from copy import copy
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,9 +14,13 @@ from rss_plotting.global_map import plot_global_map
 # these packages are located in folders in the local path
 from access_io.access_output import (
     write_daily_tb_netcdf,
+    edit_attrs_daily_tb_netcdf,
     get_access_output_filename_daily_folder,
 )
-from resampled_tbs.read_resampled_orbit import read_AMSR2_resampled_tbs
+from resampled_tbs.read_resampled_orbit import (
+    read_AMSR2_resampled_tbs,
+    get_resampled_file_name,
+)
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
 
@@ -42,6 +47,121 @@ AVAILABLE_CHANNELS = [
     "89H",
 ]
 
+def get_mtime_multi_try(path_to_file,max_num_trys=10):
+
+    num_so_far = 0
+    while num_so_far < max_num_try:
+        try:
+            mtime = path_to_file.stat().st_mtime
+            return mtime
+        except:
+            #catch all errors
+            num_so_far += 1
+    
+    raise IOError(f'Problem getting mtime for {path_to_file}')
+    
+
+
+def decide_not_to_process(
+    *,
+    filename: Path,
+    satellite: str,
+    channels: list,
+    target_size: int,
+    orbits_to_do: list[int],
+    overwrite: bool,
+    update: bool,
+):
+
+    '''Logic to determine if a daily Tb file needs to be reprocessed
+       If the daily file does not exist:
+            process
+       If the daily file exists:
+            If overwrite -> process
+            If update:
+                If any of the Tb orbit files (or the time file) are newer than
+                the daily file -> process
+            Else:
+                don't process
+            If neither overwrite or update are True:
+                don't process
+    '''
+
+    if filename.is_file():
+        if overwrite:
+            with suppress(FileNotFoundError):
+                filename.unlink()
+            return False  #force overwrite
+        else:
+            if update:
+                tb_day_file_time = filename.stat().st_mtime
+
+                # check to see if any of the included tb orbit files are newer than
+                # the daily tb file
+
+                need_to_update = False
+                for orbit in orbits_to_do:
+                    channels_to_do = copy(channels)
+                    channels_to_do.append("time")
+                    for channel in channels_to_do:
+                        tb_orbit_file = get_resampled_file_name(
+                            satellite=satellite,
+                            channel=channel,
+                            target_size=target_size,
+                            orbit=orbit,
+                        )
+                        if tb_orbit_file.is_file():
+                            tb_file_time = tb_orbit_file.stat().st_mtime
+                            if tb_file_time > tb_day_file_time:
+                                need_to_update = True
+                        else:
+                            print(f"Warning - Tb file {tb_orbit_file} is missing")
+
+                if need_to_update:
+                    with suppress(FileNotFoundError):
+                        filename.unlink()
+                    return False #At least 1 Tb orbit files are newer than the daily file
+                else:
+                    return True  #Up to date
+            else:
+                return True # don't update because update not set
+    else:
+        return False  #daily file does not exist
+
+
+def redo_attrs_daily_ACCESS_tb_file(
+    *,
+    current_day: date,
+    satellite: str,
+    target_size: int,
+    version: str,
+    dataroot: Path,
+    channels: Collection[int],
+    verbose: bool = False,
+    plot_example_map: bool = True,
+    overwrite: bool = False,
+    script_name: str = "unavailable",
+    commit: str = "unavailable",
+) -> None:
+
+    filename = get_access_output_filename_daily_folder(
+        current_day, satellite, target_size, dataroot, "resamp_tbs"
+    )
+    if filename.is_file():
+        edit_attrs_daily_tb_netcdf(
+            date=current_day,
+            satellite=satellite,
+            target_size=target_size,
+            version=None,
+            tb_array_by_hour=None,
+            time_array_by_hour=None,
+            dataroot=dataroot,
+            freq_list=None,
+            file_list=None,
+            script_name=None,
+            commit=None,
+        )
+
 
 def make_daily_ACCESS_tb_file(
     *,
@@ -54,6 +174,7 @@ def make_daily_ACCESS_tb_file(
     verbose: bool = False,
     plot_example_map: bool = True,
     overwrite: bool = False,
+    update: bool = False,
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> List[Path]:
@@ -76,12 +197,25 @@ def make_daily_ACCESS_tb_file(
     filename = get_access_output_filename_daily_folder(
         current_day, satellite, target_size, dataroot, "resamp_tbs"
     )
-    if filename.is_file() and not overwrite:
-        print(f"daily file for {current_day} exists... skipping")
+
+    orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
+    # TODO: what is the actual exception expected? AssertionError?
+
+    if len(orbits_to_do) == 0:
+        print(f"No orbits found for {current_day}")
         return []
-    else:
-        with suppress(FileNotFoundError):
-            filename.unlink()
+
+    if decide_not_to_process(
+        filename=filename,
+        satellite=satellite,
+        channels=channels,
+        target_size=target_size,
+        orbits_to_do=orbits_to_do,
+        overwrite=overwrite,
+        update=update,
+    ):
+        print(f"No processing needed for {satellite} base file on {current_day}")
+        return []
 
     # initialize arrays for daily data
     at_least_one_orbit = False
@@ -91,12 +225,7 @@ def make_daily_ACCESS_tb_file(
     time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
     file_list = []
-    try:
-        orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
-    # TODO: what is the actual exception expected? AssertionError?
-    except Exception:
-        print(f"No orbits found for {current_day}")
-        return []
+
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
         print(f"{orbit} ", end="")
@@ -217,9 +346,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
+    parser.add_argument(
+        "--update",
+        help="force overwrite if file is older than orbit files",
+        action="store_true",
+    )
     parser.add_argument("--plot_map", help="plot an example map", action="store_true")
     parser.add_argument(
         "--verbose", help="enable more verbose screen output", action="store_true"
+    )
+    parser.add_argument(
+        "--redo_attrs",
+        help="rewrite attributes using the current .json files",
+        action="store_true",
     )
 
     args = parser.parse_args()
@@ -244,20 +383,37 @@ if __name__ == "__main__":
 
     day_to_do = START_DAY
     while day_to_do <= END_DAY:
-        make_daily_ACCESS_tb_file(
-            current_day=day_to_do,
-            satellite=satellite,
-            target_size=target_size,
-            version=version,
-            dataroot=access_root,
-            channels=channels,
-            verbose=args.verbose,
-            plot_example_map=args.plot_map,
-            overwrite=args.overwrite,
-            script_name=script_name,
-            commit=commit,
-        )
-        if args.plot_map:
-            plt.show()
+        if args.redo_attrs:
+            redo_attrs_daily_ACCESS_tb_file(
+                current_day=day_to_do,
+                satellite=satellite,
+                target_size=target_size,
+                version=version,
+                dataroot=access_root,
+                channels=channels,
+                verbose=args.verbose,
+                plot_example_map=args.plot_map,
+                overwrite=args.overwrite,
+                update=args.update,
+                script_name=script_name,
+                commit=commit,
+            )
+        else:
+            make_daily_ACCESS_tb_file(
+                current_day=day_to_do,
+                satellite=satellite,
+                target_size=target_size,
+                version=version,
+                dataroot=access_root,
+                channels=channels,
+                verbose=args.verbose,
+                plot_example_map=args.plot_map,
+                overwrite=args.overwrite,
+                update=args.update,
+                script_name=script_name,
+                commit=commit,
+            )
+            if args.plot_map:
+                plt.show()
 
         day_to_do += datetime.timedelta(days=1)

@@ -2,7 +2,7 @@
 {   "name": "zonal neutral winds from ERA5",
     "type": "np.float32",
     "global": {
-        "summary" : "Eastward windcorresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
+        "summary" : "Eastward wind corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
         "keywords": "EARTH SCIENCE > OCEANS > OCEAN WINDS > SURFACE WINDS, EARTH SCIENCE > ATMOSHERE > ATMOSPHERIC WINDS > SURFACE WINDS",
         "title": "10m neutral zonal winds from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
         "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store",
@@ -16,6 +16,6 @@
         "units": "m/s",
         "_FillValue": -999.0,
         "missing_value": -999.0,
-        "coordinates": "latitude longitude hours"
+        "coordinates": "latitude longitude"
     }
 }
