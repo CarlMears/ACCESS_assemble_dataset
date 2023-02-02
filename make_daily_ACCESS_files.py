@@ -3,22 +3,21 @@ from datetime import date
 from pathlib import Path
 from typing import Collection, List
 
+import git
 import matplotlib.pyplot as plt
 import numpy as np
-import git
 
 # must be installed from rss_plotting package
 from rss_plotting.global_map import plot_global_map
 
 # these packages are located in folders in the local path
 from access_io.access_output import (
-    write_daily_tb_netcdf,
     get_access_output_filename_daily_folder,
+    write_daily_tb_netcdf,
 )
 from resampled_tbs.read_resampled_orbit import read_AMSR2_resampled_tbs
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
-
 
 NUM_LATS = 721
 NUM_LONS = 1440
@@ -60,10 +59,10 @@ def make_daily_ACCESS_tb_file(
     if satellite.lower() == "amsr2":
         orbit_times = read_amsr2_orbit_times()
         from satellite_definitions.amsr2 import (
-            SAT_NAME,
-            REF_FREQ,
             CHANNEL_TO_FREQ_MAP,
             CHANNEL_TO_POL_MAP,
+            REF_FREQ,
+            SAT_NAME,
         )
 
         assert SAT_NAME.lower() == satellite.lower()

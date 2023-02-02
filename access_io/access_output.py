@@ -1,6 +1,6 @@
-from contextlib import suppress
 import datetime
 import os
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Optional, Sequence
 

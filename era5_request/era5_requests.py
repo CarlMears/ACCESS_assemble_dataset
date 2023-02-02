@@ -14,9 +14,9 @@ folder.
 
 import datetime
 import os
+from calendar import monthrange
 from pathlib import Path
 from typing import Sequence
-from calendar import monthrange
 
 import cdsapi
 

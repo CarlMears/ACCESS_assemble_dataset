@@ -1,20 +1,22 @@
 import argparse
-from contextlib import suppress
 import datetime
-import git
+from contextlib import suppress
 from pathlib import Path
+
+import git
 import numpy as np
-from access_io.access_output import get_access_output_filename_daily_folder
-from satellite_definitions.amsr2 import REF_FREQ, REF_EIA
+from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
 from rss_lock.locked_dataset import LockedDataset
 
-from access_io.access_output import write_ocean_emiss_to_daily_ACCESS
-from access_io.access_attr_define import common_global_attributes_access
-from access_io.access_attr_define import (
+from access_io.access_attr_define import (  # old version
     anc_var_attributes_access,
-)  # old version
-
-from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
+    common_global_attributes_access,
+)
+from access_io.access_output import (
+    get_access_output_filename_daily_folder,
+    write_ocean_emiss_to_daily_ACCESS,
+)
+from satellite_definitions.amsr2 import REF_EIA, REF_FREQ
 
 # these are for debugging only
 # from rss_plotting.global_map import plot_global_map

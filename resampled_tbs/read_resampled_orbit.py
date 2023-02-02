@@ -1,6 +1,6 @@
 import os
-from typing import Tuple, Union, Any
 from pathlib import Path
+from typing import Any, Tuple, Union
 
 import xarray as xr
 
