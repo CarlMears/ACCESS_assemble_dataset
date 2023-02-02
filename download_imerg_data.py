@@ -6,7 +6,6 @@ from imerg_request.imerg_requests import imerg_half_hourly_request
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser(

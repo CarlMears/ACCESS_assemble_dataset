@@ -17,7 +17,6 @@ satellite = "amsr2"
 possible_extra_vars = ["rainfall_rate", "skt"]
 date_to_do = start_date
 while date_to_do <= end_date:
-
     old_file = get_access_output_filename_daily_folder(
         date_to_do, satellite, 0, access_root, "resamp_tbs"
     )

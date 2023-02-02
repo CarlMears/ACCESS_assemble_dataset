@@ -78,7 +78,6 @@ def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
 def get_access_output_filename_daily_folder(
     date: datetime.date, satellite: str, target_size: int, dataroot: Path, var: str
 ) -> Path:
-
     if target_size > 0:
         return (
             dataroot
@@ -162,7 +161,6 @@ def write_daily_lf_netcdf(
     script_name: str,
     commit: str,
 ) -> None:
-
     tb_fill = -999.0
     lf_string = f"land_frac_{lf_version}"
     filename = get_access_output_filename_daily_folder(
@@ -203,7 +201,6 @@ def write_daily_lf_netcdf(
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
-
         set_all_attrs(nc_out, global_attrs)
 
         nc_out.createDimension("latitude", NUM_LATS)
@@ -253,7 +250,6 @@ def write_daily_tb_netcdf(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-
     filename = get_access_output_filename_daily_folder(
         date, satellite, target_size, dataroot, "resamp_tbs"
     )
@@ -267,7 +263,6 @@ def write_daily_tb_netcdf(
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "w", 60) as nc_out:
-
         # set the global_attributes
 
         glb_attrs = common_global_attributes_access(
@@ -395,7 +390,6 @@ def write_daily_ancillary_var_netcdf(
     global_attrs: Union[dict[str, Any], Literal["copy"]],
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
     base_filename = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, "resamp_tbs"
     )
@@ -473,7 +467,6 @@ def write_ocean_emiss_to_daily_ACCESS(
     outputroot: Path,
     verbose: bool = False,
 ) -> None:
-
     if verbose:
         print(f"Opening base file for {satellite} on {current_day} in {dataroot}")
 
@@ -489,7 +482,6 @@ def write_ocean_emiss_to_daily_ACCESS(
 
     try:
         with LockedDataset(base_filename, "r") as root_grp:
-
             os.makedirs(emiss_filename_final.parent, exist_ok=True)
 
             with LockedDataset(emiss_filename_final, mode="w") as trg:

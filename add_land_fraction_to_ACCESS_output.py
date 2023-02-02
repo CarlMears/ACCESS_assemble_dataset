@@ -21,7 +21,6 @@ def add_land_fraction_to_ACCESS_output(
     overwrite: bool,
     lf_version: str = "modis",
 ) -> None:
-
     if os.name == "nt":
         land_path = Path("L:/access/land_water")
     elif os.name == "posix":
@@ -53,7 +52,6 @@ def add_land_fraction_to_ACCESS_output(
         raise KeyError(f"Land version {lf_version} not supported")
 
     try:
-
         write_daily_lf_netcdf(
             date=date,
             satellite=satellite,
@@ -72,7 +70,6 @@ def add_land_fraction_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description=(
             "Interpolate and append surface temperature to ACCESS output file. "

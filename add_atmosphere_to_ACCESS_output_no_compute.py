@@ -48,7 +48,6 @@ class DailyRtm:
     """RTM results for the entire day."""
 
     def __init__(self, date_to_load: date, data_root: Path):
-
         filename = (
             f"era5_tbs_{date_to_load.year}-"
             + f"{date_to_load.month:02d}-"
@@ -123,9 +122,7 @@ def write_atmosphere_to_daily_ACCESS(
         current_day, satellite, target_size, dataroot, "resamp_tbs"
     )
     try:
-
         with LockedDataset(base_filename, "r") as root_grp:
-
             if verbose:
                 print(
                     f"Reading ERA5 computed RTM data {satellite} "

@@ -30,7 +30,6 @@ def write_imerg_rain_rate_for_ACCESS(
     script_name: str,
     commit: str,
 ) -> None:
-
     base_filename = get_access_output_filename_daily_folder(
         current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs"
     )
@@ -123,7 +122,6 @@ def write_imerg_rain_rate_for_ACCESS(
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser(

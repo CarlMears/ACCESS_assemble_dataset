@@ -30,7 +30,6 @@ def era5_hourly_single_level_request(
     full_month: bool = False,
     verbose: bool = False,
 ) -> Path:
-
     c = cdsapi.Client()
 
     # target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.nc"

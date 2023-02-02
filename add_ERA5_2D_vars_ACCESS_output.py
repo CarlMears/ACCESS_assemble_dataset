@@ -168,7 +168,6 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-
     cds_help = (
         "For downloading ERA5 data from CDS, the UID and API key "
         "must be set as arguments or in the 'CDS_UID' and 'CDS_API_KEY` "

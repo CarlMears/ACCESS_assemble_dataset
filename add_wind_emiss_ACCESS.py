@@ -26,7 +26,6 @@ class OkToSkipDay(Exception):
 
 
 def calc_emissivity_maps(*, date, wind_source, sst_source, target_size):
-
     print(f"{date}")
 
     # Get wind info from data repository
@@ -165,7 +164,6 @@ if __name__ == "__main__":
     satellite = args.sensor.upper()
     date = START_DAY
 while date <= END_DAY:
-
     emiss_filename_final = get_access_output_filename_daily_folder(
         date, satellite, target_size, output_root, "ocean_emiss_era5"
     )

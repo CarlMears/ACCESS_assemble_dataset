@@ -71,7 +71,6 @@ float32_attributes = [
 def load_attrs(
     *, project: Optional[str] = None, satellite: Optional[str] = None, var: str
 ) -> dict[str, Any]:
-
     if len(var) == 0:
         raise ValueError("var must be specified")
 
@@ -90,7 +89,6 @@ def load_attrs(
 
 
 def load_access_attrs(*, satellite: Optional[str] = None, var: str) -> dict:
-
     project = "access"
 
     return load_attrs(project=project, satellite=satellite, var=var)
@@ -116,7 +114,6 @@ def common_global_attributes_access(
     version: str = "v00r00",
     dtype=np.float32,
 ) -> dict:
-
     attrs = load_access_attrs(var="common")
 
     day_boundary = datetime.datetime.combine(date, datetime.time())
@@ -135,7 +132,6 @@ def common_global_attributes_access(
 
 
 def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float32):
-
     attrs = load_access_attrs(satellite=satellite, var="resamp_tbs")
     attrs["global"]["version"] = version
     attrs = fix_attr_types(attrs, dtype)
@@ -145,7 +141,6 @@ def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float
 def atm_pars_era5_attributes_access(
     satellite: str, target_size: int, version="v00r00", dtype=np.float32
 ):
-
     attrs = load_access_attrs(satellite=satellite, var="atm_pars_era5")
     attrs["global"]["version"] = version
     attrs["global"]["date_accessed"] = f"{datetime.datetime.now()}"
@@ -156,7 +151,6 @@ def atm_pars_era5_attributes_access(
 def anc_var_attributes_access(
     satellite: str, var: str, version="v00r00", dtype=np.float32
 ):
-
     attrs = load_access_attrs(satellite=satellite, var=var)
 
     if "global" in attrs.keys():
@@ -172,7 +166,6 @@ def anc_var_attributes_access(
 def coord_attributes_access(
     coord: str, date: datetime.date = None, dtype=np.float32
 ) -> dict[str, Any]:
-
     attrs = load_access_attrs(var=coord)
 
     if coord == "hours" and date is not None:

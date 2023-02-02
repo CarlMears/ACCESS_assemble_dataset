@@ -57,7 +57,6 @@ def make_daily_ACCESS_tb_file(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> List[Path]:
-
     if satellite.lower() == "amsr2":
         orbit_times = read_amsr2_orbit_times()
         from satellite_definitions.amsr2 import (
@@ -186,7 +185,6 @@ def make_daily_ACCESS_tb_file(
 
 
 if __name__ == "__main__":
-
     import argparse
     import datetime
 
