@@ -2,8 +2,9 @@ import datetime
 import json
 import os
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any, Optional, cast
 
+import numpy as np
 
 """
 The routines in this file define the attributes for the ACCESS project output file

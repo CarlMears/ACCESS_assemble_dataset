@@ -4,8 +4,9 @@ ERA5 data is downloaded if missing.
 """
 
 import argparse
+import datetime
+import os
 from contextlib import suppress
-import git
 from datetime import date
 from pathlib import Path
 
@@ -13,13 +14,6 @@ import git
 import numpy as np
 from netCDF4 import Dataset
 from rss_lock.locked_dataset import LockedDataset
-import os
-import datetime
-
-from access_io.access_output import get_access_output_filename_daily_folder
-from access_io.access_output import set_all_attrs
-from access_io.access_attr_define import common_global_attributes_access
-from access_io.access_attr_define import atm_pars_era5_attributes_access
 
 from access_io.access_attr_define import (
     atm_pars_era5_attributes_access,
@@ -27,7 +21,7 @@ from access_io.access_attr_define import (
 )
 from access_io.access_output import (
     get_access_output_filename_daily_folder,
-    set_or_create_attr,
+    set_all_attrs,
 )
 from satellite_definitions.amsr2 import REF_FREQ_mapping
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
