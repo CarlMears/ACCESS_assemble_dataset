@@ -2,7 +2,7 @@ from contextlib import suppress
 import datetime
 import os
 from pathlib import Path
-from typing import Any, Literal, Optional, Sequence, Union
+from typing import Any, Optional, Sequence
 
 import numpy as np
 from netCDF4 import Variable
@@ -195,8 +195,8 @@ def write_daily_lf_netcdf(
     global_attrs["script_name"] = script_name
     global_attrs["commit"] = commit
 
-    lat_attrs = coord_attributes_access("latitude", np.float32)
-    lon_attrs = coord_attributes_access("longitude", np.float32)
+    lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+    lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     os.makedirs(filename.parent, exist_ok=True)
@@ -387,7 +387,7 @@ def write_daily_ancillary_var_netcdf(
     anc_data: NDArray[Any],
     anc_name: str,
     anc_attrs: dict[str, Any],
-    global_attrs: Union[dict[str, Any], Literal["copy"]],
+    global_attrs: dict[str, Any],
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
     base_filename = get_access_output_filename_daily_folder(

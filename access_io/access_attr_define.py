@@ -109,7 +109,7 @@ def fix_attr_types(attrs: dict, var_dtype):
 
 
 def common_global_attributes_access(
-    date: datetime.datetime,
+    date: datetime.date,
     satellite: str,
     target_size: int,
     version: str = "v00r00",
@@ -165,7 +165,7 @@ def anc_var_attributes_access(
 
 
 def coord_attributes_access(
-    coord: str, date: datetime.date = None, dtype=np.float32
+    coord: str, date: Optional[datetime.date] = None, dtype=np.float32
 ) -> dict[str, Any]:
     attrs = load_access_attrs(var=coord)
 
