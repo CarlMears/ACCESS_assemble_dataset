@@ -33,6 +33,8 @@ def get_resampled_file_name(satellite: str,
                             channel: Union[str, int],
                             target_size: int,
                             orbit: int,
+                            grid_type: str = 'equirectangular',
+                            pole: str = 'north',
                             dataroot: Path = ACCESS_ROOT):
 
     orbit_lower, orbit_upper = get_AMSR2_orbit_range(orbit)
@@ -49,14 +51,30 @@ def get_resampled_file_name(satellite: str,
         channel_str = channel
     else:
         raise ValueError('Channel type not valid')
-     
-    if channel_str == "time":
-        filename = orbit_dir / f"r{orbit:05d}.time.nc"
+
+
+    if grid_type == 'equirectangular':
+        if channel_str == "time":
+            filename = orbit_dir / f"r{orbit:05d}.time.nc"
+        else:
+            filename = (
+                orbit_dir / f"r{orbit:05d}.grid_tb.{channel_str}.{target_size:03d}km.nc"
+            )
+        return filename
+    elif grid_type == 'ease2':
+        if pole in ['north','south']:
+            if channel_str == "time":
+                filename = orbit_dir / f"r{orbit:05d}.polar_grid_time.{pole}.nc"
+            else:
+                filename = (
+                    orbit_dir / f"r{orbit:05d}.polar_grid_tb.{pole}."
+                                f"{channel_str}.{target_size:03d}km.nc"
+                )
+        else:
+            raise ValueError(f'Pole {pole} must be north or south')
+        return filename
     else:
-        filename = (
-            orbit_dir / f"r{orbit:05d}.grid_tb.{channel_str}.{target_size:03d}km.nc"
-        )
-    return filename
+        raise ValueError(f'Grid type {grid_type} not valid')
 
 def get_AMSR2_orbit_range(orbit: int) -> Tuple[int, int]:
     """Return the lower/upper bounds to an orbit.
@@ -81,6 +99,8 @@ def read_AMSR2_resampled_tbs(
     channel: Union[str, int],
     target_size: int,
     orbit: int,
+    grid_type: str = 'equirectangular',
+    pole: str = 'north',
     dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
 ) -> Tuple[Any, Path]:
@@ -89,20 +109,22 @@ def read_AMSR2_resampled_tbs(
 
     if satellite.lower() not in IMPLEMENTED_SATELLITES:
         raise ValueError(f"Satellite {satellite} is not implemented")
-    if isinstance(channel, int):
-        if (channel < 1) or (channel > 14):
-            raise ValueError(f"channel {channel} is out of range")
-        channel_str = AVAILABLE_CHANNELS[channel]
-    else:
-        if channel in AVAILABLE_CHANNELS:
-            channel_str = channel
-        else:
-            raise ValueError(f"Channel {channel} not valid")
+    # if isinstance(channel, int):
+    #     if (channel < 1) or (channel > 14):
+    #         raise ValueError(f"channel {channel} is out of range")
+    #     channel_str = AVAILABLE_CHANNELS[channel]
+    # else:
+    #     if channel in AVAILABLE_CHANNELS:
+    #         channel_str = channel
+    #     else:
+    #         raise ValueError(f"Channel {channel} not valid")
 
     filename = get_resampled_file_name(satellite=satellite,
                             channel=channel,
                             target_size=target_size,
                             orbit=orbit,
+                            grid_type=grid_type,
+                            pole=pole,
                             dataroot=dataroot)
     if verbose:
         print(filename)

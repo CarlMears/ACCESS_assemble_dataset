@@ -19,8 +19,9 @@ from access_io.access_attr_define import (
 )
 
 from resampling_utils.polar_grids import NSIDC_ease2_grids
+from access_io.access_output import get_access_output_filename_daily_folder
 ease2_grid_25km_north = NSIDC_ease2_grids(pole='north',resolution='25km')
-ease2_grid_25km_south = NSIDC_ease2_grids(pole='south',resolution='25km')
+ease2_grid_25km_south = NSIDC_ease2_grids(pole='north',resolution='25km')
 
 
 
@@ -68,8 +69,6 @@ AVAILABLE_CHANNELS = {
 }
 
 NUM_CHANNELS = 14  # all possible AMSR2 channels
-NUM_LATS = 721
-NUM_LONS = 1440
 NUM_HOURS = 24
 NUM_X_POLE = 720
 NUM_Y_POLE = 720
@@ -79,117 +78,23 @@ class OkToSkipDay(Exception):
     pass
 
 
-def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
+def set_all_attrs_polar(var: Variable, attrs: dict[str, Any]) -> None:
     for name, value in attrs.items():
-        if (name != "_FillValue") and (value is not None):
+        if (name != "_FillValue") and (name != 'global') and (value is not None):
             var.setncattr(name, value)
 
 
-def get_access_output_filename_daily_folder(
-    date: datetime.date, 
-    satellite: str, 
-    target_size: int, 
-    dataroot: Path, 
-    var: str,
-    grid_type: str = 'equirectangular',
-    pole: str = ''
-) -> Path:
-
-    if grid_type == 'equirectangular':
-        if target_size > 0:
-            return (
-                dataroot
-                / f"Y{date:%Y}"
-                / f"M{date:%m}"
-                / f"D{date:%d}"
-                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
-            )
-        else:
-            return (
-                dataroot
-                / f"Y{date:%Y}"
-                / f"M{date:%m}"
-                / f"D{date:%d}"
-                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
-            )
-    elif grid_type == 'ease2':
-        if target_size > 0:
-            pole = str.lower(pole)
-            if pole in ['north','south']:
-                return (
-                    dataroot
-                    / f"Y{date:%Y}"
-                    / f"M{date:%m}"
-                    / f"D{date:%d}"
-                    / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.{pole}.nc"
-                )
-            else:
-                raise ValueError(f'Pole={pole} must be north or south')
-        else:
-            raise ValueError('Must specify target size')
-    else:
-        raise ValueError(f'Grid type {grid_type} not valid')
-            
 
 
-"""
-def replace_var_in_daily_tb_netcdf(
-    *,
-    date: datetime.date,
-    satellite: str,
-    var: ArrayLike,
-    var_name: str,
-    standard_name: Optional[str] = None,
-    long_name: Optional[str] = None,
-    valid_min: Optional[float] = None,
-    valid_max: Optional[float] = None,
-    units: Optional[str] = None,
-    source: Optional[str] = None,
-    cell_method: Optional[str] = None,
-    dataroot: Path = ACCESS_ROOT,
-) -> None:
-
-    raise ValueError("Not yet updated")
-
-    filename = get_access_output_filename_daily_folder(date, satellite, dataroot)
-    with LockedDataset(filename, "a", 60) as root_grp:
-        # read in existing variable
-        try:
-            v = root_grp.variables[var_name]
-        except KeyError:
-            raise KeyError(f"Variable: {var_name} in not dataset, can not replace")
-
-        # replace any attributes that are passed
-        if standard_name is not None:
-            v.standard_name = standard_name
-        else:
-            v.standard_name = var_name
-
-        if long_name is not None:
-            v.long_name = long_name
-
-        if valid_min is not None:
-            v.valid_min = valid_min
-        if valid_max is not None:
-            v.valid_max = valid_max
-        if units is not None:
-            v.units = units
-        if source is not None:
-            v.source = source
-        if cell_method is not None:
-            v.cell_method = cell_method
-        v.coordinates = "latitude longitude hours"
-
-        v[:, :, :] = var
-"""
 
 
-def write_daily_lf_netcdf(
+def write_daily_lf_netcdf_polar(
     *,
     date: datetime.date,
     satellite: str,
     target_size: int,
     pole: str = None,
+    grid_type: str = None,
     version: str,
     lf_version: str,
     land_fraction: ArrayLike,
@@ -199,30 +104,28 @@ def write_daily_lf_netcdf(
     commit: str,
 ) -> None:
 
-    tb_fill = -999.0
-    lf_string = f"land_frac_{lf_version}"
-    filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, dataroot, lf_string
-    )
-
-    if pole is None:
-        filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, lf_string
-        )
-        lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
-        lons = np.arange(0, NUM_LONS) * 0.25
-    elif pole in ['north','south']:
+    if pole in ['north','south']:
             filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, lf_string,
-            grid_type='ease2',pole=pole)
+            date, satellite, target_size, dataroot, "resamp_tbs",grid_type='ease2',pole=pole)
             if pole == 'north':
                 lats = ease2_grid_25km_north.latitude
                 lons = ease2_grid_25km_north.longitude
-            else: #must be south
+                crs_attrs = ease2_grid_25km_north.crs
+            elif pole == 'south':
                 lats = ease2_grid_25km_south.latitude
                 lons = ease2_grid_25km_south.longitude
+                crs_attrs = ease2_grid_25km_south.crs
+            else:
+                raise ValueError(f'Pole {pole} is not valid')
+            
     else:
         raise ValueError(f'pole = {pole} is not valid')
+
+    lf_fill = -999.0
+    lf_string = f"land_frac_{lf_version}"
+    filename = get_access_output_filename_daily_folder(
+        date, satellite, target_size, dataroot, lf_string, grid_type, pole
+    )
 
     if filename.is_file() and not overwrite:
         print(f"daily file for {date} exists... skipping")
@@ -233,6 +136,7 @@ def write_daily_lf_netcdf(
 
     os.makedirs(filename.parent, exist_ok=True)
 
+    
     lf_attrs = anc_var_attributes_access(
         satellite, "land_fraction_" + lf_version, version=version
     )
@@ -249,48 +153,85 @@ def write_daily_lf_netcdf(
     global_attrs["script_name"] = script_name
     global_attrs["commit"] = commit
 
-    lat_attrs = coord_attributes_access("latitude", np.float32)
-    lon_attrs = coord_attributes_access("longitude", np.float32)
-
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
 
-        set_all_attrs(nc_out, global_attrs)
+        set_all_attrs_polar(nc_out, global_attrs)
 
-        nc_out.createDimension("latitude", NUM_LATS)
-        nc_out.createDimension("longitude", NUM_LONS)
+        nc_out.createDimension("x", NUM_X_POLE)
+        nc_out.createDimension("y", NUM_Y_POLE)
 
-        latitude = nc_out.createVariable(
-            "latitude", "f4", ("latitude",), fill_value=-999.0
+        x = nc_out.createVariable(
+            "x", "f4", ("x",), fill_value=-999.0
         )
+        y = nc_out.createVariable(
+            "y", "f4", ("y",), fill_value=-999.0
+        )
+
+        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+        latitude = nc_out.createVariable(
+            "latitude",
+            "f4",
+            (
+                "x",
+                "y",
+            ),
+            zlib=True,
+            fill_value=lat_attrs["_FillValue"],
+            least_significant_digit=2,
+        )
+
+        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        lon_attrs['valid_min'] = -180.0
+        lon_attrs['valid_max'] = 180.0
         longitude = nc_out.createVariable(
-            "longitude", "f4", ("longitude",), fill_value=-999.0
+            "longitude",
+            "f4",
+            (
+                "x",
+                "y",
+            ),
+            zlib=True,
+            fill_value=lon_attrs["_FillValue"],
+            least_significant_digit=2,
         )
 
         lf = nc_out.createVariable(
             "land_fraction",
             "f4",
-            ("latitude", "longitude"),
+            ("x", "y"),
             zlib=True,
             fill_value=var_attrs["_FillValue"],
             least_significant_digit=3,
         )
 
-        set_all_attrs(latitude, lat_attrs)
-        set_all_attrs(longitude, lon_attrs)
-        set_all_attrs(lf, var_attrs)
+        x_attrs = coord_attributes_access("x", dtype=np.float64)
+        y_attrs = coord_attributes_access("y", dtype=np.float64)
+        
+        set_all_attrs_polar(x, x_attrs)
+        set_all_attrs_polar(y, y_attrs)
+        set_all_attrs_polar(latitude, lat_attrs)
+        set_all_attrs_polar(longitude, lon_attrs)
 
-        latitude[:] = lats
-        longitude[:] = lons
 
-        lf_to_put = np.nan_to_num(
-            land_fraction, nan=tb_fill, posinf=tb_fill, neginf=tb_fill
-        ).astype(np.float32)
+        # write the coordinate data
+        x_values = -8987500.0 + 25000.0*np.arange(0,720).astype(np.float64)
+        y_values = -8987500.0 + 25000.0*np.arange(0,720).astype(np.float64)
+        y_values = np.flip(y_values)
+        x[:] = x_values
+        y[:] = y_values
+        latitude[:,:] = np.transpose(lats)
+        longitude[:,:] = np.transpose(lons)
+        
+        lf_to_put = np.transpose(np.nan_to_num(
+            land_fraction, nan=lf_fill, posinf=lf_fill, neginf=lf_fill
+        ).astype(np.float32))
 
         lf[:, :] = lf_to_put
 
-def write_daily_tb_netcdf(
+
+def write_daily_tb_netcdf_polar(
     *,
     date: datetime.date,
     satellite: str,
@@ -306,21 +247,13 @@ def write_daily_tb_netcdf(
     commit: str = "unavailable",
 ) -> None:
 
-    if pole is None:
-        filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, "resamp_tbs"
-        )
-        lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
-        lons = np.arange(0, NUM_LONS) * 0.25
-    elif pole in ['north','south']:
+    if pole in ['north','south']:
             filename = get_access_output_filename_daily_folder(
             date, satellite, target_size, dataroot, "resamp_tbs",grid_type='ease2',pole=pole)
-            if pole == 'north':
-                lats = ease2_grid_25km_north.latitude
-                lons = ease2_grid_25km_north.longitude
-            else: #must be south
-                lats = ease2_grid_25km_south.latitude
-                lons = ease2_grid_25km_south.longitude
+            lats = ease2_grid_25km_north.latitude
+            lons = ease2_grid_25km_north.longitude
+            crs_attrs = ease2_grid_25km_north.crs
+            
     else:
         raise ValueError(f'pole = {pole} is not valid')
 
@@ -358,31 +291,64 @@ def write_daily_tb_netcdf(
 
         glb_attrs["script_name"] = script_name
         glb_attrs["commit"] = commit
-        set_all_attrs(nc_out, glb_attrs)
+        set_all_attrs_polar(nc_out, glb_attrs)
+
+        lat_attrs = coord_attributes_access("latitude", np.float32)
+        lon_attrs = coord_attributes_access("longitude", np.float32)
+
 
         # create Dimensions
-        nc_out.createDimension("latitude", NUM_LATS)
-        nc_out.createDimension("longitude", NUM_LONS)
+        nc_out.createDimension("x", NUM_X_POLE)
+        nc_out.createDimension("y", NUM_Y_POLE)
         nc_out.createDimension("hours", NUM_HOURS)
         nc_out.createDimension("freq", num_freq)
         nc_out.createDimension("pol", num_pol)
 
-        latitude = nc_out.createVariable(
-            "latitude", "f4", ("latitude",), fill_value=-999.0
+        x = nc_out.createVariable(
+            "x", "f4", ("x",), fill_value=-999.0
         )
-        longitude = nc_out.createVariable(
-            "longitude", "f4", ("longitude",), fill_value=-999.0
+        y = nc_out.createVariable(
+            "y", "f4", ("y",), fill_value=-999.0
         )
         hours = nc_out.createVariable("hours", "i4", ("hours",))
         freq = nc_out.createVariable("freq", "f4", ("freq",))
         pol = nc_out.createVariable("pol", "i4", ("pol",))
 
+        
+        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+        latitude = nc_out.createVariable(
+            "latitude",
+            "f4",
+            (
+                "x",
+                "y",
+            ),
+            zlib=True,
+            fill_value=lat_attrs["_FillValue"],
+            least_significant_digit=2,
+        )
+
+        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        lon_attrs['valid_min'] = -180.0
+        lon_attrs['valid_max'] = 180.0
+        longitude = nc_out.createVariable(
+            "longitude",
+            "f4",
+            (
+                "x",
+                "y",
+            ),
+            zlib=True,
+            fill_value=lon_attrs["_FillValue"],
+            least_significant_digit=2,
+        )
+
         time = nc_out.createVariable(
             "time",
             "i8",
             (
-                "latitude",
-                "longitude",
+                "x",
+                "y",
                 "hours",
             ),
             zlib=True,
@@ -392,8 +358,8 @@ def write_daily_tb_netcdf(
             "brightness_temperature",
             "f4",
             (
-                "latitude",
-                "longitude",
+                "x",
+                "y",
                 "hours",
                 "freq",
                 "pol",
@@ -402,28 +368,43 @@ def write_daily_tb_netcdf(
             fill_value=tb_attrs["_FillValue"],
             least_significant_digit=2,
         )
+        crs = nc_out.createVariable(
+            "crs",
+            "i4",
+            (),
+        )
+
 
         # set coordinate attributes from .json files
 
-        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
-        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        x_attrs = coord_attributes_access("x", dtype=np.float64)
+        y_attrs = coord_attributes_access("y", dtype=np.float64)
         hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
         freq_attrs = coord_attributes_access("frequency", dtype=np.float32)
         pol_attrs = coord_attributes_access("polarization", dtype=np.int32)
         time_attrs = coord_attributes_access("time", dtype=np.int64)
+        
 
-        set_all_attrs(latitude, lat_attrs)
-        set_all_attrs(longitude, lon_attrs)
-        set_all_attrs(hours, hours_attrs)
-        set_all_attrs(freq, freq_attrs)
-        set_all_attrs(pol, pol_attrs)
-        set_all_attrs(time, time_attrs)
+        set_all_attrs_polar(x, x_attrs)
+        set_all_attrs_polar(y, y_attrs)
+        set_all_attrs_polar(latitude, lat_attrs)
+        set_all_attrs_polar(longitude, lon_attrs)
+        set_all_attrs_polar(hours, hours_attrs)
+        set_all_attrs_polar(freq, freq_attrs)
+        set_all_attrs_polar(pol, pol_attrs)
+        set_all_attrs_polar(time, time_attrs)
+        set_all_attrs_polar(crs,crs_attrs)
 
-        set_all_attrs(tbs, tb_attrs)
+        set_all_attrs_polar(tbs, tb_attrs)
 
         # write the coordinate data
-        latitude[:] = lats
-        longitude[:] = lons
+        x_values = -8987500.0 + 25000.0*np.arange(0,720).astype(np.float64)
+        y_values = -8987500.0 + 25000.0*np.arange(0,720).astype(np.float64)
+        y_values = np.flip(y_values)
+        x[:] = x_values
+        y[:] = y_values
+        latitude[:,:] = np.transpose(lats)
+        longitude[:,:] = np.transpose(lons)
         hours[:] = np.arange(NUM_HOURS)
         freq[:] = freq_list
         pol[:] = np.array([0, 1], dtype=np.int32)
@@ -436,74 +417,20 @@ def write_daily_tb_netcdf(
             time_to_put, nan=-999998.99, posinf=-999998.99, neginf=-999998.99
         )
         time_to_put = np.floor(time_to_put).astype(np.int64)
+        time_to_put = time_to_put.swapaxes(0,1)
         time[:, :, :] = time_to_put
 
         fill_val = np.float32(tb_attrs["_FillValue"])
         tbs_to_put = np.nan_to_num(
             tb_array_by_hour, nan=fill_val, posinf=fill_val, neginf=fill_val
         ).astype(np.float32)
+        tbs_to_put = tbs_to_put.swapaxes(0,1)
         tbs[:, :, :, :, :] = tbs_to_put
 
-
-def edit_attrs_daily_tb_netcdf(
-    *,
-    date: datetime.date,
-    satellite: str,
-    target_size: int,
-    version: str,
-    tb_array_by_hour: ArrayLike,
-    time_array_by_hour: ArrayLike,
-    dataroot: Path = ACCESS_ROOT,
-    freq_list: ArrayLike,
-    file_list: Optional[Sequence[Path]],
-    script_name: str = "unavailable",
-    commit: str = "unavailable",
-) -> None:
-
-    filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, dataroot, "resamp_tbs"
-    )
-
-    # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
-    with LockedDataset(filename, "r+", 60) as nc_out:
-
-        # set the global_attributes
-        try:
-            data_type = tb_array_by_hour.dtype
-        except AttributeError:
-            data_type = np.float32
-
-        glb_attrs = common_global_attributes_access(
-            date, satellite, target_size, version, data_type
-        )
-        tb_attrs = resamp_tb_attributes_access(satellite, version, data_type)
-
-        glb_attrs.update(tb_attrs["global"])
-        tb_attrs = tb_attrs["var"]
-
-        glb_attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
-        glb_attrs[
-            "cell_method"
-        ] = f"area: resampled to {target_size}km Gaussian footprint"
-        set_all_attrs(nc_out, glb_attrs)
-        set_all_attrs(nc_out["brightness_temperature"], tb_attrs)
-
-        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
-        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
-        hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
-        freq_attrs = coord_attributes_access("frequency", dtype=np.float32)
-        pol_attrs = coord_attributes_access("polarization", dtype=np.int32)
-        time_attrs = coord_attributes_access("time", dtype=np.int64)
-
-        set_all_attrs(nc_out["latitude"], lat_attrs)
-        set_all_attrs(nc_out["longitude"], lon_attrs)
-        set_all_attrs(nc_out["hours"], hours_attrs)
-        set_all_attrs(nc_out["freq"], freq_attrs)
-        set_all_attrs(nc_out["pol"], pol_attrs)
-        set_all_attrs(nc_out["time"], time_attrs)
+        crs[:] = 1
 
 
-def write_daily_ancillary_var_netcdf(
+def write_daily_ancillary_var_netcdf_polar(
     *,
     date: datetime.date,
     satellite: str,
@@ -536,7 +463,7 @@ def write_daily_ancillary_var_netcdf(
                         name, len(dim) if not dim.isunlimited() else None
                     )
 
-            set_all_attrs(nc_out, global_attrs)
+            set_all_attrs_polar(nc_out, global_attrs)
 
             for var_name in ["hours", "longitude", "latitude"]:
                 # Create the time and dimension variables in the output file
@@ -597,16 +524,16 @@ def edit_attrs_daily_ancillary_var_netcdf(
     )
 
     with LockedDataset(var_filename_final, "r+", 60) as nc_out:
-        set_all_attrs(nc_out, global_attrs)
-        set_all_attrs(nc_out.variables[anc_name], anc_attrs)
+        set_all_attrs_polar(nc_out, global_attrs)
+        set_all_attrs_polar(nc_out.variables[anc_name], anc_attrs)
 
         lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
         lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
         hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
 
-        set_all_attrs(nc_out.variables["latitude"], lat_attrs)
-        set_all_attrs(nc_out.variables["longitude"], lon_attrs)
-        set_all_attrs(nc_out.variables["hours"], hours_attrs)
+        set_all_attrs_polar(nc_out.variables["latitude"], lat_attrs)
+        set_all_attrs_polar(nc_out.variables["longitude"], lon_attrs)
+        set_all_attrs_polar(nc_out.variables["hours"], hours_attrs)
 
 
 def write_ocean_emiss_to_daily_ACCESS(
@@ -649,7 +576,7 @@ def write_ocean_emiss_to_daily_ACCESS(
                 trg.createDimension("freq", len(REF_FREQ))
                 trg.createDimension("pol", 2)
 
-                set_all_attrs(trg, glb_attrs)
+                set_all_attrs_polar(trg, glb_attrs)
 
                 for var_name in ["hours", "longitude", "latitude", "freq", "pol"]:
                     # Create the time and dimension variables in the output file
@@ -679,7 +606,7 @@ def write_ocean_emiss_to_daily_ACCESS(
                         zlib=True,
                         least_significant_digit=least_significant_digit,
                     )
-                    set_all_attrs(trg, var_attrs)
+                    set_all_attrs_polar(trg, var_attrs)
                     trg[varname][:, :, :, :, :] = ocean_emiss
 
                     print(f"finished writing {varname}")

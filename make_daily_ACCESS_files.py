@@ -17,16 +17,20 @@ from access_io.access_output import (
     edit_attrs_daily_tb_netcdf,
     get_access_output_filename_daily_folder,
 )
+from access_io.access_output_polar import write_daily_tb_netcdf_polar
 from resampled_tbs.read_resampled_orbit import (
     read_AMSR2_resampled_tbs,
     get_resampled_file_name,
 )
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
+from util.file_times import need_to_process_base_file
 
 
 NUM_LATS = 721
 NUM_LONS = 1440
+NUM_X = 720
+NUM_Y = 720
 NUM_HOURS = 24
 NUM_CHANNELS = 14  # all possible AMSR2 channels
 AVAILABLE_CHANNELS = [
@@ -170,6 +174,7 @@ def make_daily_ACCESS_tb_file(
     current_day: date,
     satellite: str,
     target_size: int,
+    region: str = "global",
     version: str,
     dataroot: Path,
     channels: Collection[int],
@@ -196,9 +201,26 @@ def make_daily_ACCESS_tb_file(
     else:
         raise ValueError(f"No satellite definition file for {satellite}")
 
-    filename = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, dataroot, "resamp_tbs"
-    )
+    if region == "global":
+        filename = get_access_output_filename_daily_folder(
+            current_day, satellite, target_size, dataroot, "resamp_tbs"
+        )
+        grid_type = "equirectangular"
+        pole = None
+    elif region in ["north", "south"]:
+        filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            dataroot,
+            "resamp_tbs",
+            grid_type="ease2",
+            pole="north",
+        )
+        grid_type = "ease2"
+        pole = region
+    else:
+        raise ValueError(f"region {region} not valid")
 
     orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
     # TODO: what is the actual exception expected? AssertionError?
@@ -207,26 +229,55 @@ def make_daily_ACCESS_tb_file(
         print(f"No orbits found for {current_day}")
         return []
 
-    if decide_not_to_process(
-        filename=filename,
+    # if decide_not_to_process(
+    #     filename=filename,
+    #     satellite=satellite,
+    #     channels=channels,
+    #     target_size=target_size,
+    #     orbits_to_do=orbits_to_do,
+    #     overwrite=overwrite,
+    #     update=update,
+    # ):
+    #     print(f"No processing needed for {satellite} base file on {current_day}")
+    #     return []
+
+    need_to_process = need_to_process_base_file(
+        date=current_day,
         satellite=satellite,
-        channels=channels,
         target_size=target_size,
+        grid_type=grid_type,
+        pole=pole,
         orbits_to_do=orbits_to_do,
+        channels_to_do=channels,
+        dataroot=dataroot,
+        outputroot=dataroot,
+        var="resamp_tbs",
         overwrite=overwrite,
         update=update,
-    ):
+    )
+
+    if need_to_process is False:
         print(f"No processing needed for {satellite} base file on {current_day}")
         return []
 
     # initialize arrays for daily data
     at_least_one_orbit = False
-    tb_array_by_hour = np.full(
-        (NUM_LATS, NUM_LONS, NUM_HOURS, NUM_FREQS, NUM_POLS), np.nan, dtype=np.float32
-    )
-    time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
-
     file_list = []
+    if region == "global":
+        tb_array_by_hour = np.full(
+            (NUM_LATS, NUM_LONS, NUM_HOURS, NUM_FREQS, NUM_POLS),
+            np.nan,
+            dtype=np.float32,
+        )
+        time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
+
+    elif region in ["north", "south"]:
+        tb_array_by_hour = np.full(
+            (NUM_X, NUM_Y, NUM_HOURS, NUM_FREQS, NUM_POLS), np.nan, dtype=np.float32
+        )
+        time_array_by_hour = np.full((NUM_X, NUM_Y, NUM_HOURS), np.nan)
+    else:
+        raise ValueError(f"Region {region} is not valid")
 
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
@@ -239,10 +290,12 @@ def make_daily_ACCESS_tb_file(
                 channel="time",
                 target_size=target_size,
                 orbit=orbit,
+                grid_type=grid_type,
+                pole=pole,
                 verbose=False,
             )
         except FileNotFoundError:
-            print(f"No time file found for orbit: {orbit}")
+            print(f"Time file corrupt or missing for orbit: {orbit}, - skipping orbit")
             continue
 
         file_list.append(filename)
@@ -267,10 +320,16 @@ def make_daily_ACCESS_tb_file(
                     channel=channel,
                     target_size=target_size,
                     orbit=orbit,
+                    grid_type=grid_type,
+                    pole=pole,
                 )
-            except FileNotFoundError:
-                print(f"No file found for orbit: {orbit}, channel: {channel}")
+            # There are a lot of possible errors for corrupted files
+            except:
+                print(
+                    f"File corrupt or missing for orbit: {orbit}, channel: {channel} - skipping channel"
+                )
                 continue
+
             file_list.append(filename)
             at_least_one_orbit = True
             # loop through the hours, saving the tbs and times in hour-long slices
@@ -300,19 +359,37 @@ def make_daily_ACCESS_tb_file(
         if plot_example_map:
             plot_global_map(tb_array_by_hour[:, :, 0, 5], vmin=0.0, vmax=330)
 
-        write_daily_tb_netcdf(
-            date=current_day,
-            satellite=satellite,
-            target_size=target_size,
-            version=version,
-            tb_array_by_hour=tb_array_by_hour,
-            time_array_by_hour=time_array_by_hour,
-            freq_list=REF_FREQ,
-            file_list=file_list,
-            dataroot=dataroot,
-            script_name=script_name,
-            commit=commit,
-        )
+        if region == "global":
+            write_daily_tb_netcdf(
+                date=current_day,
+                satellite=satellite,
+                target_size=target_size,
+                version=version,
+                tb_array_by_hour=tb_array_by_hour,
+                time_array_by_hour=time_array_by_hour,
+                freq_list=REF_FREQ,
+                file_list=file_list,
+                dataroot=dataroot,
+                script_name=script_name,
+                commit=commit,
+            )
+        elif region in ["north", "south"]:
+            write_daily_tb_netcdf_polar(
+                date=current_day,
+                satellite=satellite,
+                target_size=target_size,
+                pole=pole,
+                version=version,
+                tb_array_by_hour=tb_array_by_hour,
+                time_array_by_hour=time_array_by_hour,
+                freq_list=REF_FREQ,
+                file_list=file_list,
+                dataroot=dataroot,
+                script_name=script_name,
+                commit=commit,
+            )
+        else:
+            raise ValueError(f"Region {region} is not valid")
     return file_list
 
 
@@ -325,26 +402,29 @@ if __name__ == "__main__":
         description=("Arrange resampled TBs into an ACCESS output file. ")
     )
     parser.add_argument(
-        "access_root", type=Path, help="Root directory to ACCESS project"
+        "--access_root", type=Path, help="Root directory to ACCESS project"
     )
     parser.add_argument(
-        "temp_root", type=Path, help="Root directory store temporary files"
+        "--temp_root", type=Path, help="Root directory store temporary files"
     )
     parser.add_argument(
-        "start_date",
+        "--start_date",
         type=datetime.date.fromisoformat,
         help="First Day to process, as YYYY-MM-DD",
     )
     parser.add_argument(
-        "end_date",
+        "--end_date",
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
     parser.add_argument(
-        "target_size", choices=["30", "70"], help="Size of target footprint in km"
+        "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
-    parser.add_argument("version", help="version sting - e.g. v01r00")
+    parser.add_argument(
+        "--region", choices=["global", "north", "south"], default="global"
+    )
+    parser.add_argument("--version", help="version sting - e.g. v01r00")
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
@@ -372,7 +452,6 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     target_size = int(args.target_size)
-    version = args.version
 
     if target_size == 30:
         channels = list(range(5, 13))
@@ -390,7 +469,8 @@ if __name__ == "__main__":
                 current_day=day_to_do,
                 satellite=satellite,
                 target_size=target_size,
-                version=version,
+                region=args.region,
+                version=args.version,
                 dataroot=access_root,
                 channels=channels,
                 verbose=args.verbose,
@@ -405,7 +485,8 @@ if __name__ == "__main__":
                 current_day=day_to_do,
                 satellite=satellite,
                 target_size=target_size,
-                version=version,
+                region=args.region,
+                version=args.version,
                 dataroot=access_root,
                 channels=channels,
                 verbose=args.verbose,
