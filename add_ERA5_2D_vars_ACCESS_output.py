@@ -11,6 +11,7 @@ import numpy as np
 from era5_request.era5_requests import era5_hourly_single_level_request
 from access_io.access_output import get_access_output_filename_daily_folder
 from access_io.access_output import write_daily_ancillary_var_netcdf
+from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 
 from access_io.access_attr_define import (
     common_global_attributes_access,
@@ -19,6 +20,8 @@ from access_io.access_attr_define import (
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 from util.file_times import need_to_process
+
+from era5.resample_ERA5 import ResampleERA5
 
 
 def add_ERA5_single_level_variable_to_ACCESS_output(
@@ -29,6 +32,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     var_attrs: dict,
     satellite: str,
     target_size: int,
+    region: str,
     dataroot: Path,
     outputroot: Path,
     temproot: Path,
@@ -39,16 +43,61 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     commit: str,
 ) -> None:
 
+    # Do some logic about the region and file names
+
+    if region == "global":
+        base_filename = get_access_output_filename_daily_folder(
+            current_day, 
+            satellite, 
+            target_size, 
+            dataroot, 
+            "resamp_tbs"
+        )
+        anc_name = f"{variable[0]}_era5"
+        var_filename_final = get_access_output_filename_daily_folder(
+            current_day, 
+            satellite, 
+            target_size, 
+            dataroot, 
+            anc_name)
+        grid_type = "equirectangular"
+        pole = None
+    elif region in ["north", "south"]:
+        pole=region
+        base_filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            dataroot,
+            "resamp_tbs",
+            grid_type="ease2",
+            pole=pole,
+        )
+        anc_name = f"{variable[0]}_era5"
+        var_filename_final = get_access_output_filename_daily_folder(
+            current_day, 
+            satellite, 
+            target_size, 
+            dataroot, 
+            anc_name,
+            grid_type="ease2",
+            pole=pole,)
+        grid_type = "ease2"
+        pole = region
+    else:
+        raise ValueError(f"region {region} not valid")
+
+
     # Get the maps of observation times from the existing output file that
     # already contains times and Tbs
-    base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite.lower(), target_size, dataroot, "resamp_tbs"
-    )
+    # base_filename = get_access_output_filename_daily_folder(
+    #     current_day, satellite.lower(), target_size, dataroot, "resamp_tbs"
+    # )
 
-    anc_name = f"{variable[0]}_era5"
-    var_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite.lower(), target_size, dataroot, anc_name
-    )
+    # anc_name = f"{variable[0]}_era5"
+    # var_filename_final = get_access_output_filename_daily_folder(
+    #     current_day, satellite.lower(), target_size, dataroot, anc_name
+    # )
 
     if need_to_process(
         date=current_day,
@@ -59,6 +108,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         var=anc_name,
         overwrite=overwrite,
         update=update,
+        grid_type=grid_type,
+        pole=pole
     ):
 
         if not base_filename.is_file():
@@ -142,10 +193,29 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         # file1 modification time as a datetime.datetime object
         mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
 
+
+        resample_required = True
+        if ((target_size == 30) and (grid_type=="equirectangular")):
+            resample_required = False
+        resampler = None
+        if resample_required:
+            if resampler is None:
+                resampler = ResampleERA5(target_size=target_size,region=region)
+            
+            time_begin = datetime.datetime.now()
+            var = resampler.resample_fortran(var)
+            time = datetime.datetime.now()-time_begin
+            print(time)
+
+            # time_begin = datetime.datetime.now()
+            # var_test = resampler.resample(var)
+            # time = datetime.datetime.now()-time_begin
+            # print(time)
+
         # ERA-5 files are upside down relative to RSS convention.
         # TODO: I think you can just do var = var[:, ::-1, :] and avoid the loop
-        for i in range(0, 25):
-            var[i, :, :] = np.flipud(var[i, :, :])
+        #for i in range(0, 25):
+        #    var[i, :, :] = np.flipud(var[i, :, :])
 
         # interpolate the array of var maps to the times in the "times" maps
 
@@ -176,16 +246,32 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         glb_attrs["commit"] = commit
 
         # write the results to a separate output file
-        write_daily_ancillary_var_netcdf(
-            date=current_day,
-            satellite=satellite,
-            target_size=target_size,
-            anc_data=var_by_hour,
-            anc_name=anc_name,
-            anc_attrs=var_attrs,
-            global_attrs=glb_attrs,
-            dataroot=outputroot,
-        )
+        if grid_type == 'equirectangular':
+            write_daily_ancillary_var_netcdf(
+                date=current_day,
+                satellite=satellite,
+                target_size=target_size,
+                anc_data=var_by_hour,
+                anc_name=anc_name,
+                anc_attrs=var_attrs,
+                global_attrs=glb_attrs,
+                dataroot=outputroot,
+            )
+        elif grid_type == 'ease2':
+            write_daily_ancillary_var_netcdf_polar(
+                date=current_day,
+                satellite=satellite,
+                target_size=target_size,
+                grid_type=grid_type,
+                pole=pole,
+                anc_data=var_by_hour,
+                anc_name=anc_name,
+                anc_attrs=var_attrs,
+                global_attrs=glb_attrs,
+                dataroot=outputroot,
+            )
+        else:
+            raise ValueError(f'Grid Type {grid_type} is not valid')
     else:
         print(f"No processing needed for {anc_name} on {current_day}")
 
@@ -205,27 +291,31 @@ if __name__ == "__main__":
         epilog=cds_help,
     )
     parser.add_argument(
-        "access_root", type=Path, help="Root directory to ACCESS project"
+        "--access_root", type=Path, help="Root directory to ACCESS project"
     )
-    parser.add_argument("output_root", type=Path, help="Root directory to write output")
+    parser.add_argument("--output_root", type=Path, help="Root directory to write output")
     parser.add_argument(
-        "temp_root", type=Path, help="Root directory store temporary files"
+        "--temp_root", type=Path, help="Root directory store temporary files"
     )
     parser.add_argument(
-        "start_date",
+        "--start_date",
         type=datetime.date.fromisoformat,
         help="First Day to process, as YYYY-MM-DD",
     )
     parser.add_argument(
-        "end_date",
+        "--end_date",
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
     parser.add_argument(
-        "target_size", choices=["30", "70"], help="Size of target footprint in km"
+        "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
-    parser.add_argument("version", help="version sting - e.g. v01r00")
+
+    parser.add_argument("--version", help="version sting - e.g. v01r00")
+    parser.add_argument(
+        "--region", help="region to process",choices=["global","north","south"]
+    )
     parser.add_argument("-v", "--variables", nargs="*", default=[])
 
     parser.add_argument(
@@ -250,6 +340,7 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     target_size = int(args.target_size)
+    region = args.region
     version = args.version
     var_list = args.variables
     overwrite = args.overwrite
@@ -307,6 +398,7 @@ if __name__ == "__main__":
                 glb_attrs=glb_attrs,
                 satellite=satellite,
                 target_size=target_size,
+                region=region,
                 dataroot=access_root,
                 outputroot=output_root,
                 temproot=temp_root,

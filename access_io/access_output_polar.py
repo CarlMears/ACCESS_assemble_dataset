@@ -435,6 +435,8 @@ def write_daily_ancillary_var_netcdf_polar(
     date: datetime.date,
     satellite: str,
     target_size: int,
+    pole: str,
+    grid_type: str,
     anc_data: ArrayLike,
     anc_name: str,
     anc_attrs: dict,
@@ -442,32 +444,40 @@ def write_daily_ancillary_var_netcdf_polar(
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
 
-    base_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, "resamp_tbs"
-    )
-    var_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, f"{anc_name}_temp"
-    )
-    var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, anc_name
-    )
-    with suppress(FileNotFoundError):
-        var_filename.unlink()
+    if pole in ['north','south']:
+        base_filename = get_access_output_filename_daily_folder(
+            date, satellite, target_size, dataroot, "resamp_tbs",grid_type='ease2',pole=pole
+            )
+        var_filename = get_access_output_filename_daily_folder(
+            date, satellite.lower(), target_size, dataroot, f"{anc_name}_temp",grid_type='ease2',pole=pole
+            )
+        var_filename_final = get_access_output_filename_daily_folder(
+            date, satellite.lower(), target_size, dataroot, anc_name,grid_type='ease2',pole=pole
+            )
+
+        lats = ease2_grid_25km_north.latitude
+        lons = ease2_grid_25km_north.longitude
+        crs_attrs = ease2_grid_25km_north.crs
+            
+    else:
+        raise ValueError(f'pole = {pole} is not valid')
 
     with LockedDataset(var_filename, "w", 60) as nc_out:
         with LockedDataset(base_filename, "r", 60) as root_grp:
-            # Create the dimensions of the file
+
+            # Create the dimensions of the file from the base file
             for name, dim in root_grp.dimensions.items():
-                if name in ["hours", "latitude", "longitude"]:
+                if name in ["hours", "x", "y"]:
                     nc_out.createDimension(
                         name, len(dim) if not dim.isunlimited() else None
                     )
 
             set_all_attrs_polar(nc_out, global_attrs)
 
-            for var_name in ["hours", "longitude", "latitude"]:
+            for var_name in ["hours", "x", "y", "latitude", "longitude"]:
                 # Create the time and dimension variables in the output file
                 var_in = root_grp[var_name]
+                print(f'Transferring {var_name}')
                 nc_out.createVariable(
                     var_name, var_in.dtype, var_in.dimensions, zlib=True
                 )
@@ -479,6 +489,7 @@ def write_daily_ancillary_var_netcdf_polar(
 
                 # Copy the data values
                 nc_out.variables[var_name][:] = root_grp.variables[var_name][:]
+
 
             # make the ancillary variable with the same dimensions as the
             # time variable in the base file

@@ -21,6 +21,8 @@ def need_to_process(*,
                     date: datetime.date, 
                     satellite: str, 
                     target_size: int, 
+                    grid_type: str = 'equirectangular',
+                    pole: str = '',
                     dataroot: Path, 
                     outputroot: Path,
                     var:str,
@@ -30,11 +32,13 @@ def need_to_process(*,
 
 
     base_filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, dataroot, "resamp_tbs"
+        date, satellite, target_size, dataroot, "resamp_tbs",grid_type=grid_type,
+                pole=pole
         )
 
     var_filename = get_access_output_filename_daily_folder(
-                date, satellite, target_size, outputroot, var)
+                date, satellite, target_size, outputroot, var,grid_type=grid_type,
+                pole=pole)
 
     if base_filename.is_file():
         if var_filename.is_file():
