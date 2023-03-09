@@ -25,6 +25,8 @@ from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 from util.file_times import need_to_process
 from satellite_definitions.amsr2 import REF_FREQ_mapping
 
+from era5.resample_ERA5 import ResampleERA5
+
 # Reference frequencies (in GHz) to use
 # REF_FREQ = np.array([6.9, 7.3, 10.7, 18.7, 23.8, 37.0], np.float32)
 # REF_FREQ_mapping = np.array([1,1,2,3,4,5],np.int32)
@@ -97,6 +99,7 @@ def write_atmosphere_to_daily_ACCESS(
     current_day,
     satellite: str,
     target_size: int,
+    region: str,
     dataroot: Path,
     outputroot: Path,
     temproot: Path,
@@ -110,6 +113,71 @@ def write_atmosphere_to_daily_ACCESS(
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
 
+
+        # Do some logic about the region and file names
+
+    if region == "global":
+        grid_type = "equirectangular"
+        base_filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            dataroot,
+            "resamp_tbs",
+            grid_type=grid_type,
+        )
+
+        atm_filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            outputroot,
+            "atm_par_era5_temp",
+            grid_type=grid_type,
+        )
+        atm_filename_final = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            outputroot,
+            "atm_par_era5",
+            grid_type=grid_type,
+        )
+        grid_type = "equirectangular"
+        pole = None
+    elif region in ["north", "south"]:
+        pole = region
+        grid_type = "ease2"
+        base_filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            dataroot,
+            "resamp_tbs",
+            grid_type=grid_type,
+            pole=pole,
+        )
+        atm_filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            outputroot,
+            "atm_par_era5_temp",
+            grid_type=grid_type,
+            pole=pole,
+        )
+        atm_filename_final = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            outputroot,
+            "atm_par_era5",
+            grid_type=grid_type,
+            pole=region,
+        )
+    else:
+        raise ValueError(f"region {region} not valid")
+
     if need_to_process(
         date=current_day,
         satellite=satellite,
@@ -119,16 +187,23 @@ def write_atmosphere_to_daily_ACCESS(
         var="atm_par_era5",
         overwrite=overwrite,
         update=update,
+        grid_type=grid_type,
+        pole=pole
     ):
+
+        if atm_filename_final.is_file():
+            if overwrite or update:
+                atm_filename_final.unlink()
+            else:
+                print(f"File {atm_filename_final} exists, skipping")
+                return
+        with suppress(FileNotFoundError):
+            atm_filename.unlink()
 
         if verbose:
             print(f"Opening data for {satellite} on {current_day} in {dataroot}")
 
-        base_filename = get_access_output_filename_daily_folder(
-            current_day, satellite, target_size, dataroot, "resamp_tbs"
-        )
         try:
-
             with LockedDataset(base_filename, "r") as root_grp:
 
                 if verbose:
@@ -143,6 +218,21 @@ def write_atmosphere_to_daily_ACCESS(
                 # num_chan = len(REF_FREQ)
 
                 rtm_data = DailyRtm(current_day, temproot)
+
+                resample_required = True
+                if (target_size == 30) and (grid_type == "equirectangular"):
+                    resample_required = False
+                resampler = None
+
+                # WORKING HERE!
+                if resample_required:
+                    if resampler is None:
+                        resampler = ResampleERA5(target_size=target_size, region=region)
+
+                    # time_begin = datetime.datetime.now()
+                    # var = resampler.resample_fortran(var)
+                    # time = datetime.datetime.now()-time_begin
+                    # print(time)time = dateti
 
                 glb_attrs = common_global_attributes_access(
                     current_day,
@@ -163,22 +253,6 @@ def write_atmosphere_to_daily_ACCESS(
                 glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
                 glb_attrs["script_name"] = script_name
                 glb_attrs["commit"] = commit
-
-                atm_filename = get_access_output_filename_daily_folder(
-                    current_day, satellite, target_size, outputroot, "atm_par_era5_temp"
-                )
-                atm_filename_final = get_access_output_filename_daily_folder(
-                    current_day, satellite, target_size, outputroot, "atm_par_era5"
-                )
-
-                if atm_filename_final.is_file():
-                    if overwrite or update:
-                        atm_filename_final.unlink()
-                    else:
-                        print(f"File {atm_filename_final} exists, skipping")
-                        return
-                with suppress(FileNotFoundError):
-                    atm_filename.unlink()
 
                 with LockedDataset(atm_filename, mode="w") as trg:
                     for name, dim in root_grp.dimensions.items():
@@ -285,25 +359,30 @@ if __name__ == "__main__":
         epilog=cds_help,
     )
     parser.add_argument(
-        "access_root", type=Path, help="Root directory to ACCESS project"
+        "--access_root", type=Path, help="Root directory to ACCESS project"
     )
     parser.add_argument(
-        "output_root", type=Path, help="Root directory to ACCESS project"
+        "--output_root", type=Path, help="Root directory to ACCESS project"
     )
 
-    parser.add_argument("temp_root", type=Path, help="Root directory to ACCESS project")
+    parser.add_argument(
+        "--temp_root", type=Path, help="Root directory to ACCESS project"
+    )
 
     parser.add_argument(
-        "start_date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
+        "--start_date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
     )
     parser.add_argument(
-        "end_date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
+        "--end_date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
     )
-    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
     parser.add_argument(
-        "target_size", choices=["30", "70"], help="target footprint size in km"
+        "--target_size", choices=["30", "70"], help="target footprint size in km"
     )
-    parser.add_argument("version")
+    parser.add_argument("--version")
+    parser.add_argument(
+        "--region", help="region to process", choices=["global", "north", "south"]
+    )
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
@@ -317,6 +396,7 @@ if __name__ == "__main__":
     temp_root: Path = args.temp_root
     output_root: Path = args.output_root
     target_size: int = int(args.target_size)
+    region: str = args.region
     version: str = args.version
     rtm_dir = temp_root / "rtm" / "tbs"
     START_DAY = args.start_date
@@ -330,13 +410,14 @@ if __name__ == "__main__":
     repo = git.Repo(search_parent_directories=True)
     commit = repo.head.object.hexsha
 
-    print("Adding ERA5 2D variables")
+    print("Adding ERA5 drrived RTM parameters")
     print(f"ACCESS Root: {access_root}")
     print(f"Output Root: {output_root}")
     print(f"RTM Root: {rtm_dir}")
     print(f"Date Range:  {START_DAY} - {END_DAY}")
     print(f"Satellite:   {satellite}")
     print(f"Target Size: {target_size}")
+    print(f"Region: {region}")
     print(f"Version:     {version}")
     if overwrite:
         print("Overwriting old files")
@@ -354,6 +435,7 @@ if __name__ == "__main__":
                 date_to_do,
                 satellite,
                 target_size,
+                region,
                 access_root,
                 output_root,
                 rtm_dir,

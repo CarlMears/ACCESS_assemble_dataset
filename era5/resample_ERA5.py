@@ -113,16 +113,27 @@ class ResampleERA5:
 
     def resample_fortran(self,var):
 
+        # To import the following, the module needs to be installed using build/f2py
+        #
+        # see instruction in the README.md in
+        #
+        # gitlab.remss.com/access/resample_using_weights_fortran_python
+    
         from resamp import resamp_using_wts
 
-        num_time_steps,num_var_y,num_var_x = var.shape
+        num_time_steps,_,_ = var.shape
         var_resamp = np.full((num_time_steps,self.numy,self.numx),np.nan,dtype=np.float32)
 
         for itime in range(num_time_steps):
-            var_resamp_step = resamp_using_wts(self.xindexF,self.yindexF,self.weightsF,np.transpose(var[itime,:,:]))
+            var_resamp_step = resamp_using_wts(np.asfortranarray(self.xindexF),
+                                               np.asfortranarray(self.yindexF),
+                                               np.asfortranarray(self.weightsF),
+                                               np.asfortranarray(np.transpose(var[itime,:,:])))
             var_resamp[itime,:,:] = var_resamp_step
 
         return var_resamp
+
+        
 
                 
 
