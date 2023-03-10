@@ -477,7 +477,7 @@ def write_daily_ancillary_var_netcdf_polar(
             for var_name in ["hours", "x", "y", "latitude", "longitude"]:
                 # Create the time and dimension variables in the output file
                 var_in = root_grp[var_name]
-                print(f'Transferring {var_name}')
+                #print(f'Transferring {var_name}')
                 nc_out.createVariable(
                     var_name, var_in.dtype, var_in.dimensions, zlib=True
                 )

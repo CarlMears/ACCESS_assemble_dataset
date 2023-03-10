@@ -5,6 +5,26 @@ import os
 from pathlib import Path
 import concurrent.futures
 
+'''
+To use the python-wrapped fortran version of the resampler, the f2py-based resamp_using_wts must be installed
+
+To do this:
+    clone the project from http://gitlab.remss.com/access/resample_using_weights_fortran_python
+    (or cd to http://gitlab.remss.com/access/resample_using_weights_fortran_python)
+
+    issue the command 
+    
+    python -m build
+
+    Ideally, this will build the project with no errors.  There are a LOT of warnings.
+
+    then
+
+    python -m pip install dist/samp-0.0.1-cp310-cp310-linux_x86_64.whl
+    (or whatever wheel was generated for your flavor of python)
+
+'''
+
 def init_worker() -> None:
     """
     This is a function which will allow the user to stop all workers
@@ -55,14 +75,23 @@ class ResampleERA5:
             grid_type = 'equirectangular'
             nc_file = resample_wt_path / f'resamp_wts_1440)721)rect_{int(target_size)}km.nc'
 
+        print(f'Initializing resampler for {target_size} targets for {region}')
+        print(f'Loading weights and indices from {nc_file}')
+
         ds = xr.open_dataset(nc_file)
         self.weights = ds['weights'].values
         self.yindex = ds['lat_index'].values
         self.xindex = ds['lon_index'].values
 
-        self.weightsF = np.swapaxes(ds['weights'].values,0,2)
-        self.yindexF = np.swapaxes(ds['lat_index'].values,0,2)
-        self.xindexF = np.swapaxes(ds['lon_index'].values,0,2)
+
+        #before passing to the FORTRAN routine make fortran versions of the arrays
+        # 1.  Swap axes so it is in column major order with weight dimension first
+        # 2.  Ensure that it stored in this order using "asfortranarray"
+        # 3.  Add one to the indices to agree with fortran default
+
+        self.weightsF = np.asfortranarray(np.swapaxes(ds['weights'].values,0,2))
+        self.yindexF = np.asfortranarray(np.swapaxes(ds['lat_index'].values,0,2)+1)
+        self.xindexF = np.asfortranarray(np.swapaxes(ds['lon_index'].values,0,2)+1)
 
         try:
             self.lats = ds['latitude'].values
@@ -78,13 +107,14 @@ class ResampleERA5:
         self.numy = self.weights.shape[0]
         self.numx = self.weights.shape[1]
         
-
-
     def resample(self,var):
+
+        '''This python only version is much, much slower than the fortran version,
+        even though it uses multiple processes'''
 
         max_workers = 10
 
-        num_time_steps,num_var_y,num_var_x = var.shape
+        num_time_steps,_,_ = var.shape
 
         var_resamp = np.full((num_time_steps,self.numy,self.numx),np.nan,dtype=np.float32)
 
@@ -111,7 +141,7 @@ class ResampleERA5:
                 print(f"Error in run: {e}")
         return var_resamp
 
-    def resample_fortran(self,var):
+    def resample_fortran(self,var,verbose=False):
 
         # To import the following, the module needs to be installed using build/f2py
         #
@@ -121,17 +151,64 @@ class ResampleERA5:
     
         from resamp import resamp_using_wts
 
-        num_time_steps,_,_ = var.shape
-        var_resamp = np.full((num_time_steps,self.numy,self.numx),np.nan,dtype=np.float32)
+        if verbose:
+            iverbose=1
+        else:
+            iverbose=0
 
-        for itime in range(num_time_steps):
-            var_resamp_step = resamp_using_wts(np.asfortranarray(self.xindexF),
-                                               np.asfortranarray(self.yindexF),
-                                               np.asfortranarray(self.weightsF),
-                                               np.asfortranarray(np.transpose(var[itime,:,:])))
-            var_resamp[itime,:,:] = var_resamp_step
+        var_shape = var.shape
+        if len(var_shape) == 3:
+            num_time_steps,_,_ = var.shape
+            var_resamp = np.full((num_time_steps,self.numy,self.numx),np.nan,dtype=np.float32)
 
+            for itime in range(num_time_steps):
+                var_resamp_step = resamp_using_wts(self.xindexF,
+                                                   self.yindexF,
+                                                   self.weightsF,
+                                                   np.transpose(var[itime,:,:]),
+                                                   iverbose)
+                var_resamp[itime,:,:] = var_resamp_step
+        else:
+            var_resamp = resamp_using_wts(self.xindexF,
+                                          self.yindexF,
+                                          self.weightsF,
+                                          np.transpose(var),
+                                          iverbose)
+
+        if verbose:
+            print('Finished Resampling in Fortran')
         return var_resamp
+
+
+if __name__ == '__main__':
+
+    from rss_plotting.plot_2d_array import plot_2d_array
+    import matplotlib.pyplot as plt
+
+    resampler = ResampleERA5(target_size=70,region='north')
+
+    plot_2d_array(resampler.xindexF[0,:,:],xvals = np.arange(0,720),yvals=np.arange(0,720),zrange=[-1440,1440],plt_colorbar=True)
+    plot_2d_array(resampler.yindexF[0,:,:],xvals = np.arange(0,720),yvals=np.arange(0,720),zrange=[-720,720],plt_colorbar=True)
+
+    plt.show()
+
+    var_in = np.zeros((721,1440),dtype=np.float32)
+
+    for ilat in range(0,721):
+        var_in[ilat,:] = -90.0 + ilat*0.25
+
+    var_out = np.zeros((720,720),dtype=np.float32)
+    var_out = resampler.resample_fortran(var_in,verbose=False)
+
+    print(f'Max = {np.nanmax(var_out)}')
+    print(f'Min = {np.nanmin(var_out)}')
+
+
+
+    plot_2d_array(var_out,xvals = np.arange(0,720),yvals=np.arange(0,720),zrange=[-90.0,90.0])
+    plt.show()
+
+    print
 
         
 

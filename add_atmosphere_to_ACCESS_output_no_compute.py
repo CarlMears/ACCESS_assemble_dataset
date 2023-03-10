@@ -204,7 +204,7 @@ def write_atmosphere_to_daily_ACCESS(
             print(f"Opening data for {satellite} on {current_day} in {dataroot}")
 
         try:
-            with LockedDataset(base_filename, "r") as root_grp:
+            with LockedDataset(base_filename, "r",lock_stale_time = 0.1) as root_grp:
 
                 if verbose:
                     print(
@@ -254,32 +254,70 @@ def write_atmosphere_to_daily_ACCESS(
                 glb_attrs["script_name"] = script_name
                 glb_attrs["commit"] = commit
 
-                with LockedDataset(atm_filename, mode="w") as trg:
+                with LockedDataset(atm_filename, mode="w",lock_stale_time = 0.1) as trg:
                     for name, dim in root_grp.dimensions.items():
-                        if name in ["hours", "latitude", "longitude"]:
-                            trg.createDimension(
-                                name, len(dim) if not dim.isunlimited() else None
-                            )
+                        if grid_type == 'equirectangular':
+                            if name in ["hours", "latitude", "longitude"]:
+                                trg.createDimension(
+                                    name, len(dim) if not dim.isunlimited() else None
+                                )
+                        elif grid_type == 'ease2':
+                            if name in ["hours", "x", "y"]:
+                                trg.createDimension(
+                                    name, len(dim) if not dim.isunlimited() else None
+                                )
+                        else:
+                            raise ValueError(f'Grid Type {grid_type} is not valid')
 
                     trg.createDimension("freq", len(REF_FREQ))
 
                     # Set global attributes
                     set_all_attrs(trg, glb_attrs)
+                    if grid_type == 'equirectangular':
+                        for var_name in ["time", "hours", "longitude", "latitude", "freq"]:
+                            # Create the time and dimension variables in the output file
+                            var_in = root_grp[var_name]
+                            trg.createVariable(
+                                var_name, var_in.dtype, var_in.dimensions, zlib=True
+                            )
 
-                    for var_name in ["time", "hours", "longitude", "latitude", "freq"]:
-                        # Create the time and dimension variables in the output file
-                        var_in = root_grp[var_name]
-                        trg.createVariable(
-                            var_name, var_in.dtype, var_in.dimensions, zlib=True
-                        )
+                            # Copy the attributes
+                            trg.variables[var_name].setncatts(
+                                {a: var_in.getncattr(a) for a in var_in.ncattrs()}
+                            )
+                            trg[var_name][:] = var_in[:]
+                        dimensions_out = ("latitude", "longitude", "hours", "freq")
+                    elif grid_type == 'ease2':
+                        for var_name in ["time", "hours", "x", "y", "freq"]:
+                            # Create the time and dimension variables in the output file
+                            var_in = root_grp[var_name]
+                            trg.createVariable(
+                                var_name, var_in.dtype, var_in.dimensions, zlib=True
+                            )
 
-                        # Copy the attributes
-                        trg.variables[var_name].setncatts(
-                            {a: var_in.getncattr(a) for a in var_in.ncattrs()}
-                        )
-                        trg[var_name][:] = var_in[:]
+                            # Copy the attributes
+                            trg.variables[var_name].setncatts(
+                                {a: var_in.getncattr(a) for a in var_in.ncattrs()}
+                            )
+                            trg[var_name][:] = var_in[:]
 
-                    dimensions_out = ("latitude", "longitude", "hours", "freq")
+                        for var_name in ["longitude", "latitude"]:
+                            # Create the time and dimension variables in the output file
+                            var_in = root_grp[var_name]
+                            trg.createVariable(
+                                var_name, var_in.dtype, var_in.dimensions, zlib=True
+                            )
+
+                            # Copy the attributes
+                            trg.variables[var_name].setncatts(
+                                {a: var_in.getncattr(a) for a in var_in.ncattrs()}
+                            )
+                            trg[var_name][:,:] = var_in[:,:]
+                        dimensions_out = ("y", "x", "hours", "freq")
+                    else:
+                        raise ValueError(f'Grid Type {grid_type} is not valid')
+
+                    
 
                     for varname, long_name, units in [
                         ("transmissivity", "atmospheric transmissivity", None),
@@ -291,7 +329,7 @@ def write_atmosphere_to_daily_ACCESS(
                         ),
                     ]:
                         var_attrs = atm_attrs[varname]
-                        print(f"starting writing {varname}", end="")
+                        print(f"starting writing {varname}")
                         if varname == "transmissivity":
                             least_significant_digit = 3
                         else:
@@ -316,7 +354,17 @@ def write_atmosphere_to_daily_ACCESS(
                                 :, :, :, REF_FREQ_mapping[freq_index]
                             ]
                             var = np.moveaxis(var, -1, 0)
+
+                            if resample_required:
+
+                                print(f'Resampling {varname} to polar map for freq = {freq}')
+                                time_begin = datetime.datetime.now()
+                                var = resampler.resample_fortran(var)
+                                time = datetime.datetime.now()-time_begin
+                                
                             var_times = rtm_data.time_in_day
+
+                            print('Interpolating in time',end="")
                             for hour_index in range(len(root_grp["hours"][:])):
                                 time_map = root_grp["time"][:, :, hour_index]
                                 time_map = (
@@ -332,6 +380,7 @@ def write_atmosphere_to_daily_ACCESS(
                                     :, :, hour_index, freq_index
                                 ] = var_at_time_map
                                 print(".", end="")
+                            print()
                         print()
                         print(f"finished writing {varname}")
         except FileNotFoundError:

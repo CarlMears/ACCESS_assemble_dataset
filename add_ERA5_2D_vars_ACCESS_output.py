@@ -323,7 +323,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--update",
-        help="overwrite exisitng files is older than base file",
+        help="overwrite existing files is older than base file",
         action="store_true",
     )
     parser.add_argument(
