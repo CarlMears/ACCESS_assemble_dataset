@@ -132,50 +132,59 @@ def write_atmosphere_to_daily_ACCESS(
             "resamp_tbs",
             grid_type=grid_type,
         )
-    if verbose:
-        print(f"Opening data for {satellite} on {current_day} in {dataroot}")
+        if verbose:
+            print(f"Opening data for {satellite} on {current_day} in {dataroot}")
 
-    try:
-        with LockedDataset(base_filename, "r") as root_grp:
-            if verbose:
-                print(
-                    f"Reading ERA5 computed RTM data {satellite} "
-                    + f"on {current_day} in {temproot}"
+        try:
+            with LockedDataset(base_filename, "r") as root_grp:
+                if verbose:
+                    print(
+                        f"Reading ERA5 computed RTM data {satellite} "
+                        + f"on {current_day} in {temproot}"
+                    )
+
+                # num_lats = root_grp["latitude"].shape[0]
+                # num_lons = root_grp["longitude"].shape[0]
+                # num_hours = root_grp["hours"].shape[0]
+                # num_chan = len(REF_FREQ)
+
+                rtm_data = DailyRtm(current_day, temproot)
+
+                glb_attrs = common_global_attributes_access(
+                    current_day,
+                    satellite,
+                    target_size,
+                    version=version,
+                    dtype=np.float32,
                 )
 
-            # num_lats = root_grp["latitude"].shape[0]
-            # num_lons = root_grp["longitude"].shape[0]
-            # num_hours = root_grp["hours"].shape[0]
-            # num_chan = len(REF_FREQ)
+                atm_attrs = atm_pars_era5_attributes_access(
+                    satellite,
+                    target_size=target_size,
+                    version=version,
+                    dtype=np.float32,
+                )
 
-            rtm_data = DailyRtm(current_day, temproot)
-
-            glb_attrs = common_global_attributes_access(
-                current_day, satellite, target_size, version=version, dtype=np.float32
-            )
-
-            atm_attrs = atm_pars_era5_attributes_access(
-                satellite, target_size=target_size, version=version, dtype=np.float32
-            )
-
-        atm_filename = get_access_output_filename_daily_folder(
-            current_day,
-            satellite,
-            target_size,
-            outputroot,
-            "atm_par_era5_temp",
-            grid_type=grid_type,
-        )
-        atm_filename_final = get_access_output_filename_daily_folder(
-            current_day,
-            satellite,
-            target_size,
-            outputroot,
-            "atm_par_era5",
-            grid_type=grid_type,
-        )
-        grid_type = "equirectangular"
-        pole = None
+                atm_filename = get_access_output_filename_daily_folder(
+                    current_day,
+                    satellite,
+                    target_size,
+                    outputroot,
+                    "atm_par_era5_temp",
+                    grid_type=grid_type,
+                )
+                atm_filename_final = get_access_output_filename_daily_folder(
+                    current_day,
+                    satellite,
+                    target_size,
+                    outputroot,
+                    "atm_par_era5",
+                    grid_type=grid_type,
+                )
+                grid_type = "equirectangular"
+                pole = None
+        except FileNotFoundError:
+            raise
     elif region in ["north", "south"]:
         pole = region
         grid_type = "ease2"

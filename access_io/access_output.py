@@ -16,9 +16,9 @@ from access_io.access_attr_define import (  # atm_pars_era5_attributes_access,
 )
 
 from resampling_utils.polar_grids import NSIDC_ease2_grids
-ease2_grid_25km_north = NSIDC_ease2_grids(pole='north',resolution='25km')
-ease2_grid_25km_south = NSIDC_ease2_grids(pole='south',resolution='25km')
 
+ease2_grid_25km_north = NSIDC_ease2_grids(pole="north", resolution="25km")
+ease2_grid_25km_south = NSIDC_ease2_grids(pole="south", resolution="25km")
 
 
 if os.name == "nt":
@@ -96,16 +96,16 @@ def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
 
 
 def get_access_output_filename_daily_folder(
-    date: datetime.date, 
-    satellite: str, 
-    target_size: int, 
-    dataroot: Path, 
+    date: datetime.date,
+    satellite: str,
+    target_size: int,
+    dataroot: Path,
     var: str,
-    grid_type: str = 'equirectangular',
-    pole: str = ''
+    grid_type: str = "equirectangular",
+    pole: str = "",
 ) -> Path:
 
-    if grid_type == 'equirectangular':
+    if grid_type == "equirectangular":
         if target_size > 0:
             return (
                 dataroot
@@ -122,10 +122,10 @@ def get_access_output_filename_daily_folder(
                 / f"D{date:%d}"
                 / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
             )
-    elif grid_type == 'ease2':
+    elif grid_type == "ease2":
         if target_size > 0:
             pole = str.lower(pole)
-            if pole in ['north','south']:
+            if pole in ["north", "south"]:
                 return (
                     dataroot
                     / f"Y{date:%Y}"
@@ -134,9 +134,9 @@ def get_access_output_filename_daily_folder(
                     / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.{pole}.nc"
                 )
             else:
-                raise ValueError(f'Pole={pole} must be north or south')
+                raise ValueError(f"Pole={pole} must be north or south")
         else:
-            raise ValueError('Must specify target size')
+            raise ValueError("Must specify target size")
     if target_size > 0:
         return (
             dataroot
@@ -146,8 +146,7 @@ def get_access_output_filename_daily_folder(
             / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
         )
     else:
-        raise ValueError(f'Grid type {grid_type} not valid')
-            
+        raise ValueError(f"Grid type {grid_type} not valid")
 
 
 """
@@ -228,18 +227,24 @@ def write_daily_lf_netcdf(
         )
         lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
         lons = np.arange(0, NUM_LONS) * 0.25
-    elif pole in ['north','south']:
-            filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, lf_string,
-            grid_type='ease2',pole=pole)
-            if pole == 'north':
-                lats = ease2_grid_25km_north.latitude
-                lons = ease2_grid_25km_north.longitude
-            else: #must be south
-                lats = ease2_grid_25km_south.latitude
-                lons = ease2_grid_25km_south.longitude
+    elif pole in ["north", "south"]:
+        filename = get_access_output_filename_daily_folder(
+            date,
+            satellite,
+            target_size,
+            dataroot,
+            lf_string,
+            grid_type="ease2",
+            pole=pole,
+        )
+        if pole == "north":
+            lats = ease2_grid_25km_north.latitude
+            lons = ease2_grid_25km_north.longitude
+        else:  # must be south
+            lats = ease2_grid_25km_south.latitude
+            lons = ease2_grid_25km_south.longitude
     else:
-        raise ValueError(f'pole = {pole} is not valid')
+        raise ValueError(f"pole = {pole} is not valid")
 
     if filename.is_file() and not overwrite:
         print(f"daily file for {date} exists... skipping")
@@ -306,6 +311,7 @@ def write_daily_lf_netcdf(
 
         lf[:, :] = lf_to_put
 
+
 def write_daily_tb_netcdf(
     *,
     date: datetime.date,
@@ -328,17 +334,24 @@ def write_daily_tb_netcdf(
         )
         lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
         lons = np.arange(0, NUM_LONS) * 0.25
-    elif pole in ['north','south']:
-            filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, "resamp_tbs",grid_type='ease2',pole=pole)
-            if pole == 'north':
-                lats = ease2_grid_25km_north.latitude
-                lons = ease2_grid_25km_north.longitude
-            else: #must be south
-                lats = ease2_grid_25km_south.latitude
-                lons = ease2_grid_25km_south.longitude
+    elif pole in ["north", "south"]:
+        filename = get_access_output_filename_daily_folder(
+            date,
+            satellite,
+            target_size,
+            dataroot,
+            "resamp_tbs",
+            grid_type="ease2",
+            pole=pole,
+        )
+        if pole == "north":
+            lats = ease2_grid_25km_north.latitude
+            lons = ease2_grid_25km_north.longitude
+        else:  # must be south
+            lats = ease2_grid_25km_south.latitude
+            lons = ease2_grid_25km_south.longitude
     else:
-        raise ValueError(f'pole = {pole} is not valid')
+        raise ValueError(f"pole = {pole} is not valid")
 
     os.makedirs(filename.parent, exist_ok=True)
 

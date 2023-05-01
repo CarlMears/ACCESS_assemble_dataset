@@ -59,12 +59,14 @@ def era5_hourly_single_level_request(
             times = [f"{h:02d}:00" for h in range(0, 24)]
             days = [f"{date:%d}"]
         else:
-            target = target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m_%d}.1st_hour.nc"
+            target = (
+                target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m_%d}.1st_hour.nc"
+            )
             times = ["00:00"]
             days = [f"{date:%d}"]
 
-    #make sure the location exists
-    os.makedirs(target.parent,exist_ok=True)
+    # make sure the location exists
+    os.makedirs(target.parent, exist_ok=True)
 
     temp_file = target_path / "temp.nc"
 
@@ -191,6 +193,3 @@ if __name__ == "__main__":
     )
 
     print(file)
-
-
-

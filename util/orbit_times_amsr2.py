@@ -30,7 +30,10 @@ def find_orbits_in_day(
     try:
         orbits = np.where(
             np.all(
-                [(times_np64 > target_day_begin_np64), (times_np64 < target_day_end_np64)],
+                [
+                    (times_np64 > target_day_begin_np64),
+                    (times_np64 < target_day_end_np64),
+                ],
                 axis=0,
             )
         )[0]
@@ -38,7 +41,7 @@ def find_orbits_in_day(
     except IndexError:
         orbits = []
         return orbits
-        
+
     orbits = np.append(orbits, orbits[-1] + 1)
 
     assert len(orbits) < 19  # This should always be true

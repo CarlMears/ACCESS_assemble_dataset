@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from rss_plotting.plot_2d_array import plot_2d_array
 import sys
 
-sys.path.append('/mnt/ops1p-ren/m/job_access/python/dataset_assembly/')
+sys.path.append("/mnt/ops1p-ren/m/job_access/python/dataset_assembly/")
 from access_io.access_output import get_access_output_filename_daily_folder
 
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     satellite = "amsr2"
     footprint_size = 30
     region = "north"
-    
+
     if region == "global":
         grid_type = "equirectangular"
         output_root = output_root / f"{satellite}_out_GL_{footprint_size}"

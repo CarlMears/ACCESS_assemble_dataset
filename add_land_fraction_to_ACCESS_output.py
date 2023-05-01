@@ -56,7 +56,13 @@ def add_land_fraction_to_ACCESS_output(
         land_file = (
             land_path
             / f"land_fraction_1440_721_{target_size}km.from_nsidc_3km_mask.{region}.ease25.v5.nc"
-    try:
+        )
+        try:
+            land_fraction_xr = xr.open_dataset(land_file)
+            land_fraction_np = land_fraction_xr["land_fraction"].values
+        except FileNotFoundError:
+            raise
+
         write_daily_lf_netcdf(
             date=date,
             satellite=satellite,
@@ -69,8 +75,6 @@ def add_land_fraction_to_ACCESS_output(
             script_name=script_name,
             commit=commit,
         )
-        land_fraction_xr = xr.open_dataset(land_file)
-        land_fraction_np = land_fraction_xr["land_fraction"].values
 
     elif region == "global":
         if lf_version.lower() == "combined_hansen":

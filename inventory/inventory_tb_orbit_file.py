@@ -18,7 +18,8 @@ def is_file_multiple_try(path_to_test: Path, max_tries: int = 10):
     return is_file_multiple
 
 
-def inventory_access_tb_orbit_files(*,
+def inventory_access_tb_orbit_files(
+    *,
     tb_orbit_root: Path,
     start_orbit: int,
     end_orbit: int,
@@ -100,35 +101,47 @@ if __name__ == "__main__":
         raise ValueError
 
     channel_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    channel_name = ["6.9V","6.9H","7.3V","7.3H","11V", "11H", "19V", "19H", "24V", "24H", "37V", "37H"]
+    channel_name = [
+        "6.9V",
+        "6.9H",
+        "7.3V",
+        "7.3H",
+        "11V",
+        "11H",
+        "19V",
+        "19H",
+        "24V",
+        "24H",
+        "37V",
+        "37H",
+    ]
 
     footprint_size = 30
     region = "north"
-    
+
     if region == "global":
         template = "grid_tb"
-        tb_orbit_root = tb_orbit_root / f'GL_{footprint_size:02d}'
+        tb_orbit_root = tb_orbit_root / f"GL_{footprint_size:02d}"
     elif region == "north":
         template = "polar_grid_tb.north"
-        tb_orbit_root = tb_orbit_root / f'NP_{footprint_size:02d}'
+        tb_orbit_root = tb_orbit_root / f"NP_{footprint_size:02d}"
     elif region == "south":
         template = "polar_grid_tb.south"
-        tb_orbit_root = tb_orbit_root / f'SP_{footprint_size:02d}'
+        tb_orbit_root = tb_orbit_root / f"SP_{footprint_size:02d}"
     else:
         raise ValueError(f"Region: {region} is not valid")
 
-
-    for orbit_group in range(0,12):
+    for orbit_group in range(0, 12):
         start_orbit = 5000 * orbit_group + 1
         end_orbit = start_orbit + 4999
 
         exists = inventory_access_tb_orbit_files(
-            tb_orbit_root = tb_orbit_root,
-            start_orbit = start_orbit,
-            end_orbit = end_orbit,
-            channel_list = channel_list,
-            footprint_size = footprint_size,
-            file_template = template,
+            tb_orbit_root=tb_orbit_root,
+            start_orbit=start_orbit,
+            end_orbit=end_orbit,
+            channel_list=channel_list,
+            footprint_size=footprint_size,
+            file_template=template,
         )
 
         print(np.sum(exists))
