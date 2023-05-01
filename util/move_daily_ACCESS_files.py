@@ -1,9 +1,10 @@
-from access_io.access_output import get_access_output_filename_daily_folder
+import datetime
 import os
 from pathlib import Path
-import datetime
+
 import xarray as xr
 
+from access_io.access_output import get_access_output_filename_daily_folder
 
 start_date = datetime.datetime(2012, 1, 1)
 end_date = datetime.datetime(2012, 12, 31)
@@ -17,7 +18,6 @@ satellite = "amsr2"
 possible_extra_vars = ["rainfall_rate", "skt"]
 date_to_do = start_date
 while date_to_do <= end_date:
-
     old_file = get_access_output_filename_daily_folder(
         date_to_do, satellite, 0, access_root, "resamp_tbs"
     )

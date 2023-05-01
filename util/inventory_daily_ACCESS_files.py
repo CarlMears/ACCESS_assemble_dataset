@@ -40,7 +40,6 @@ def inventory_daily_ACCESS_tb_file(
     channels: Collection[int],
     verbose: bool = False,
 ) -> list[Any]:
-
     filename = get_access_output_filename_daily_folder(
         current_day, satellite, 0, dataroot, "UNKNOWN"
     )
@@ -52,7 +51,6 @@ def inventory_daily_ACCESS_tb_file(
 
 
 def plot_inventory(access_inventory):
-
     from rss_plotting.plot_2d_array import plot_2d_array
 
     inv_np = np.transpose(access_inventory.to_numpy())
@@ -84,7 +82,6 @@ def plot_inventory(access_inventory):
 
 
 if __name__ == "__main__":
-
     import argparse
     import datetime
 
@@ -128,7 +125,6 @@ if __name__ == "__main__":
     df = pd.DataFrame(index=date_rng)
 
     while day_to_do <= END_DAY:
-
         list_of_vars = inventory_daily_ACCESS_tb_file(
             current_day=day_to_do,
             satellite=satellite,

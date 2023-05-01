@@ -13,13 +13,11 @@ from access_io.access_output import get_access_output_filename_daily_folder
 def fix_time_in_ACCESS_output(
     *, current_day: datetime.date, satellite: str, dataroot: Path
 ) -> None:
-
     filename = get_access_output_filename_daily_folder(
         current_day, satellite, 0, dataroot, "UNKNOWN"
     )
     try:
         with netcdf_dataset(filename, "r+") as root_grp:
-
             time_sec_midnight = root_grp.variables["second_since_midnight"]
             time_np = time_sec_midnight[:, :, :]
             t = np.array([(current_day - datetime.date(1900, 1, 1)).total_seconds()])
@@ -57,7 +55,6 @@ def fix_time_in_ACCESS_output(
 
 
 if __name__ == "__main__":
-
     import calendar
 
     satellite = "AMSR2"

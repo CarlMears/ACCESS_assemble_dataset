@@ -10,7 +10,6 @@ import xarray as xr
 
 from resampling_utils.AMSR2_Antenna_Gain import target_gain
 
-
 NUM_LATS = 721
 NUM_LONS = 1440
 NUM_HOURS = 24

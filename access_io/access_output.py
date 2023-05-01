@@ -1,8 +1,13 @@
-from contextlib import suppress
 import datetime
 import os
+from contextlib import suppress
 from pathlib import Path
+<<<<<<< access_io/access_output.py
+from typing import Any, Optional, Sequence
+
+=======
 from typing import Optional, Sequence, Any, Union, Literal
+>>>>>>> access_io/access_output.py
 import numpy as np
 from netCDF4 import Variable
 from numpy.typing import ArrayLike, NDArray
@@ -68,6 +73,8 @@ class OkToSkipDay(Exception):
     pass
 
 
+<<<<<<< access_io/access_output.py
+=======
 def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
     """seems like something like this should be part
     of the interface but I can not find it"""
@@ -81,6 +88,7 @@ def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
     return
 
 
+>>>>>>> access_io/access_output.py
 def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
     for name, value in attrs.items():
         if name != "_FillValue":
@@ -90,7 +98,6 @@ def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
 def get_access_output_filename_daily_folder(
     date: datetime.date, satellite: str, target_size: int, dataroot: Path, var: str
 ) -> Path:
-
     if target_size > 0:
         return (
             dataroot
@@ -174,7 +181,6 @@ def write_daily_lf_netcdf(
     script_name: str,
     commit: str,
 ) -> None:
-
     tb_fill = -999.0
     lf_string = f"land_frac_{lf_version}"
     filename = get_access_output_filename_daily_folder(
@@ -209,13 +215,12 @@ def write_daily_lf_netcdf(
     global_attrs["script_name"] = script_name
     global_attrs["commit"] = commit
 
-    lat_attrs = coord_attributes_access("latitude", np.float32)
-    lon_attrs = coord_attributes_access("longitude", np.float32)
+    lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+    lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
-
         set_all_attrs(nc_out, global_attrs)
 
         nc_out.createDimension("latitude", NUM_LATS)
@@ -265,7 +270,6 @@ def write_daily_tb_netcdf(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-
     filename = get_access_output_filename_daily_folder(
         date, satellite, target_size, dataroot, "resamp_tbs"
     )
@@ -279,7 +283,6 @@ def write_daily_tb_netcdf(
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "w", 60) as nc_out:
-
         # set the global_attributes
 
         glb_attrs = common_global_attributes_access(
@@ -404,10 +407,13 @@ def write_daily_ancillary_var_netcdf(
     anc_data: NDArray[Any],
     anc_name: str,
     anc_attrs: dict[str, Any],
+<<<<<<< access_io/access_output.py
+    global_attrs: dict[str, Any],
+=======
     global_attrs: Union[dict[str, Any], Literal["copy"]],
+>>>>>>> access_io/access_output.py
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
     base_filename = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, "resamp_tbs"
     )
@@ -485,7 +491,6 @@ def write_ocean_emiss_to_daily_ACCESS(
     outputroot: Path,
     verbose: bool = False,
 ) -> None:
-
     if verbose:
         print(f"Opening base file for {satellite} on {current_day} in {dataroot}")
 
@@ -501,7 +506,6 @@ def write_ocean_emiss_to_daily_ACCESS(
 
     try:
         with LockedDataset(base_filename, "r") as root_grp:
-
             os.makedirs(emiss_filename_final.parent, exist_ok=True)
 
             with LockedDataset(emiss_filename_final, mode="w") as trg:

@@ -2,20 +2,21 @@
 
 import datetime
 from pathlib import Path
+
+import git
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
 
-from access_io.access_output import (
-    write_daily_ancillary_var_netcdf,
-    get_access_output_filename_daily_folder,
+from access_io.access_attr_define import (
+    anc_var_attributes_access,
+    common_global_attributes_access,
 )
-
-from access_io.access_attr_define import common_global_attributes_access
-from access_io.access_attr_define import anc_var_attributes_access
+from access_io.access_output import (
+    get_access_output_filename_daily_folder,
+    write_daily_ancillary_var_netcdf,
+)
 from imerg_request.imerg_requests import imerg_half_hourly_request
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
-
-import git
 
 
 def write_imerg_rain_rate_for_ACCESS(
@@ -30,7 +31,6 @@ def write_imerg_rain_rate_for_ACCESS(
     script_name: str,
     commit: str,
 ) -> None:
-
     base_filename = get_access_output_filename_daily_folder(
         current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs"
     )
@@ -123,7 +123,6 @@ def write_imerg_rain_rate_for_ACCESS(
 
 
 if __name__ == "__main__":
-
     import argparse
 
     parser = argparse.ArgumentParser(

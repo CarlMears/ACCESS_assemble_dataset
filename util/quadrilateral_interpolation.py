@@ -15,7 +15,6 @@ class QuadrilateralTranform:
     def __init__(
         self, x_vertices, y_vertices  # array/list of 4 x locations
     ):  # array/list of 4 y locations
-
         # A = np.zeros((4,4),dtype = np.float64)
         # A[0,:] = [1.0,0.0,0.0,0.0]
         # A[1,:] = [1.0,1.0,0.0,0.0]
@@ -73,7 +72,6 @@ class QuadrilateralTranform:
         self.cc_part = self.a[1] * self.b[0] - self.a[0] * self.b[1]
 
     def __call__(self, x, y):
-
         bb = self.bb_part + x * self.b[3] - y * self.a[3]
         cc = self.cc_part + x * self.b[1] - y * self.a[1]
 
@@ -108,7 +106,6 @@ class InterpBilinearQuadrilateral:
         y_vertices,  # array/list of 4 y locations
         z,
     ):  # array/list of 4 z locations)
-
         self.tranform = QuadrilateralTranform(x_vertices, y_vertices)
 
         self.a00 = z[0]
@@ -117,7 +114,6 @@ class InterpBilinearQuadrilateral:
         self.a11 = z[2] - z[1] - z[3] + z[0]
 
     def __call__(self, x, y):
-
         # transform to l,m
         l, m = self.transform(x, y)
         return self.a00 + self.a10 * l + self.a01 * m + self.a11 * m * l
@@ -130,7 +126,6 @@ class InterpParallelogram:
     def __init__(
         self, x, y, z  # array/list of 4 x locations  # array/list of 4 y locations
     ):  # array/list of 4 z locations)
-
         try:
             assert len(x) == 4
             assert len(y) == 4
@@ -211,7 +206,6 @@ class InterpParallelogram:
         return is_parallelogram
 
     def __call__(self, x0, y0, check_for_inside=True):
-
         dx_y = np.array([x0 - self.x[0], y0 - self.y[0]])
 
         # This transforms the locations dx,dy (relative to x[0],y[0])
@@ -306,7 +300,6 @@ class InterpQuadrilateralFit:
 
 
 if __name__ == "__main__":
-
     a_small_number = 0.00000001
     x = [1.0, 3.0, 3.5, 1.5]
     y = [1.0, 2.0, 3.0, 3.0]

@@ -1,6 +1,6 @@
 import os
-from typing import Tuple, Union, Any
 from pathlib import Path
+from typing import Any, Tuple, Union
 
 import xarray as xr
 
@@ -56,7 +56,6 @@ def read_AMSR2_resampled_tbs(
     dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
 ) -> Tuple[Any, Path]:
-
     """Using xarray here to take advantage of lazy reading"""
 
     if satellite.lower() not in IMPLEMENTED_SATELLITES:
