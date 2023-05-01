@@ -1,5 +1,7 @@
 """Add IMERG rain rates to an existing daily ACCESS data file."""
 
+import argparse
+from contextlib import suppress
 import datetime
 from pathlib import Path
 
@@ -12,14 +14,18 @@ from access_io.access_attr_define import (
     common_global_attributes_access,
 )
 from access_io.access_output import (
+    write_daily_ancillary_var_netcdf,
+    edit_attrs_daily_ancillary_var_netcdf,
     get_access_output_filename_daily_folder,
     write_daily_ancillary_var_netcdf,
 )
 from imerg_request.imerg_requests import imerg_half_hourly_request
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
+from util.file_times import need_to_process
+import git
 
 
-def write_imerg_rain_rate_for_ACCESS(
+def redo_imerg_rain_rate_attrs_ACCESS(
     *,
     current_day: datetime.date,
     satellite: str,
@@ -31,26 +37,76 @@ def write_imerg_rain_rate_for_ACCESS(
     script_name: str,
     commit: str,
 ) -> None:
+
+    imerge_filename_final = get_access_output_filename_daily_folder(
+        current_day, satellite, footprint_diameter_km, outputroot, "rainfall_rate"
+    )
+
+    if imerge_filename_final.is_file():
+        version = "v01r00"
+        rr_attrs = anc_var_attributes_access(
+            satellite, "rain_rate_imerg", version=version
+        )
+        global_attrs = common_global_attributes_access(
+            current_day, satellite, footprint_diameter_km, version=version
+        )
+
+        # add in the global part of the var-specific attributes
+        global_attrs.update(rr_attrs["global"])
+
+        # get the variable description parts of the var-specific attributes
+        var_attrs = rr_attrs["var"]
+
+        edit_attrs_daily_ancillary_var_netcdf(
+            date=current_day,
+            satellite=satellite,
+            target_size=footprint_diameter_km,
+            anc_data=None,
+            anc_name="rainfall_rate",
+            anc_attrs=var_attrs,
+            global_attrs=global_attrs,
+            dataroot=dataroot,
+        )
+
+
+def write_imerg_rain_rate_for_ACCESS(
+    *,
+    current_day: datetime.date,
+    satellite: str,
+    dataroot: Path,
+    outputroot: Path,
+    temproot: Path,
+    footprint_diameter_km: int,
+    overwrite: bool = False,
+    update: bool = False,
+    script_name: str,
+    commit: str,
+) -> None:
     base_filename = get_access_output_filename_daily_folder(
         current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs"
     )
+
+    var = "rainfall_rate"
     imerge_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite, footprint_diameter_km, outputroot, "rain_rate_imerge"
+        current_day, satellite, footprint_diameter_km, outputroot, var
     )
 
-    if not base_filename.is_file():
-        print(f"base file for {current_day} does not exist, skipping")
-        return
+    if need_to_process(
+        date=current_day,
+        satellite=satellite,
+        target_size=footprint_diameter_km,
+        dataroot=dataroot,
+        outputroot=outputroot,
+        var=var,
+        overwrite=overwrite,
+        update=update,
+    ):
 
-    if imerge_filename_final.is_file():
-        if not overwrite:
-            print(f"imerge_filename for {current_day} exists, skipping to next day")
-            return
-        else:
+        with suppress(FileNotFoundError):
             imerge_filename_final.unlink()
 
-    try:
-        # read in base file and extract dimensions and metadata
+        # try:
+        #     # read in base file and extract dimensions and metadata
         with netcdf_dataset(base_filename, "r") as root_grp:
             try:
                 times = root_grp.variables["time"][:, :, :]
@@ -59,67 +115,71 @@ def write_imerg_rain_rate_for_ACCESS(
                 )
             except KeyError:
                 raise ValueError(f'Error finding "time" in {base_filename}')
-    except FileNotFoundError:
-        print(f"File: {base_filename} not found, skipping")
-        return
+        # except FileNotFoundError:
+        #     print(f"File: {base_filename} not found, skipping")
+        #     return
 
-    # Downloding all IMERG files for the day
-    try:
-        imerg_half_hourly_request(
-            date=current_day,
+        # Downloding all IMERG files for the day
+        try:
+            imerg_half_hourly_request(
+                date=current_day,
+                target_path=temproot / "imerg",
+            )
+
+        except Exception as e:
+            raise RuntimeError("Problem downloading IMERG data") from e
+
+        # An array of hour times in seconds
+        hourly_intervals = np.arange(0, 86401, 3600)
+
+        # Return resampled rain rate maps for each hour of the day
+        rr_for_access, mod_time = resample_imerg_day(
+            np.roll(times, 720, axis=1),
+            hourly_intervals,
+            date,
+            footprint_diameter_km,
             target_path=temproot / "imerg",
         )
 
-    except Exception as e:
-        raise RuntimeError("Problem downloading IMERG data") from e
+        rr_for_access = np.roll(rr_for_access, 720, axis=1)
 
-    # An array of hour times in seconds
-    hourly_intervals = np.arange(0, 86401, 3600)
+        version = "v01r00"
+        rr_attrs = anc_var_attributes_access(
+            satellite, "rain_rate_imerg", version=version
+        )
+        global_attrs = common_global_attributes_access(
+            date, satellite, footprint_diameter_km, version=version
+        )
 
-    # Return resampled rain rate maps for each hour of the day
-    rr_for_access, mod_time = resample_imerg_day(
-        np.roll(times, 720, axis=1),
-        hourly_intervals,
-        date,
-        footprint_diameter_km,
-        target_path=temproot / "imerg",
-    )
+        # add in the global part of the var-specific attributes
+        global_attrs.update(rr_attrs["global"])
 
-    rr_for_access = np.roll(rr_for_access, 720, axis=1)
+        # get the variable description parts of the var-specific attributes
+        var_attrs = rr_attrs["var"]
 
-    version = "v01r00"
-    rr_attrs = anc_var_attributes_access(satellite, "rain_rate_imerg", version=version)
-    global_attrs = common_global_attributes_access(
-        date, satellite, footprint_diameter_km, version=version
-    )
+        global_attrs["date_accessed"] = f"{datetime.datetime.today()}"
+        global_attrs["id"] = imerge_filename_final.name
+        global_attrs["corresponding_resampled_Tb_file"] = base_filename.name
+        global_attrs["cell_method"] = (
+            "time: closest 30-min IMERG file; "
+            f"area: weighted average over {footprint_diameter_km}km Gaussian footprint"
+        )
+        global_attrs["corresponding_resampled_tb_file"] = base_filename.name
+        global_attrs["commit"] = commit
+        global_attrs["script_name"] = script_name
 
-    # add in the global part of the var-specific attributes
-    global_attrs.update(rr_attrs["global"])
-
-    # get the variable description parts of the var-specific attributes
-    var_attrs = rr_attrs["var"]
-
-    global_attrs["date_accessed"] = f"{datetime.datetime.today()}"
-    global_attrs["id"] = imerge_filename_final.name
-    global_attrs["corresponding_resampled_Tb_file"] = base_filename.name
-    global_attrs["cell_method"] = (
-        "time: closest 30-min IMERG file; "
-        f"area: weighted average over {footprint_diameter_km}km gaussian footprint"
-    )
-    global_attrs["corresponding_resampled_tb_file"] = base_filename.name
-    global_attrs["commit"] = commit
-    global_attrs["script_name"] = script_name
-
-    write_daily_ancillary_var_netcdf(
-        date=date,
-        satellite=satellite,
-        target_size=footprint_diameter_km,
-        anc_data=rr_for_access,
-        anc_name="rainfall_rate",
-        anc_attrs=var_attrs,
-        global_attrs=global_attrs,
-        dataroot=dataroot,
-    )
+        write_daily_ancillary_var_netcdf(
+            date=date,
+            satellite=satellite,
+            target_size=footprint_diameter_km,
+            anc_data=rr_for_access,
+            anc_name="rainfall_rate",
+            anc_attrs=var_attrs,
+            global_attrs=global_attrs,
+            dataroot=dataroot,
+        )
+    else:
+        print(f"No processing needed for  {var} on {date}")
 
 
 if __name__ == "__main__":
@@ -159,6 +219,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
+    parser.add_argument(
+        "--update",
+        help="force overwrite if file older than base file",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--redo_attrs", help="rewrite attrs if file exists", action="store_true"
+    )
 
     args = parser.parse_args()
 
@@ -179,18 +248,36 @@ if __name__ == "__main__":
     satellite = args.sensor.upper()
     footprint_diameter_km = args.footprint_diameter
 
+    overwrite = args.overwrite
+    update = args.update
+
+    redo_attrs = args.redo_attrs
+
     date = START_DAY
     while date <= END_DAY:
         print(f"{date}")
-
-        write_imerg_rain_rate_for_ACCESS(
-            current_day=date,
-            satellite=satellite,
-            dataroot=access_root,
-            outputroot=output_root,
-            temproot=temp_root,
-            footprint_diameter_km=footprint_diameter_km,
-            script_name=script_name,
-            commit=commit,
-        )
+        if redo_attrs:
+            redo_imerg_rain_rate_attrs_ACCESS(
+                current_day=date,
+                satellite=satellite,
+                dataroot=access_root,
+                outputroot=output_root,
+                temproot=temp_root,
+                footprint_diameter_km=footprint_diameter_km,
+                script_name=script_name,
+                commit=commit,
+            )
+        else:
+            write_imerg_rain_rate_for_ACCESS(
+                current_day=date,
+                satellite=satellite,
+                dataroot=access_root,
+                outputroot=output_root,
+                temproot=temp_root,
+                footprint_diameter_km=footprint_diameter_km,
+                overwrite=overwrite,
+                update=update,
+                script_name=script_name,
+                commit=commit,
+            )
         date += datetime.timedelta(days=1)

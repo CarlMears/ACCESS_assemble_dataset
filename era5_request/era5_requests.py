@@ -29,23 +29,42 @@ def era5_hourly_single_level_request(
     full_day: bool = True,
     full_month: bool = False,
     verbose: bool = False,
+    simpler_path: bool = False,
 ) -> Path:
     c = cdsapi.Client()
 
     # target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.nc"
-    if full_month:
-        target = target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m}.full.nc"
-        times = [f"{h:02d}:00" for h in range(0, 24)]
-        day_list = range(1, monthrange(date.year, date.month)[1] + 1)
-        days = [f"{day:02d}" for day in day_list]
-    elif full_day:
-        target = target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m_%d}.full.nc"
-        times = [f"{h:02d}:00" for h in range(0, 24)]
-        days = [f"{date:%d}"]
+    if simpler_path:
+        if full_month:
+            target = target_path / f"ERA5_{variable}_{date:%Y_%m}.full.nc"
+            times = [f"{h:02d}:00" for h in range(0, 24)]
+            day_list = range(1, monthrange(date.year, date.month)[1] + 1)
+            days = [f"{day:02d}" for day in day_list]
+        elif full_day:
+            target = target_path / f"ERA5_{variable}_{date:%Y_%m_%d}.full.nc"
+            times = [f"{h:02d}:00" for h in range(0, 24)]
+            days = [f"{date:%d}"]
+        else:
+            target = target_path / f"ERA5_{variable}_{date:%Y_%m_%d}.1st_hour.nc"
+            times = ["00:00"]
+            days = [f"{date:%d}"]
     else:
-        target = target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m_%d}.1st_hour.nc"
-        times = ["00:00"]
-        days = [f"{date:%d}"]
+        if full_month:
+            target = target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m}.full.nc"
+            times = [f"{h:02d}:00" for h in range(0, 24)]
+            day_list = range(1, monthrange(date.year, date.month)[1] + 1)
+            days = [f"{day:02d}" for day in day_list]
+        elif full_day:
+            target = target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m_%d}.full.nc"
+            times = [f"{h:02d}:00" for h in range(0, 24)]
+            days = [f"{date:%d}"]
+        else:
+            target = target_path / "era5" / f"ERA5_{variable}_{date:%Y_%m_%d}.1st_hour.nc"
+            times = ["00:00"]
+            days = [f"{date:%d}"]
+
+    #make sure the location exists
+    os.makedirs(target.parent,exist_ok=True)
 
     temp_file = target_path / "temp.nc"
 
@@ -172,3 +191,6 @@ if __name__ == "__main__":
     )
 
     print(file)
+
+
+

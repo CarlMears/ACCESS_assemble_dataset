@@ -3,6 +3,14 @@ import datetime
 import os
 from contextlib import suppress
 from pathlib import Path
+from typing import Tuple, Union
+from netCDF4 import Dataset as netcdf_dataset
+import numpy as np
+
+from era5_request.era5_requests import era5_hourly_single_level_request
+from access_io.access_output import get_access_output_filename_daily_folder
+from access_io.access_output import write_daily_ancillary_var_netcdf
+from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from typing import Any, Tuple
 
 import git
@@ -19,6 +27,9 @@ from access_io.access_output import (
 )
 from era5_request.era5_requests import era5_hourly_single_level_request
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
+from util.file_times import need_to_process
+
+from era5.resample_ERA5 import ResampleERA5
 
 
 def add_ERA5_single_level_variable_to_ACCESS_output(
@@ -29,143 +40,230 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     var_attrs: dict[str, Any],
     satellite: str,
     target_size: int,
+    region: str,
     dataroot: Path,
     outputroot: Path,
     temproot: Path,
     verbose: bool = False,
-    force_overwrite: bool = False,
+    overwrite: bool = False,
+    update: bool = False,
     script_name: str,
     commit: str,
+    resampler=None,
 ) -> None:
+
+    # Do some logic about the region and file names
+
+    if region == "global":
+        base_filename = get_access_output_filename_daily_folder(
+            current_day, satellite, target_size, dataroot, "resamp_tbs"
+        )
+        anc_name = f"{variable[0]}_era5"
+        var_filename_final = get_access_output_filename_daily_folder(
+            current_day, satellite, target_size, dataroot, anc_name
+        )
+        grid_type = "equirectangular"
+        pole = None
+    elif region in ["north", "south"]:
+        pole = region
+        base_filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            dataroot,
+            "resamp_tbs",
+            grid_type="ease2",
+            pole=pole,
+        )
+        anc_name = f"{variable[0]}_era5"
+        var_filename_final = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            target_size,
+            dataroot,
+            anc_name,
+            grid_type="ease2",
+            pole=pole,
+        )
+        grid_type = "ease2"
+        pole = region
+    else:
+        raise ValueError(f"region {region} not valid")
+
     # Get the maps of observation times from the existing output file that
     # already contains times and Tbs
-    base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite.lower(), target_size, dataroot, "resamp_tbs"
-    )
+    # base_filename = get_access_output_filename_daily_folder(
+    #     current_day, satellite.lower(), target_size, dataroot, "resamp_tbs"
+    # )
 
-    anc_name = f"{variable[0]}_era5"
-    var_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite.lower(), target_size, dataroot, anc_name
-    )
+    # anc_name = f"{variable[0]}_era5"
+    # var_filename_final = get_access_output_filename_daily_folder(
+    #     current_day, satellite.lower(), target_size, dataroot, anc_name
+    # )
 
-    if not base_filename.is_file():
-        print(f"base file for {current_day} does not exist, skipping")
-        return
-
-    if not force_overwrite:
-        if var_filename_final.is_file():
-            print(f"{variable[0]} file for {current_day} exists, skipping to next day")
-            return
-    else:
-        with suppress(FileNotFoundError):
-            var_filename_final.unlink()
-
-    try:
-        # read in base file and extract dimensions and make sure time is available
-        with netcdf_dataset(base_filename, "r") as root_grp:
-            try:
-                times = root_grp.variables["time"][:, :, :]
-                times = (
-                    times - (current_day - datetime.date(1900, 1, 1)).total_seconds()
-                )
-            except KeyError:
-                raise ValueError(f'Error finding "time" in {base_filename}')
-    except FileNotFoundError:
-        print(f"File: {base_filename} not found, skipping")
-        return
-
-    # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour
-    # of the next day.
-    next_day = current_day + datetime.timedelta(hours=24)
-    # try:
-    os.makedirs(temproot, exist_ok=True)
-    file1 = era5_hourly_single_level_request(
-        date=current_day,
-        variable=variable[1],
-        target_path=temproot,
-        full_day=True,
-        full_month=True,
-    )
-
-    # if next day is in the same month, this second request
-    # refers to the same file, so no second download will be done
-    file2 = era5_hourly_single_level_request(
-        date=next_day,
-        variable=variable[1],
-        target_path=temproot,
-        full_day=True,
-        full_month=True,
-    )
-
-    # except Exception:
-    #    raise RuntimeError("Problem downloading ERA5 data using cdsapi")
-
-    # open the file(s), and combine the two files into a
-    # 25-map array for the day being processed
-
-    if current_day.month == next_day.month:
-        hour_index1 = 24 * (current_day.day - 1)
-        hour_index2 = hour_index1 + 25
-        ds1 = netcdf_dataset(file1)
-        var = ds1[variable[0]][hour_index1:hour_index2, :, :]
-
-    else:
-        # This is the case when the 25th hour is in the next month
-        hour_index1 = 24 * (current_day.day - 1)
-        hour_index2 = hour_index1 + 24
-        ds1 = netcdf_dataset(file1)
-        var_first_day = ds1[variable[1]][hour_index1:hour_index2, :, :]
-
-        ds2 = netcdf_dataset(file2)
-        var_next_day = ds2[variable[1]][0, :, :]
-        var = np.concatenate((var_first_day, var_next_day[np.newaxis, :, :]), axis=0)
-
-    # file1 modification time as a datetime.datetime object
-    mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
-
-    # ERA-5 files are upside down relative to RSS convention.
-    # TODO: I think you can just do var = var[:, ::-1, :] and avoid the loop
-    for i in range(0, 25):
-        var[i, :, :] = np.flipud(var[i, :, :])
-
-    # interpolate the array of var maps to the times in the "times" maps
-
-    print(f"Interpolating...{variable[0]}")
-
-    # list of times, each hour.
-    var_times = np.arange(0.0, 86401.0, 3600.0)
-
-    # create output array
-    var_by_hour = np.full_like(times, np.nan).filled()
-
-    for hour_index in range(0, 24):
-        time_map = times[:, :, hour_index]
-        var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
-            var, var_times, time_map
-        )
-        var_by_hour[:, :, hour_index] = var_at_time_map
-
-    print(f"Finished Interpolating...{variable[0]}")
-    if "_FillValue" in var_attrs.keys():
-        var_by_hour[~np.isfinite(var_by_hour)] = var_attrs["_FillValue"]
-
-    glb_attrs["date_accessed"] = f"{mod_time}"
-    glb_attrs["id"] = var_filename_final.name
-    glb_attrs["corresponding_resampled_Tb_file"] = base_filename.name
-    glb_attrs["script_name"] = script_name
-    glb_attrs["commit"] = commit
-
-    # write the results to a separate output file
-    write_daily_ancillary_var_netcdf(
+    if need_to_process(
         date=current_day,
         satellite=satellite,
         target_size=target_size,
-        anc_data=var_by_hour,
-        anc_name=anc_name,
-        anc_attrs=var_attrs,
-        global_attrs=glb_attrs,
-        dataroot=outputroot,
-    )
+        dataroot=dataroot,
+        outputroot=outputroot,
+        var=anc_name,
+        overwrite=overwrite,
+        update=update,
+        grid_type=grid_type,
+        pole=pole,
+    ):
+
+        if not base_filename.is_file():
+            print(f"base file for {current_day} does not exist, skipping")
+            return
+
+        if not (overwrite or update):
+            if var_filename_final.is_file():
+                print(
+                    f"{variable[0]} file for {current_day} exists, skipping to next day"
+                )
+                return
+        else:
+            with suppress(FileNotFoundError):
+                var_filename_final.unlink()
+
+        print(f"Processing: {anc_name} for {current_day}")
+        try:
+            # read in base file and extract dimensions and make sure time is available
+            with netcdf_dataset(base_filename, "r") as root_grp:
+                try:
+                    times = root_grp.variables["time"][:, :, :]
+                    times = (
+                        times
+                        - (current_day - datetime.date(1900, 1, 1)).total_seconds()
+                    )
+                except KeyError:
+                    raise ValueError(f'Error finding "time" in {base_filename}')
+        except FileNotFoundError:
+            print(f"File: {base_filename} not found, skipping")
+            return
+
+        # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour
+        # of the next day.
+        next_day = current_day + datetime.timedelta(hours=24)
+        # try:
+        os.makedirs(temproot, exist_ok=True)
+        file1 = era5_hourly_single_level_request(
+            date=current_day,
+            variable=variable[1],
+            target_path=temproot,
+            full_day=True,
+            full_month=True,
+        )
+
+        # if next day is in the same month, this second request
+        # refers to the same file, so no second download will be done
+        file2 = era5_hourly_single_level_request(
+            date=next_day,
+            variable=variable[1],
+            target_path=temproot,
+            full_day=True,
+            full_month=True,
+        )
+
+        # except Exception:
+        #    raise RuntimeError("Problem downloading ERA5 data using cdsapi")
+
+        # open the file(s), and combine the two files into a
+        # 25-map array for the day being processed
+
+        if current_day.month == next_day.month:
+            hour_index1 = 24 * (current_day.day - 1)
+            hour_index2 = hour_index1 + 25
+            ds1 = netcdf_dataset(file1)
+            var = ds1[variable[0]][hour_index1:hour_index2, :, :]
+
+        else:
+            # This is the case when the 25th hour is in the next month
+            hour_index1 = 24 * (current_day.day - 1)
+            hour_index2 = hour_index1 + 24
+            ds1 = netcdf_dataset(file1)
+            var_first_day = ds1[variable[0]][hour_index1:hour_index2, :, :]
+
+            ds2 = netcdf_dataset(file2)
+            var_next_day = ds2[variable[0]][0, :, :]
+            var = np.concatenate(
+                (var_first_day, var_next_day[np.newaxis, :, :]), axis=0
+            )
+
+        var = np.flip(var, 1)
+        # file1 modification time as a datetime.datetime object
+        mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
+
+        resample_required = True
+        if (target_size == 30) and (grid_type == "equirectangular"):
+            resample_required = False
+
+        if resample_required:
+            if resampler is None:
+                # should be done at a higher level, but just in case....
+                resampler = ResampleERA5(target_size=target_size, region=region)
+
+            time_begin = datetime.datetime.now()
+            var = resampler.resample_fortran(var)
+            time = datetime.datetime.now() - time_begin
+            # print(time)
+
+        # list of times, each hour.
+        var_times = np.arange(0.0, 86401.0, 3600.0)
+
+        # create output array
+
+        var_by_hour = np.full_like(times, np.nan).filled()
+
+        time_begin = datetime.datetime.now()
+        for hour_index in range(0, 24):
+            time_map = times[:, :, hour_index]
+            var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
+                var, var_times, time_map
+            )
+            var_by_hour[:, :, hour_index] = var_at_time_map
+        time = datetime.datetime.now() - time_begin
+
+        if "_FillValue" in var_attrs.keys():
+            var_by_hour[~np.isfinite(var_by_hour)] = var_attrs["_FillValue"]
+
+        glb_attrs["date_accessed"] = f"{mod_time}"
+        glb_attrs["id"] = var_filename_final.name
+        glb_attrs["corresponding_resampled_Tb_file"] = base_filename.name
+        glb_attrs["script_name"] = script_name
+        glb_attrs["commit"] = commit
+
+        # write the results to a separate output file
+        if grid_type == "equirectangular":
+            write_daily_ancillary_var_netcdf(
+                date=current_day,
+                satellite=satellite,
+                target_size=target_size,
+                anc_data=var_by_hour,
+                anc_name=anc_name,
+                anc_attrs=var_attrs,
+                global_attrs=glb_attrs,
+                dataroot=outputroot,
+            )
+        elif grid_type == "ease2":
+            write_daily_ancillary_var_netcdf_polar(
+                date=current_day,
+                satellite=satellite,
+                target_size=target_size,
+                grid_type=grid_type,
+                pole=pole,
+                anc_data=var_by_hour,
+                anc_name=anc_name,
+                anc_attrs=var_attrs,
+                global_attrs=glb_attrs,
+                dataroot=outputroot,
+            )
+        else:
+            raise ValueError(f"Grid Type {grid_type} is not valid")
+    else:
+        print(f"No processing needed for {anc_name} on {current_day}")
 
 
 if __name__ == "__main__":
@@ -182,31 +280,42 @@ if __name__ == "__main__":
         epilog=cds_help,
     )
     parser.add_argument(
-        "access_root", type=Path, help="Root directory to ACCESS project"
-    )
-    parser.add_argument("output_root", type=Path, help="Root directory to write output")
-    parser.add_argument(
-        "temp_root", type=Path, help="Root directory store temporary files"
+        "--access_root", type=Path, help="Root directory to ACCESS project"
     )
     parser.add_argument(
-        "start_date",
+        "--output_root", type=Path, help="Root directory to write output"
+    )
+    parser.add_argument(
+        "--temp_root", type=Path, help="Root directory store temporary files"
+    )
+    parser.add_argument(
+        "--start_date",
         type=datetime.date.fromisoformat,
         help="First Day to process, as YYYY-MM-DD",
     )
     parser.add_argument(
-        "end_date",
+        "--end_date",
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
     parser.add_argument(
-        "target_size", choices=["30", "70"], help="Size of target footprint in km"
+        "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
-    parser.add_argument("version", help="version sting - e.g. v01r00")
+    parser.add_argument(
+        "--region", help="region to process", choices=["global", "north", "south"]
+    )
+    parser.add_argument("--version", help="version sting - e.g. v01r00")
+
     parser.add_argument("-v", "--variables", nargs="*", default=[])
 
     parser.add_argument(
         "--overwrite", help="overwrite exisitng files", action="store_true"
+    )
+    parser.add_argument(
+        "--update",
+        help="overwrite existing files is older than base file",
+        action="store_true",
     )
     parser.add_argument(
         "--verbose", help="enable more verbose screen output", action="store_true"
@@ -222,9 +331,11 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     target_size = int(args.target_size)
+    region = args.region
     version = args.version
     var_list = args.variables
     overwrite = args.overwrite
+    update = args.update
     print(var_list)
     script_name = parser.prog
     repo = git.Repo(search_parent_directories=True)
@@ -253,9 +364,17 @@ if __name__ == "__main__":
             print(f"Variable {var} not defined - skipping")
             continue
 
+        resample_required = True
+        if (target_size == 30) and (region == "global"):
+            resample_required = False
+
+        resampler = None
+        if resample_required:
+            if resampler is None:
+                resampler = ResampleERA5(target_size=target_size, region=region)
+
         date = START_DAY
         while date <= END_DAY:
-            print(f"Processing: {date}")
 
             # common global_attributes for the project
             glb_attrs = common_global_attributes_access(
@@ -279,13 +398,16 @@ if __name__ == "__main__":
                 glb_attrs=glb_attrs,
                 satellite=satellite,
                 target_size=target_size,
+                region=region,
                 dataroot=access_root,
                 outputroot=output_root,
                 temproot=temp_root,
                 verbose=args.verbose,
-                force_overwrite=overwrite,
+                overwrite=overwrite,
+                update=update,
                 script_name=script_name,
                 commit=commit,
+                resampler=resampler,
             )
 
             date += datetime.timedelta(days=1)

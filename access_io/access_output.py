@@ -2,12 +2,7 @@ import datetime
 import os
 from contextlib import suppress
 from pathlib import Path
-<<<<<<< access_io/access_output.py
-from typing import Any, Optional, Sequence
-
-=======
 from typing import Optional, Sequence, Any, Union, Literal
->>>>>>> access_io/access_output.py
 import numpy as np
 from netCDF4 import Variable
 from numpy.typing import ArrayLike, NDArray
@@ -19,6 +14,12 @@ from access_io.access_attr_define import (  # atm_pars_era5_attributes_access,
     coord_attributes_access,
     resamp_tb_attributes_access,
 )
+
+from resampling_utils.polar_grids import NSIDC_ease2_grids
+ease2_grid_25km_north = NSIDC_ease2_grids(pole='north',resolution='25km')
+ease2_grid_25km_south = NSIDC_ease2_grids(pole='south',resolution='25km')
+
+
 
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
@@ -67,14 +68,14 @@ NUM_CHANNELS = 14  # all possible AMSR2 channels
 NUM_LATS = 721
 NUM_LONS = 1440
 NUM_HOURS = 24
+NUM_X_POLE = 720
+NUM_Y_POLE = 720
 
 
 class OkToSkipDay(Exception):
     pass
 
 
-<<<<<<< access_io/access_output.py
-=======
 def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
     """seems like something like this should be part
     of the interface but I can not find it"""
@@ -88,16 +89,54 @@ def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
     return
 
 
->>>>>>> access_io/access_output.py
 def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
     for name, value in attrs.items():
-        if name != "_FillValue":
+        if (name != "_FillValue") and (value is not None):
             var.setncattr(name, value)
 
 
 def get_access_output_filename_daily_folder(
-    date: datetime.date, satellite: str, target_size: int, dataroot: Path, var: str
+    date: datetime.date, 
+    satellite: str, 
+    target_size: int, 
+    dataroot: Path, 
+    var: str,
+    grid_type: str = 'equirectangular',
+    pole: str = ''
 ) -> Path:
+
+    if grid_type == 'equirectangular':
+        if target_size > 0:
+            return (
+                dataroot
+                / f"Y{date:%Y}"
+                / f"M{date:%m}"
+                / f"D{date:%d}"
+                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
+            )
+        else:
+            return (
+                dataroot
+                / f"Y{date:%Y}"
+                / f"M{date:%m}"
+                / f"D{date:%d}"
+                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
+            )
+    elif grid_type == 'ease2':
+        if target_size > 0:
+            pole = str.lower(pole)
+            if pole in ['north','south']:
+                return (
+                    dataroot
+                    / f"Y{date:%Y}"
+                    / f"M{date:%m}"
+                    / f"D{date:%d}"
+                    / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.{pole}.nc"
+                )
+            else:
+                raise ValueError(f'Pole={pole} must be north or south')
+        else:
+            raise ValueError('Must specify target size')
     if target_size > 0:
         return (
             dataroot
@@ -107,13 +146,8 @@ def get_access_output_filename_daily_folder(
             / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
         )
     else:
-        return (
-            dataroot
-            / f"Y{date:%Y}"
-            / f"M{date:%m}"
-            / f"D{date:%d}"
-            / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
-        )
+        raise ValueError(f'Grid type {grid_type} not valid')
+            
 
 
 """
@@ -173,6 +207,7 @@ def write_daily_lf_netcdf(
     date: datetime.date,
     satellite: str,
     target_size: int,
+    pole: str = None,
     version: str,
     lf_version: str,
     land_fraction: ArrayLike,
@@ -187,6 +222,25 @@ def write_daily_lf_netcdf(
         date, satellite, target_size, dataroot, lf_string
     )
 
+    if pole is None:
+        filename = get_access_output_filename_daily_folder(
+            date, satellite, target_size, dataroot, lf_string
+        )
+        lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
+        lons = np.arange(0, NUM_LONS) * 0.25
+    elif pole in ['north','south']:
+            filename = get_access_output_filename_daily_folder(
+            date, satellite, target_size, dataroot, lf_string,
+            grid_type='ease2',pole=pole)
+            if pole == 'north':
+                lats = ease2_grid_25km_north.latitude
+                lons = ease2_grid_25km_north.longitude
+            else: #must be south
+                lats = ease2_grid_25km_south.latitude
+                lons = ease2_grid_25km_south.longitude
+    else:
+        raise ValueError(f'pole = {pole} is not valid')
+
     if filename.is_file() and not overwrite:
         print(f"daily file for {date} exists... skipping")
         return
@@ -195,9 +249,6 @@ def write_daily_lf_netcdf(
             filename.unlink()
 
     os.makedirs(filename.parent, exist_ok=True)
-
-    lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
-    lons = np.arange(0, NUM_LONS) * 0.25
 
     lf_attrs = anc_var_attributes_access(
         satellite, "land_fraction_" + lf_version, version=version
@@ -210,7 +261,7 @@ def write_daily_lf_netcdf(
     var_attrs = lf_attrs["var"]
     global_attrs[
         "cell_method"
-    ] = f"area: resampled to {target_size}km guassian footprint"
+    ] = f"area: resampled to {target_size}km Gaussian footprint"
 
     global_attrs["script_name"] = script_name
     global_attrs["commit"] = commit
@@ -255,12 +306,12 @@ def write_daily_lf_netcdf(
 
         lf[:, :] = lf_to_put
 
-
 def write_daily_tb_netcdf(
     *,
     date: datetime.date,
     satellite: str,
     target_size: int,
+    pole: str = None,
     version: str,
     tb_array_by_hour: NDArray[Any],
     time_array_by_hour: NDArray[Any],
@@ -270,13 +321,26 @@ def write_daily_tb_netcdf(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-    filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, dataroot, "resamp_tbs"
-    )
-    os.makedirs(filename.parent, exist_ok=True)
 
-    lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
-    lons = np.arange(0, NUM_LONS) * 0.25
+    if pole is None:
+        filename = get_access_output_filename_daily_folder(
+            date, satellite, target_size, dataroot, "resamp_tbs"
+        )
+        lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
+        lons = np.arange(0, NUM_LONS) * 0.25
+    elif pole in ['north','south']:
+            filename = get_access_output_filename_daily_folder(
+            date, satellite, target_size, dataroot, "resamp_tbs",grid_type='ease2',pole=pole)
+            if pole == 'north':
+                lats = ease2_grid_25km_north.latitude
+                lons = ease2_grid_25km_north.longitude
+            else: #must be south
+                lats = ease2_grid_25km_south.latitude
+                lons = ease2_grid_25km_south.longitude
+    else:
+        raise ValueError(f'pole = {pole} is not valid')
+
+    os.makedirs(filename.parent, exist_ok=True)
 
     num_freq = len(freq_list)
     num_pol = 2
@@ -298,7 +362,7 @@ def write_daily_tb_netcdf(
         glb_attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
         glb_attrs[
             "cell_method"
-        ] = f"area: resampled to {target_size}km guassian footprint"
+        ] = f"area: resampled to {target_size}km Gaussian footprint"
         glb_attrs["date_accessed"] = f"{datetime.datetime.today()}"
         glb_attrs["date_created"] = f"{datetime.datetime.today()}"
 
@@ -399,6 +463,64 @@ def write_daily_tb_netcdf(
         tbs[:, :, :, :, :] = tbs_to_put
 
 
+def edit_attrs_daily_tb_netcdf(
+    *,
+    date: datetime.date,
+    satellite: str,
+    target_size: int,
+    version: str,
+    tb_array_by_hour: ArrayLike,
+    time_array_by_hour: ArrayLike,
+    dataroot: Path = ACCESS_ROOT,
+    freq_list: ArrayLike,
+    file_list: Optional[Sequence[Path]],
+    script_name: str = "unavailable",
+    commit: str = "unavailable",
+) -> None:
+
+    filename = get_access_output_filename_daily_folder(
+        date, satellite, target_size, dataroot, "resamp_tbs"
+    )
+
+    # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
+    with LockedDataset(filename, "r+", 60) as nc_out:
+
+        # set the global_attributes
+        try:
+            data_type = tb_array_by_hour.dtype
+        except AttributeError:
+            data_type = np.float32
+
+        glb_attrs = common_global_attributes_access(
+            date, satellite, target_size, version, data_type
+        )
+        tb_attrs = resamp_tb_attributes_access(satellite, version, data_type)
+
+        glb_attrs.update(tb_attrs["global"])
+        tb_attrs = tb_attrs["var"]
+
+        glb_attrs["spatial_resolution"] = f"{target_size} km X {target_size} km"
+        glb_attrs[
+            "cell_method"
+        ] = f"area: resampled to {target_size}km Gaussian footprint"
+        set_all_attrs(nc_out, glb_attrs)
+        set_all_attrs(nc_out["brightness_temperature"], tb_attrs)
+
+        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
+        freq_attrs = coord_attributes_access("frequency", dtype=np.float32)
+        pol_attrs = coord_attributes_access("polarization", dtype=np.int32)
+        time_attrs = coord_attributes_access("time", dtype=np.int64)
+
+        set_all_attrs(nc_out["latitude"], lat_attrs)
+        set_all_attrs(nc_out["longitude"], lon_attrs)
+        set_all_attrs(nc_out["hours"], hours_attrs)
+        set_all_attrs(nc_out["freq"], freq_attrs)
+        set_all_attrs(nc_out["pol"], pol_attrs)
+        set_all_attrs(nc_out["time"], time_attrs)
+
+
 def write_daily_ancillary_var_netcdf(
     *,
     date: datetime.date,
@@ -407,11 +529,7 @@ def write_daily_ancillary_var_netcdf(
     anc_data: NDArray[Any],
     anc_name: str,
     anc_attrs: dict[str, Any],
-<<<<<<< access_io/access_output.py
-    global_attrs: dict[str, Any],
-=======
     global_attrs: Union[dict[str, Any], Literal["copy"]],
->>>>>>> access_io/access_output.py
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
     base_filename = get_access_output_filename_daily_folder(
@@ -479,6 +597,35 @@ def write_daily_ancillary_var_netcdf(
     var_filename.rename(var_filename_final)
 
 
+def edit_attrs_daily_ancillary_var_netcdf(
+    *,
+    date: datetime.date,
+    satellite: str,
+    target_size: int,
+    anc_data: ArrayLike,
+    anc_name: str,
+    anc_attrs: dict,
+    global_attrs: dict,
+    dataroot: Path = ACCESS_ROOT,
+) -> None:
+
+    var_filename_final = get_access_output_filename_daily_folder(
+        date, satellite.lower(), target_size, dataroot, anc_name
+    )
+
+    with LockedDataset(var_filename_final, "r+", 60) as nc_out:
+        set_all_attrs(nc_out, global_attrs)
+        set_all_attrs(nc_out.variables[anc_name], anc_attrs)
+
+        lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+        lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
+        hours_attrs = coord_attributes_access("hours", date=date, dtype=np.int32)
+
+        set_all_attrs(nc_out.variables["latitude"], lat_attrs)
+        set_all_attrs(nc_out.variables["longitude"], lon_attrs)
+        set_all_attrs(nc_out.variables["hours"], hours_attrs)
+
+
 def write_ocean_emiss_to_daily_ACCESS(
     *,
     ocean_emiss: ArrayLike,
@@ -539,7 +686,7 @@ def write_ocean_emiss_to_daily_ACCESS(
                 for varname, long_name, units in [
                     ("emissivity", "ocean surface emissivity", None),
                 ]:
-                    print(f"starting writing {varname}")
+                    print(f"starting writing {varname} to {emiss_filename_final}")
                     least_significant_digit = 3
                     trg.createVariable(
                         varname,

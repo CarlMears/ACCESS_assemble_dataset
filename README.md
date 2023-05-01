@@ -5,7 +5,7 @@ the ACCESS dataset.
 
 All processing has been moved to linux, though most of these scripts will also run on windows with the exception of add_wind_emiss_ACCESS.py
 
-## Instructions
+# Instructions
 
 The first step is to assemble a daily brightness temperature file.  The other steps,
 which append ancillary data to the daily file, can be performed in any order.  Because
@@ -23,7 +23,22 @@ pip install git+http://gitlab.remss.com/Carl/plotting.git
 pip install git+http://gitlab.remss.com/Carl/rss_lock.git
 ```
 
-### Assemble measured brightness temperatures
+## Overview of tasks required to construct the ACCESS dataset.
+These are the required steps:
+1. Calculate and Resample Satellite Radiances onto a fixed grid.  
+    * Lat/Lon Grid
+    * Polar Grids
+2. Download ERA5 Profile Data
+3. Calculate Atmospheric Parameters
+4. Download/Calculate Additional Ancillary Data
+    * ERA5 values of SKT, U10N,V10N, TCWV, TCLW
+    * Rain rate from imerg
+    * Ocean emissivity from ERA5 winds
+
+
+
+
+## Assemble measured brightness temperatures
 
 The `make_daily_ACCESS_files.py` script assembles the daily files from orbit files that contain the 
 resampled circular footprints. Each file contains 24 hour-long slices of data arranged in lat/lon maps
@@ -44,7 +59,7 @@ size if minimized by writing using slightly lossy built-in netCDF4 compression.
 
 **Example Command:**
 ```
-on linux
+linux:
 
 python make_daily_ACCESS_files.py /mnt/ops1p-ren/l/access/amsr2_out_test /mnt/ops1p-ren/l/access/_temp 2012-07-02 2012-07-31 amsr2 30 v01r00--overwrite 
 
@@ -200,9 +215,9 @@ python add_atmosphere_to_ACCESS_output.py L:/access 2012-07-11 amsr2
  ~~~json
  {
     "global":{
-        "summary": "Modis Land Mask resampled to gaussian footprints",
+        "summary": "Modis Land Mask resampled to Gaussian footprints",
         "keywords": "EARTH SCIENCE > LAND SURFACE > LAND USE/LAND COVER > LAND/OCEAN/ICE MASK",
-        "title": "Modis Land Mask resampled to circulargaussian footprintsgaussian footprints 0.25 degree Earth grid",
+        "title": "Modis Land Mask resampled to circular Gaussian footprints 0.25 degree Earth grid",
         "history": "Created from on-line MODIS data from the CMR EarthData API"},
     "var":{
         "standard_name": "land fraction",
