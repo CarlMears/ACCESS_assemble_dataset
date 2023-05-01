@@ -547,13 +547,16 @@ def edit_attrs_daily_ancillary_var_netcdf(
         set_all_attrs_polar(nc_out.variables["hours"], hours_attrs)
 
 
-def write_ocean_emiss_to_daily_ACCESS(
+
+def write_ocean_emiss_to_daily_ACCESS_polar(
     *,
     ocean_emiss: ArrayLike,
     current_day: datetime.date,
     satellite: str,
     target_size: int,
-    glb_attrs: dict,
+    grid_type: str,
+    pole: str,
+    global_attrs: dict,
     var_attrs: dict,
     dataroot: Path,
     outputroot: Path,
@@ -565,51 +568,66 @@ def write_ocean_emiss_to_daily_ACCESS(
         from satellite_definitions.amsr2 import REF_FREQ
 
     base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, dataroot, "resamp_tbs"
+        current_day, satellite, target_size, dataroot, "resamp_tbs",grid_type,pole
     )
     emiss_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, outputroot, "ocean_emiss_era5"
+        current_day, satellite, target_size, outputroot, "ocean_emiss_era5",grid_type,pole
     )
 
+    if pole == 'north':
+        lats = ease2_grid_25km_north.latitude
+        lons = ease2_grid_25km_north.longitude
+        crs_attrs = ease2_grid_25km_north.crs
+    elif pole == 'south':
+        lats = ease2_grid_25km_south.latitude
+        lons = ease2_grid_25km_south.longitude
+        crs_attrs = ease2_grid_25km_south.crs
+    else:
+        raise ValueError(f'Pole: {pole} is not valid')
+
     try:
-        with LockedDataset(base_filename, "r") as root_grp:
-
-            os.makedirs(emiss_filename_final.parent, exist_ok=True)
-
-            with LockedDataset(emiss_filename_final, mode="w") as trg:
+        with LockedDataset(emiss_filename_final, 'w', 60) as nc_out:
+            with LockedDataset(base_filename, "r", 60) as root_grp:
+                # Create the dimensions of the file from the base file
                 for name, dim in root_grp.dimensions.items():
-                    if name in ["hours", "latitude", "longitude"]:
-                        trg.createDimension(
+                    if name in ["hours", "x", "y",'freq','pol']:
+                        nc_out.createDimension(
                             name, len(dim) if not dim.isunlimited() else None
                         )
+                set_all_attrs_polar(nc_out, global_attrs)
 
-                # create the new dimensions needed for the emissivity data
-                trg.createDimension("freq", len(REF_FREQ))
-                trg.createDimension("pol", 2)
-
-                set_all_attrs_polar(trg, glb_attrs)
-
-                for var_name in ["hours", "longitude", "latitude", "freq", "pol"]:
+                for var_name in ["hours", "x", "y", "latitude", "longitude", "freq", "pol"]:
                     # Create the time and dimension variables in the output file
                     var_in = root_grp[var_name]
-                    trg.createVariable(
+                    #print(f'Transferring {var_name}')
+                    nc_out.createVariable(
                         var_name, var_in.dtype, var_in.dimensions, zlib=True
                     )
 
-                    # Copy the attributes from the base file
-                    trg.variables[var_name].setncatts(
+                    # Copy the attributes
+                    nc_out.variables[var_name].setncatts(
                         {a: var_in.getncattr(a) for a in var_in.ncattrs()}
                     )
-                    trg[var_name][:] = var_in[:]
 
-                dimensions_out = ("latitude", "longitude", "hours", "freq", "pol")
+                    # Copy the data values
+                    nc_out.variables[var_name][:] = root_grp.variables[var_name][:]
+
+
+                # create the new dimensions needed for the emissivity data
+                # nc_out.createDimension("freq", len(REF_FREQ))
+                # nc_out.createDimension("pol", 2)
+
+               
+
+
+                dimensions_out = ("x", "y", "hours", "freq", "pol")
 
                 for varname, long_name, units in [
                     ("emissivity", "ocean surface emissivity", None),
                 ]:
                     print(f"starting writing {varname} to {emiss_filename_final}")
                     least_significant_digit = 3
-                    trg.createVariable(
+                    nc_out.createVariable(
                         varname,
                         np.float32,
                         dimensions_out,
@@ -617,8 +635,8 @@ def write_ocean_emiss_to_daily_ACCESS(
                         zlib=True,
                         least_significant_digit=least_significant_digit,
                     )
-                    set_all_attrs_polar(trg, var_attrs)
-                    trg[varname][:, :, :, :, :] = ocean_emiss
+                    set_all_attrs_polar(nc_out, var_attrs)
+                    nc_out[varname][:, :, :, :, :] = ocean_emiss
 
                     print(f"finished writing {varname}")
 

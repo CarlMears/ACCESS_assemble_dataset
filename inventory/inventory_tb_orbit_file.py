@@ -18,14 +18,13 @@ def is_file_multiple_try(path_to_test: Path, max_tries: int = 10):
     return is_file_multiple
 
 
-def inventory_access_tb_orbit_files(
+def inventory_access_tb_orbit_files(*,
     tb_orbit_root: Path,
     start_orbit: int,
     end_orbit: int,
     channel_list: list,
     footprint_size: int,
     file_template: str,
-    template_to_fix: str,
 ) -> np.ndarray:
 
     debug = False
@@ -48,25 +47,15 @@ def inventory_access_tb_orbit_files(
         l2b_root_this_orbit = AMSR2_L2B_root / f"r{lower_range:05d}_{upper_range:05d}"
         for ich, channel in enumerate(channel_list):
             filename = (
-                tb_orbit_root_this_orbit
-                / f"r{orbit_num:05d}.{file_template}."
+                tb_orbit_root_this_orbit / f"r{orbit_num:05d}.{file_template}."
                 f"ch{channel:02d}.{footprint_size:03d}km.nc"
-                )
+            )
             if debug:
                 print(filename)
             isFile = is_file_multiple_try(filename)
             if isFile:
                 exists[channel - channel_list[0], orbit_num - start_orbit] = 2
             else:
-                #     filename2 = (
-                #     tb_orbit_root_this_orbit /
-                #     f'r{orbit_num:05d}.{template_to_fix}.{channel_name[ich]}.nc'
-                # )
-                #     isFile = is_file_multiple_try(filename2)
-                #     if isFile:
-                #         print('renaming {filename2} to {file_name}')
-                #         filename2.rename(filename)
-
                 l2b_filename = l2b_root_this_orbit / f"r{orbit_num:05d}.dat"
                 isFileL2B = is_file_multiple_try(l2b_filename)
                 if isFileL2B:
@@ -111,34 +100,47 @@ if __name__ == "__main__":
         raise ValueError
 
     channel_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-    channel_name = ["11V", "11H", "19V", "19H", "24V", "24H", "37V", "37H"]
+    channel_name = ["6.9V","6.9H","7.3V","7.3H","11V", "11H", "19V", "19H", "24V", "24H", "37V", "37H"]
 
-    footprint_size = 70
-    template = "grid_tb"
-    template_to_fix = "gridded_tbs"
+    footprint_size = 30
+    region = "north"
+    
+    if region == "global":
+        template = "grid_tb"
+        tb_orbit_root = tb_orbit_root / f'GL_{footprint_size:02d}'
+    elif region == "north":
+        template = "polar_grid_tb.north"
+        tb_orbit_root = tb_orbit_root / f'NP_{footprint_size:02d}'
+    elif region == "south":
+        template = "polar_grid_tb.south"
+        tb_orbit_root = tb_orbit_root / f'SP_{footprint_size:02d}'
+    else:
+        raise ValueError(f"Region: {region} is not valid")
 
-    for orbit_group in range(11, 12):
+
+    for orbit_group in range(0,12):
         start_orbit = 5000 * orbit_group + 1
         end_orbit = start_orbit + 4999
 
         exists = inventory_access_tb_orbit_files(
-            tb_orbit_root,
-            start_orbit,
-            end_orbit,
-            channel_list,
-            footprint_size,
-            template,
-            template_to_fix,
+            tb_orbit_root = tb_orbit_root,
+            start_orbit = start_orbit,
+            end_orbit = end_orbit,
+            channel_list = channel_list,
+            footprint_size = footprint_size,
+            file_template = template,
         )
 
         print(np.sum(exists))
         fig, ax = plot_orbit_summary(start_orbit, end_orbit, exists, channel_list)
-        ax.set_title(f"AMSR2 Tb Orbit Inventory {start_orbit:05d}-{end_orbit:05d} {footprint_size:03d}km")
+        ax.set_title(
+            f"AMSR2 Tb Orbit Inventory {start_orbit:05d}-{end_orbit:05d} {region} {footprint_size:03d}km"
+        )
         print()
         png_file = (
             tb_orbit_root
             / "inventory"
-            / f"tb_orbit_inv_r{start_orbit:05d}_{end_orbit:05d}.{footprint_size:03d}km.png"
+            / f"tb_orbit_inv_r{start_orbit:05d}_{end_orbit:05d}.{footprint_size:03d}km.{region}.png"
         )
         os.makedirs(png_file.parent, exist_ok=True)
         fig.savefig(png_file)

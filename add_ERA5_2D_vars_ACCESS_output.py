@@ -41,29 +41,23 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     update: bool = False,
     script_name: str,
     commit: str,
+    resampler=None,
 ) -> None:
 
     # Do some logic about the region and file names
 
     if region == "global":
         base_filename = get_access_output_filename_daily_folder(
-            current_day, 
-            satellite, 
-            target_size, 
-            dataroot, 
-            "resamp_tbs"
+            current_day, satellite, target_size, dataroot, "resamp_tbs"
         )
         anc_name = f"{variable[0]}_era5"
         var_filename_final = get_access_output_filename_daily_folder(
-            current_day, 
-            satellite, 
-            target_size, 
-            dataroot, 
-            anc_name)
+            current_day, satellite, target_size, dataroot, anc_name
+        )
         grid_type = "equirectangular"
         pole = None
     elif region in ["north", "south"]:
-        pole=region
+        pole = region
         base_filename = get_access_output_filename_daily_folder(
             current_day,
             satellite,
@@ -75,18 +69,18 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         )
         anc_name = f"{variable[0]}_era5"
         var_filename_final = get_access_output_filename_daily_folder(
-            current_day, 
-            satellite, 
-            target_size, 
-            dataroot, 
+            current_day,
+            satellite,
+            target_size,
+            dataroot,
             anc_name,
             grid_type="ease2",
-            pole=pole,)
+            pole=pole,
+        )
         grid_type = "ease2"
         pole = region
     else:
         raise ValueError(f"region {region} not valid")
-
 
     # Get the maps of observation times from the existing output file that
     # already contains times and Tbs
@@ -109,7 +103,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         overwrite=overwrite,
         update=update,
         grid_type=grid_type,
-        pole=pole
+        pole=pole,
     ):
 
         if not base_filename.is_file():
@@ -190,36 +184,23 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 (var_first_day, var_next_day[np.newaxis, :, :]), axis=0
             )
 
+        var = np.flip(var, 1)
         # file1 modification time as a datetime.datetime object
         mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
 
-
         resample_required = True
-        if ((target_size == 30) and (grid_type=="equirectangular")):
+        if (target_size == 30) and (grid_type == "equirectangular"):
             resample_required = False
-        resampler = None
+
         if resample_required:
             if resampler is None:
-                resampler = ResampleERA5(target_size=target_size,region=region)
-            
+                # should be done at a higher level, but just in case....
+                resampler = ResampleERA5(target_size=target_size, region=region)
+
             time_begin = datetime.datetime.now()
             var = resampler.resample_fortran(var)
-            time = datetime.datetime.now()-time_begin
-            print(time)
-
-            # time_begin = datetime.datetime.now()
-            # var_test = resampler.resample(var)
-            # time = datetime.datetime.now()-time_begin
+            time = datetime.datetime.now() - time_begin
             # print(time)
-
-        # ERA-5 files are upside down relative to RSS convention.
-        # TODO: I think you can just do var = var[:, ::-1, :] and avoid the loop
-        #for i in range(0, 25):
-        #    var[i, :, :] = np.flipud(var[i, :, :])
-
-        # interpolate the array of var maps to the times in the "times" maps
-
-        print(f"Interpolating...{variable[0]}")
 
         # list of times, each hour.
         var_times = np.arange(0.0, 86401.0, 3600.0)
@@ -228,14 +209,15 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
         var_by_hour = np.full_like(times, np.nan).filled()
 
+        time_begin = datetime.datetime.now()
         for hour_index in range(0, 24):
             time_map = times[:, :, hour_index]
             var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
                 var, var_times, time_map
             )
             var_by_hour[:, :, hour_index] = var_at_time_map
+        time = datetime.datetime.now() - time_begin
 
-        print(f"Finished Interpolating...{variable[0]}")
         if "_FillValue" in var_attrs.keys():
             var_by_hour[~np.isfinite(var_by_hour)] = var_attrs["_FillValue"]
 
@@ -246,7 +228,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         glb_attrs["commit"] = commit
 
         # write the results to a separate output file
-        if grid_type == 'equirectangular':
+        if grid_type == "equirectangular":
             write_daily_ancillary_var_netcdf(
                 date=current_day,
                 satellite=satellite,
@@ -257,7 +239,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 global_attrs=glb_attrs,
                 dataroot=outputroot,
             )
-        elif grid_type == 'ease2':
+        elif grid_type == "ease2":
             write_daily_ancillary_var_netcdf_polar(
                 date=current_day,
                 satellite=satellite,
@@ -271,7 +253,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 dataroot=outputroot,
             )
         else:
-            raise ValueError(f'Grid Type {grid_type} is not valid')
+            raise ValueError(f"Grid Type {grid_type} is not valid")
     else:
         print(f"No processing needed for {anc_name} on {current_day}")
 
@@ -293,7 +275,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--access_root", type=Path, help="Root directory to ACCESS project"
     )
-    parser.add_argument("--output_root", type=Path, help="Root directory to write output")
+    parser.add_argument(
+        "--output_root", type=Path, help="Root directory to write output"
+    )
     parser.add_argument(
         "--temp_root", type=Path, help="Root directory store temporary files"
     )
@@ -311,11 +295,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
-
-    parser.add_argument("--version", help="version sting - e.g. v01r00")
     parser.add_argument(
-        "--region", help="region to process",choices=["global","north","south"]
+        "--region", help="region to process", choices=["global", "north", "south"]
     )
+    parser.add_argument("--version", help="version sting - e.g. v01r00")
+
     parser.add_argument("-v", "--variables", nargs="*", default=[])
 
     parser.add_argument(
@@ -373,6 +357,15 @@ if __name__ == "__main__":
             print(f"Variable {var} not defined - skipping")
             continue
 
+        resample_required = True
+        if (target_size == 30) and (region == "global"):
+            resample_required = False
+
+        resampler = None
+        if resample_required:
+            if resampler is None:
+                resampler = ResampleERA5(target_size=target_size, region=region)
+
         date = START_DAY
         while date <= END_DAY:
 
@@ -407,6 +400,7 @@ if __name__ == "__main__":
                 update=update,
                 script_name=script_name,
                 commit=commit,
+                resampler=resampler,
             )
 
             date += datetime.timedelta(days=1)

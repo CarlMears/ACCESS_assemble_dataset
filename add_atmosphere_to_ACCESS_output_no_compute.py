@@ -113,7 +113,6 @@ def write_atmosphere_to_daily_ACCESS(
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
 
-
         # Do some logic about the region and file names
 
     if region == "global":
@@ -188,7 +187,7 @@ def write_atmosphere_to_daily_ACCESS(
         overwrite=overwrite,
         update=update,
         grid_type=grid_type,
-        pole=pole
+        pole=pole,
     ):
 
         if atm_filename_final.is_file():
@@ -204,7 +203,7 @@ def write_atmosphere_to_daily_ACCESS(
             print(f"Opening data for {satellite} on {current_day} in {dataroot}")
 
         try:
-            with LockedDataset(base_filename, "r",lock_stale_time = 0.1) as root_grp:
+            with LockedDataset(base_filename, "r", lock_stale_time=0.1) as root_grp:
 
                 if verbose:
                     print(
@@ -223,16 +222,9 @@ def write_atmosphere_to_daily_ACCESS(
                 if (target_size == 30) and (grid_type == "equirectangular"):
                     resample_required = False
                 resampler = None
-
-                # WORKING HERE!
                 if resample_required:
                     if resampler is None:
                         resampler = ResampleERA5(target_size=target_size, region=region)
-
-                    # time_begin = datetime.datetime.now()
-                    # var = resampler.resample_fortran(var)
-                    # time = datetime.datetime.now()-time_begin
-                    # print(time)time = dateti
 
                 glb_attrs = common_global_attributes_access(
                     current_day,
@@ -254,27 +246,33 @@ def write_atmosphere_to_daily_ACCESS(
                 glb_attrs["script_name"] = script_name
                 glb_attrs["commit"] = commit
 
-                with LockedDataset(atm_filename, mode="w",lock_stale_time = 0.1) as trg:
+                with LockedDataset(atm_filename, mode="w", lock_stale_time=0.1) as trg:
                     for name, dim in root_grp.dimensions.items():
-                        if grid_type == 'equirectangular':
+                        if grid_type == "equirectangular":
                             if name in ["hours", "latitude", "longitude"]:
                                 trg.createDimension(
                                     name, len(dim) if not dim.isunlimited() else None
                                 )
-                        elif grid_type == 'ease2':
+                        elif grid_type == "ease2":
                             if name in ["hours", "x", "y"]:
                                 trg.createDimension(
                                     name, len(dim) if not dim.isunlimited() else None
                                 )
                         else:
-                            raise ValueError(f'Grid Type {grid_type} is not valid')
+                            raise ValueError(f"Grid Type {grid_type} is not valid")
 
                     trg.createDimension("freq", len(REF_FREQ))
 
                     # Set global attributes
                     set_all_attrs(trg, glb_attrs)
-                    if grid_type == 'equirectangular':
-                        for var_name in ["time", "hours", "longitude", "latitude", "freq"]:
+                    if grid_type == "equirectangular":
+                        for var_name in [
+                            "time",
+                            "hours",
+                            "longitude",
+                            "latitude",
+                            "freq",
+                        ]:
                             # Create the time and dimension variables in the output file
                             var_in = root_grp[var_name]
                             trg.createVariable(
@@ -287,7 +285,7 @@ def write_atmosphere_to_daily_ACCESS(
                             )
                             trg[var_name][:] = var_in[:]
                         dimensions_out = ("latitude", "longitude", "hours", "freq")
-                    elif grid_type == 'ease2':
+                    elif grid_type == "ease2":
                         for var_name in ["time", "hours", "x", "y", "freq"]:
                             # Create the time and dimension variables in the output file
                             var_in = root_grp[var_name]
@@ -312,12 +310,10 @@ def write_atmosphere_to_daily_ACCESS(
                             trg.variables[var_name].setncatts(
                                 {a: var_in.getncattr(a) for a in var_in.ncattrs()}
                             )
-                            trg[var_name][:,:] = var_in[:,:]
+                            trg[var_name][:, :] = var_in[:, :]
                         dimensions_out = ("y", "x", "hours", "freq")
                     else:
-                        raise ValueError(f'Grid Type {grid_type} is not valid')
-
-                    
+                        raise ValueError(f"Grid Type {grid_type} is not valid")
 
                     for varname, long_name, units in [
                         ("transmissivity", "atmospheric transmissivity", None),
@@ -357,14 +353,24 @@ def write_atmosphere_to_daily_ACCESS(
 
                             if resample_required:
 
-                                print(f'Resampling {varname} to polar map for freq = {freq}')
+                                print(
+                                    f"Resampling {varname} to polar map for freq = {freq}"
+                                )
                                 time_begin = datetime.datetime.now()
                                 var = resampler.resample_fortran(var)
-                                time = datetime.datetime.now()-time_begin
-                                
-                            var_times = rtm_data.time_in_day
+                                time = datetime.datetime.now() - time_begin
 
-                            print('Interpolating in time',end="")
+                            var_times = rtm_data.time_in_day
+                            var = np.moveaxis(var, 1, -1)
+
+                            # #DEBUG
+                            # import matplotlib.pyplot as plt
+                            # from rss_plotting.global_map import plot_global_map
+                            # debug_root = output_root / 'debug'
+                            # os.makedirs(debug_root,exist_ok=True)
+                            # # END DEBUG
+
+                            print("Interpolating in time", end="")
                             for hour_index in range(len(root_grp["hours"][:])):
                                 time_map = root_grp["time"][:, :, hour_index]
                                 time_map = (
@@ -373,12 +379,24 @@ def write_atmosphere_to_daily_ACCESS(
                                         current_day - datetime.date(1900, 1, 1)
                                     ).total_seconds()
                                 )
+                                time_map = np.transpose(time_map)
                                 var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
                                     var, var_times, time_map
                                 )
+
                                 trg[varname][
                                     :, :, hour_index, freq_index
                                 ] = var_at_time_map
+
+                                # fig,ax = plot_global_map(time_map,vmin=0,vmax=86400,plt_colorbar=True)
+                                # fig.savefig(debug_root /'time_map.png')
+
+                                # fig,ax = plot_global_map(var[0,:,:],vmin=0.9,vmax=1.0,plt_colorbar=True)
+                                # fig.savefig(debug_root /'trans_map.png')
+
+                                # fig,ax = plot_global_map(var_at_time_map,vmin=0.9,vmax=1.0,plt_colorbar=True)
+                                # fig.savefig(debug_root /'trans_map_at_time.png')
+
                                 print(".", end="")
                             print()
                         print()
@@ -459,7 +477,7 @@ if __name__ == "__main__":
     repo = git.Repo(search_parent_directories=True)
     commit = repo.head.object.hexsha
 
-    print("Adding ERA5 drrived RTM parameters")
+    print("Adding ERA5 derived RTM parameters")
     print(f"ACCESS Root: {access_root}")
     print(f"Output Root: {output_root}")
     print(f"RTM Root: {rtm_dir}")

@@ -146,7 +146,7 @@ if __name__ == '__main__':
             data_vars = dict(
             weights = (["Y","X","Sample"],weight_map),
             latitude = (["Y","X"],ease2_grid_25km_north.latitude),
-            longitude = (["Y","X"],ease2_grid_25km_north.latitude),
+            longitude = (["Y","X"],ease2_grid_25km_north.longitude),
             lat_index = (["Latitude","Longitude","Sample"],ilat_map),
             lon_index = (["Latitude","Longitude","Sample"],ilon_map),
                             ),

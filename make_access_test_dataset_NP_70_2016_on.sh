@@ -2,7 +2,7 @@ access_root=/mnt/ops1p-ren/l/access/amsr2_out_NP_70
 output_root=/mnt/ops1p-ren/l/access/amsr2_out_NP_70
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date=2012-08-01
+start_date=2016-01-01
 end_date=2019-12-31
 satellite=amsr2
 target_size=70
@@ -59,7 +59,7 @@ python add_atmosphere_to_ACCESS_output_no_compute.py \
 # python add_ERA5_2D_vars_ACCESS_output.py \
 #                        --access_root $output_root \
 #                        --output_root $output_root \
-#                        --temp_root $temp_root \
+#      82222212                  --temp_root $temp_root \
 #                        --start_date $start_date \
 #                        --end_date $end_date \
 #                        --sensor $satellite \

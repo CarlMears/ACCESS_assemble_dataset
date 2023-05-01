@@ -34,9 +34,8 @@ path_to_this_day = (
 )
 
 atm_par_file = (
-    path_to_this_day
-    / f"amsr2_atm_par_era5_{day_to_do.year}_{day_to_do.month:02d}"
-      f"_{day_to_do.day:02d}.{footprint_size:03d}km.nc"
+    path_to_this_day / f"amsr2_atm_par_era5_{day_to_do.year}_{day_to_do.month:02d}"
+    f"_{day_to_do.day:02d}.{footprint_size:03d}km.nc"
 )
 
 print(atm_par_file)
@@ -57,8 +56,10 @@ for ivar, var in enumerate(vars):
         glb_map[glb_map < -50.0] = np.nan
 
         if len(varunits[ivar]) > 0:
-            title_str = f"Calculated AMSR2 (from ERA5 profiles) "\
-                        f"{varnames[ivar]} {freq:.2f} ({varunits[ivar]})"
+            title_str = (
+                f"Calculated AMSR2 (from ERA5 profiles) "
+                f"{varnames[ivar]} {freq:.2f} ({varunits[ivar]})"
+            )
         else:
             title_str = (
                 f"Calculated AMSR2 (from ERA5 profiles) {varnames[ivar]} {freq:.2f}"
@@ -109,9 +110,8 @@ var_names = [
 ]
 for ivar, var in enumerate(vars):
     file = (
-        path_to_this_day
-        / f"amsr2_{var}_{day_to_do.year}_{day_to_do.month:02d}_"
-          f"{day_to_do.day:02d}.{footprint_size:03d}km.nc"
+        path_to_this_day / f"amsr2_{var}_{day_to_do.year}_{day_to_do.month:02d}_"
+        f"{day_to_do.day:02d}.{footprint_size:03d}km.nc"
     )
     print(file)
     ds = xr.open_dataset(file)
@@ -154,9 +154,8 @@ print
 
 
 resamp_tb_file = (
-    path_to_this_day
-    / f"amsr2_resamp_tbs_{day_to_do.year}_{day_to_do.month:02d}_"
-      f"{day_to_do.day:02d}.{footprint_size:03d}km.nc"
+    path_to_this_day / f"amsr2_resamp_tbs_{day_to_do.year}_{day_to_do.month:02d}_"
+    f"{day_to_do.day:02d}.{footprint_size:03d}km.nc"
 )
 
 print(resamp_tb_file)

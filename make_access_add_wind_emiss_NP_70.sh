@@ -44,17 +44,17 @@ version=test_01
 #                     $version \
 #                     "--update" 
 
-python add_atmosphere_to_ACCESS_output_no_compute.py \
-                    --access_root $access_root \
-                    --output_root $output_root \
-                    --temp_root $rtm_data_root \
-                    --start_date $start_date \
-                    --end_date $end_date \
-                    --sensor $satellite \
-                    --target_size $target_size \
-                    --version $version \
-                    --region $region \
-                    --overwrite
+# python add_atmosphere_to_ACCESS_output_no_compute.py \
+#                     --access_root $access_root \
+#                     --output_root $output_root \
+#                     --temp_root $rtm_data_root \
+#                     --start_date $start_date \
+#                     --end_date $end_date \
+#                     --sensor $satellite \
+#                     --target_size $target_size \
+#                     --version $version \
+#                     --region $region \
+#                     --overwrite
                     
 # python add_ERA5_2D_vars_ACCESS_output.py \
 #                        --access_root $output_root \
@@ -71,17 +71,20 @@ python add_atmosphere_to_ACCESS_output_no_compute.py \
 
              
 
-# python add_wind_emiss_ACCESS.py \
-#                     $access_root \
-#                     $output_root \
-#                     $wind_source \
-#                     $wind_source \
-#                     $start_date \
-#                     $end_date \
-#                     $satellite \
-#                     $target_size \
-#                     $version \
-#                     "--update"
+python add_wind_emiss_ACCESS.py \
+                    --access_root $access_root \
+                    --output_root $output_root \
+                    --wind $wind_source \
+                    --sst $wind_source \
+                    --start_date $start_date \
+                    --end_date $end_date \
+                    --sensor $satellite \
+                    --target_size $target_size \
+                    --region $region
+                    --version $version \
+                    "--update"
+
+
 
 # python add_imerg_rain_rate_to_ACCESS_output.py \
 #                     $access_root \

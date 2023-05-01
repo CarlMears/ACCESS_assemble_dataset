@@ -91,7 +91,9 @@ class ResampleERA5:
 
         self.weightsF = np.asfortranarray(np.swapaxes(ds['weights'].values,0,2))
         self.yindexF = np.asfortranarray(np.swapaxes(ds['lat_index'].values,0,2)+1)
+
         self.xindexF = np.asfortranarray(np.swapaxes(ds['lon_index'].values,0,2)+1)
+        #self.xindexF[self.xindexF > 1440] = self.xindexF[self.xindexF > 1440] - 1440
 
         try:
             self.lats = ds['latitude'].values

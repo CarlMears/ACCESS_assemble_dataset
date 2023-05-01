@@ -37,10 +37,21 @@ def get_resampled_file_name(satellite: str,
                             pole: str = 'north',
                             dataroot: Path = ACCESS_ROOT):
 
+    if grid_type == 'equirectangular':
+        folder = f'GL_{target_size}'
+    elif grid_type == 'ease2':
+        if pole=='north':
+            folder = f'NP_{target_size}'
+        elif pole == 'south':
+            folder = f'NP_{target_size}'
+        else:
+            raise ValueError(f'Pole: {pole} not valid')
+    else:
+        raise ValueError(f'grid_type: {grid_type} is not valid')
     orbit_lower, orbit_upper = get_AMSR2_orbit_range(orbit)
-    orbit_dir = dataroot.joinpath(
-        f"{satellite}_tb_orbits", f"r{orbit_lower:05d}_{orbit_upper:05d}"
-    )
+    orbit_dir = dataroot / f"{satellite}_tb_orbits" / folder / f"r{orbit_lower:05d}_{orbit_upper:05d}"
+    orbit_dir_time = dataroot / f"{satellite}_tb_orbits" / f"r{orbit_lower:05d}_{orbit_upper:05d}"
+    
 
     if isinstance(channel,int):
         if ((channel >= 0) and (channel <=99)):
@@ -55,7 +66,7 @@ def get_resampled_file_name(satellite: str,
 
     if grid_type == 'equirectangular':
         if channel_str == "time":
-            filename = orbit_dir / f"r{orbit:05d}.time.nc"
+            filename = orbit_dir_time/ f"r{orbit:05d}.time.nc"
         else:
             filename = (
                 orbit_dir / f"r{orbit:05d}.grid_tb.{channel_str}.{target_size:03d}km.nc"
@@ -64,7 +75,7 @@ def get_resampled_file_name(satellite: str,
     elif grid_type == 'ease2':
         if pole in ['north','south']:
             if channel_str == "time":
-                filename = orbit_dir / f"r{orbit:05d}.polar_grid_time.{pole}.nc"
+                filename = orbit_dir_time / f"r{orbit:05d}.polar_grid_time.{pole}.nc"
             else:
                 filename = (
                     orbit_dir / f"r{orbit:05d}.polar_grid_tb.{pole}."
@@ -109,15 +120,6 @@ def read_AMSR2_resampled_tbs(
 
     if satellite.lower() not in IMPLEMENTED_SATELLITES:
         raise ValueError(f"Satellite {satellite} is not implemented")
-    # if isinstance(channel, int):
-    #     if (channel < 1) or (channel > 14):
-    #         raise ValueError(f"channel {channel} is out of range")
-    #     channel_str = AVAILABLE_CHANNELS[channel]
-    # else:
-    #     if channel in AVAILABLE_CHANNELS:
-    #         channel_str = channel
-    #     else:
-    #         raise ValueError(f"Channel {channel} not valid")
 
     filename = get_resampled_file_name(satellite=satellite,
                             channel=channel,

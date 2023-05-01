@@ -13,13 +13,12 @@ from access_io.access_output import get_access_output_filename_daily_folder
 from access_io.access_output import write_daily_ancillary_var_netcdf
 
 
-
-output_root = Path('N:/data/model/ERA5/hourly')
-var_list = ['tcwv','u10n','v10n','tclw','skt']
+output_root = Path("N:/data/model/ERA5/hourly")
+var_list = ["tcwv", "u10n", "v10n", "tclw", "skt"]
 year = 2017
 
 for var in var_list:
-    for month in range(1,13):
+    for month in range(1, 13):
 
         var_dict = {
             "skt": "Skin temperature",
@@ -36,11 +35,12 @@ for var in var_list:
 
         os.makedirs(output_root, exist_ok=True)
 
-        current_day = datetime.datetime(year,month,15)
+        current_day = datetime.datetime(year, month, 15)
         file1 = era5_hourly_single_level_request(
             date=current_day,
             variable=variable[1],
             target_path=output_root,
             full_day=True,
-            full_month=True,simpler_path=True
+            full_month=True,
+            simpler_path=True,
         )

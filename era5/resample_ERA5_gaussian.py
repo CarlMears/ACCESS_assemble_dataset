@@ -39,7 +39,8 @@ if __name__ == '__main__':
 
             #figure out indices of the ERA5 submap needed
             
-            half_numy = 10  #eventually, this will be a function of the footprint size
+            half_numy = 10  
+            #eventually, this will be a function of the footprint size
             half_numx = int(np.ceil(half_numy/np.cos(np.deg2rad(latitude0))))
 
             numy = 1+2*half_numy
