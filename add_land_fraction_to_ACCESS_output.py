@@ -1,9 +1,10 @@
 import argparse
 import datetime
-import numpy as np
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
+import numpy as np
 import xarray as xr
 
 from access_io.access_output import write_daily_lf_netcdf
@@ -28,7 +29,6 @@ def add_land_fraction_to_ACCESS_output(
     overwrite: bool,
     lf_version: str = "modis",
 ) -> None:
-
     if os.name == "nt":
         land_path = Path("L:/access/land_water")
     elif os.name == "posix":
@@ -56,6 +56,18 @@ def add_land_fraction_to_ACCESS_output(
         land_file = (
             land_path
             / f"land_fraction_1440_721_{target_size}km.from_nsidc_3km_mask.{region}.ease25.v5.nc"
+    try:
+        write_daily_lf_netcdf(
+            date=date,
+            satellite=satellite,
+            target_size=target_size,
+            version=version,
+            lf_version=lf_version,
+            land_fraction=land_fraction_np,
+            dataroot=dataroot,
+            overwrite=overwrite,
+            script_name=script_name,
+            commit=commit,
         )
         land_fraction_xr = xr.open_dataset(land_file)
         land_fraction_np = land_fraction_xr["land_fraction"].values
@@ -132,7 +144,6 @@ def add_land_fraction_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description=(
             "Interpolate and append surface temperature to ACCESS output file. "

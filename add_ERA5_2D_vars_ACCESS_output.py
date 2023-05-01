@@ -1,8 +1,7 @@
 import argparse
-from contextlib import suppress
 import datetime
-import git
 import os
+from contextlib import suppress
 from pathlib import Path
 from typing import Tuple, Union
 from netCDF4 import Dataset as netcdf_dataset
@@ -12,12 +11,21 @@ from era5_request.era5_requests import era5_hourly_single_level_request
 from access_io.access_output import get_access_output_filename_daily_folder
 from access_io.access_output import write_daily_ancillary_var_netcdf
 from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
+from typing import Any, Tuple
+
+import git
+import numpy as np
+from netCDF4 import Dataset as netcdf_dataset
 
 from access_io.access_attr_define import (
-    common_global_attributes_access,
     anc_var_attributes_access,
+    common_global_attributes_access,
 )
-
+from access_io.access_output import (
+    get_access_output_filename_daily_folder,
+    write_daily_ancillary_var_netcdf,
+)
+from era5_request.era5_requests import era5_hourly_single_level_request
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 from util.file_times import need_to_process
 
@@ -28,8 +36,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     *,
     current_day: datetime.date,
     variable: Tuple[str, str],
-    glb_attrs: Union[dict, str],
-    var_attrs: dict,
+    glb_attrs: dict[str, Any],
+    var_attrs: dict[str, Any],
     satellite: str,
     target_size: int,
     region: str,
@@ -259,7 +267,6 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
 
 if __name__ == "__main__":
-
     cds_help = (
         "For downloading ERA5 data from CDS, the UID and API key "
         "must be set as arguments or in the 'CDS_UID' and 'CDS_API_KEY` "

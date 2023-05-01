@@ -14,9 +14,9 @@ folder.
 
 import datetime
 import os
+from calendar import monthrange
 from pathlib import Path
 from typing import Sequence
-from calendar import monthrange
 
 import cdsapi
 
@@ -31,7 +31,6 @@ def era5_hourly_single_level_request(
     verbose: bool = False,
     simpler_path: bool = False,
 ) -> Path:
-
     c = cdsapi.Client()
 
     # target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.nc"

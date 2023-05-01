@@ -1,14 +1,13 @@
 from datetime import date
 from pathlib import Path
-from typing import Collection, Dict
+from typing import Any, Collection
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 
 # these packages are located in folders in the local path
-from access_io.access_output import get_access_output_filename
-
+from access_io.access_output import get_access_output_filename_daily_folder
 
 NUM_LATS = 721
 NUM_LONS = 1440
@@ -40,9 +39,10 @@ def inventory_daily_ACCESS_tb_file(
     dataroot: Path,
     channels: Collection[int],
     verbose: bool = False,
-) -> Dict:
-
-    filename = get_access_output_filename(current_day, satellite, dataroot)
+) -> list[Any]:
+    filename = get_access_output_filename_daily_folder(
+        current_day, satellite, 0, dataroot, "UNKNOWN"
+    )
     if filename.is_file():
         ds = xr.open_dataset(filename)
         return list(ds.data_vars.keys())
@@ -51,7 +51,6 @@ def inventory_daily_ACCESS_tb_file(
 
 
 def plot_inventory(access_inventory):
-
     from rss_plotting.plot_2d_array import plot_2d_array
 
     inv_np = np.transpose(access_inventory.to_numpy())
@@ -83,7 +82,6 @@ def plot_inventory(access_inventory):
 
 
 if __name__ == "__main__":
-
     import argparse
     import datetime
 
@@ -127,7 +125,6 @@ if __name__ == "__main__":
     df = pd.DataFrame(index=date_rng)
 
     while day_to_do <= END_DAY:
-
         list_of_vars = inventory_daily_ACCESS_tb_file(
             current_day=day_to_do,
             satellite=satellite,

@@ -1,11 +1,11 @@
 import argparse
-from contextlib import suppress
 import datetime
-import git
+from contextlib import suppress
 from pathlib import Path
+
+import git
 import numpy as np
-from access_io.access_output import get_access_output_filename_daily_folder
-from satellite_definitions.amsr2 import REF_FREQ, REF_EIA
+from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
 from rss_lock.locked_dataset import LockedDataset
 
 from access_io.access_output import write_ocean_emiss_to_daily_ACCESS
@@ -18,6 +18,15 @@ from access_io.access_attr_define import (
 from util.file_times import need_to_process
 
 from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
+from access_io.access_attr_define import (  # old version
+    anc_var_attributes_access,
+    common_global_attributes_access,
+)
+from access_io.access_output import (
+    get_access_output_filename_daily_folder,
+    write_ocean_emiss_to_daily_ACCESS,
+)
+from satellite_definitions.amsr2 import REF_EIA, REF_FREQ
 
 # these are for debugging only
 # from rss_plotting.global_map import plot_global_map
@@ -186,6 +195,10 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     date = START_DAY
+while date <= END_DAY:
+    emiss_filename_final = get_access_output_filename_daily_folder(
+        date, satellite, target_size, output_root, "ocean_emiss_era5"
+    )
 
     if region in ["north", "south"]:
         grid_type = "ease2"

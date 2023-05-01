@@ -1,21 +1,18 @@
-from contextlib import suppress
 import datetime
 import os
+from contextlib import suppress
 from pathlib import Path
-from typing import Optional, Sequence, Any
-from netCDF4 import Variable
-
+from typing import Optional, Sequence, Any, Union, Literal
 import numpy as np
-from numpy.typing import ArrayLike
-
+from netCDF4 import Variable
+from numpy.typing import ArrayLike, NDArray
 from rss_lock.locked_dataset import LockedDataset
 
-from access_io.access_attr_define import (
-    common_global_attributes_access,
-    resamp_tb_attributes_access,
-    coord_attributes_access,
-    # atm_pars_era5_attributes_access,
+from access_io.access_attr_define import (  # atm_pars_era5_attributes_access,
     anc_var_attributes_access,
+    common_global_attributes_access,
+    coord_attributes_access,
+    resamp_tb_attributes_access,
 )
 
 from resampling_utils.polar_grids import NSIDC_ease2_grids
@@ -79,6 +76,19 @@ class OkToSkipDay(Exception):
     pass
 
 
+def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
+    """seems like something like this should be part
+    of the interface but I can not find it"""
+
+    if attr_name in var.ncattrs():
+        if attr_name != "_FillValue":
+            var.setncattr(attr_name, attr_value)
+        return
+    var.UnusedNameAttribute = attr_value
+    var.renameAttribute("UnusedNameAttribute", attr_name)
+    return
+
+
 def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
     for name, value in attrs.items():
         if (name != "_FillValue") and (value is not None):
@@ -127,6 +137,14 @@ def get_access_output_filename_daily_folder(
                 raise ValueError(f'Pole={pole} must be north or south')
         else:
             raise ValueError('Must specify target size')
+    if target_size > 0:
+        return (
+            dataroot
+            / f"Y{date:%Y}"
+            / f"M{date:%m}"
+            / f"D{date:%d}"
+            / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
+        )
     else:
         raise ValueError(f'Grid type {grid_type} not valid')
             
@@ -198,7 +216,6 @@ def write_daily_lf_netcdf(
     script_name: str,
     commit: str,
 ) -> None:
-
     tb_fill = -999.0
     lf_string = f"land_frac_{lf_version}"
     filename = get_access_output_filename_daily_folder(
@@ -226,7 +243,7 @@ def write_daily_lf_netcdf(
 
     if filename.is_file() and not overwrite:
         print(f"daily file for {date} exists... skipping")
-        return []
+        return
     else:
         with suppress(FileNotFoundError):
             filename.unlink()
@@ -249,13 +266,12 @@ def write_daily_lf_netcdf(
     global_attrs["script_name"] = script_name
     global_attrs["commit"] = commit
 
-    lat_attrs = coord_attributes_access("latitude", np.float32)
-    lon_attrs = coord_attributes_access("longitude", np.float32)
+    lat_attrs = coord_attributes_access("latitude", dtype=np.float32)
+    lon_attrs = coord_attributes_access("longitude", dtype=np.float32)
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
-
         set_all_attrs(nc_out, global_attrs)
 
         nc_out.createDimension("latitude", NUM_LATS)
@@ -297,10 +313,10 @@ def write_daily_tb_netcdf(
     target_size: int,
     pole: str = None,
     version: str,
-    tb_array_by_hour: ArrayLike,
-    time_array_by_hour: ArrayLike,
+    tb_array_by_hour: NDArray[Any],
+    time_array_by_hour: NDArray[Any],
     dataroot: Path = ACCESS_ROOT,
-    freq_list: ArrayLike,
+    freq_list: NDArray[Any],
     file_list: Optional[Sequence[Path]],
     script_name: str = "unavailable",
     commit: str = "unavailable",
@@ -331,7 +347,6 @@ def write_daily_tb_netcdf(
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "w", 60) as nc_out:
-
         # set the global_attributes
 
         glb_attrs = common_global_attributes_access(
@@ -439,8 +454,11 @@ def write_daily_tb_netcdf(
         time[:, :, :] = time_to_put
 
         fill_val = np.float32(tb_attrs["_FillValue"])
-        tbs_to_put = np.nan_to_num(
-            tb_array_by_hour, nan=fill_val, posinf=fill_val, neginf=fill_val
+        tbs_to_put = np.nan_to_num(  # type: ignore
+            tb_array_by_hour,
+            nan=fill_val,
+            posinf=fill_val,
+            neginf=fill_val,
         ).astype(np.float32)
         tbs[:, :, :, :, :] = tbs_to_put
 
@@ -508,13 +526,12 @@ def write_daily_ancillary_var_netcdf(
     date: datetime.date,
     satellite: str,
     target_size: int,
-    anc_data: ArrayLike,
+    anc_data: NDArray[Any],
     anc_name: str,
-    anc_attrs: dict,
-    global_attrs: dict,
+    anc_attrs: dict[str, Any],
+    global_attrs: Union[dict[str, Any], Literal["copy"]],
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
     base_filename = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, "resamp_tbs"
     )
@@ -615,13 +632,14 @@ def write_ocean_emiss_to_daily_ACCESS(
     current_day: datetime.date,
     satellite: str,
     target_size: int,
-    glb_attrs: dict,
-    var_attrs: dict,
+    glb_attrs: dict[str, Any],
+    var_attrs: dict[str, Any],
     dataroot: Path,
     outputroot: Path,
     verbose: bool = False,
 ) -> None:
-
+    if verbose:
+        print(f"Opening base file for {satellite} on {current_day} in {dataroot}")
 
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
@@ -635,7 +653,6 @@ def write_ocean_emiss_to_daily_ACCESS(
 
     try:
         with LockedDataset(base_filename, "r") as root_grp:
-
             os.makedirs(emiss_filename_final.parent, exist_ok=True)
 
             with LockedDataset(emiss_filename_final, mode="w") as trg:

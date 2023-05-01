@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import Collection, List
 from copy import copy
 
+import git
 import matplotlib.pyplot as plt
 import numpy as np
-import git
 
 # must be installed from rss_plotting package
 from rss_plotting.global_map import plot_global_map
@@ -16,6 +16,7 @@ from access_io.access_output import (
     write_daily_tb_netcdf,
     edit_attrs_daily_tb_netcdf,
     get_access_output_filename_daily_folder,
+    write_daily_tb_netcdf,
 )
 from access_io.access_output_polar import write_daily_tb_netcdf_polar
 from resampled_tbs.read_resampled_orbit import (
@@ -25,7 +26,6 @@ from resampled_tbs.read_resampled_orbit import (
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
 from util.file_times import need_to_process_base_file
-
 
 NUM_LATS = 721
 NUM_LONS = 1440
@@ -185,14 +185,13 @@ def make_daily_ACCESS_tb_file(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> List[Path]:
-
     if satellite.lower() == "amsr2":
         orbit_times = read_amsr2_orbit_times()
         from satellite_definitions.amsr2 import (
-            SAT_NAME,
-            REF_FREQ,
             CHANNEL_TO_FREQ_MAP,
             CHANNEL_TO_POL_MAP,
+            REF_FREQ,
+            SAT_NAME,
         )
 
         assert SAT_NAME.lower() == satellite.lower()
@@ -394,7 +393,6 @@ def make_daily_ACCESS_tb_file(
 
 
 if __name__ == "__main__":
-
     import argparse
     import datetime
 
@@ -498,5 +496,5 @@ if __name__ == "__main__":
             )
             if args.plot_map:
                 plt.show()
-
+                
         day_to_do += datetime.timedelta(days=1)

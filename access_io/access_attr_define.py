@@ -1,10 +1,11 @@
 import datetime
 import json
-import numpy as np
 import os
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, cast
+import numpy as np
 
+import numpy as np
 
 """
 The routines in this file define the attributes for the ACCESS project output file
@@ -72,7 +73,6 @@ float32_attributes = [
 def load_attrs(
     *, project: Optional[str] = None, satellite: Optional[str] = None, var: str
 ) -> dict[str, Any]:
-
     if len(var) == 0:
         raise ValueError("var must be specified")
 
@@ -87,11 +87,10 @@ def load_attrs(
     with open(path_to_file) as json_file:
         attrs = json.load(json_file)
 
-    return attrs
+    return cast(dict[str, Any], attrs)
 
 
 def load_access_attrs(*, satellite: Optional[str] = None, var: str) -> dict:
-
     project = "access"
 
     return load_attrs(project=project, satellite=satellite, var=var)
@@ -111,13 +110,12 @@ def fix_attr_types(attrs: dict, var_dtype):
 
 
 def common_global_attributes_access(
-    date: datetime.datetime,
+    date: datetime.date,
     satellite: str,
     target_size: int,
     version: str = "v00r00",
     dtype=np.float32,
 ) -> dict:
-
     attrs = load_access_attrs(var="common")
 
     day_boundary = datetime.datetime.combine(date, datetime.time())
@@ -142,7 +140,6 @@ def common_global_attributes_access(
 
 
 def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float32):
-
     attrs = load_access_attrs(satellite=satellite, var="resamp_tbs")
     if version is not None:
         attrs["global"]["version"] = version
@@ -154,7 +151,6 @@ def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float
 def atm_pars_era5_attributes_access(
     satellite: str, target_size: int, version="v00r00", dtype=np.float32
 ):
-
     attrs = load_access_attrs(satellite=satellite, var="atm_pars_era5")
     attrs["global"]["version"] = version
     attrs["global"]["date_accessed"] = f"{datetime.datetime.now()}"
@@ -165,7 +161,6 @@ def atm_pars_era5_attributes_access(
 def anc_var_attributes_access(
     satellite: str, var: str, version="v00r00", dtype=np.float32
 ):
-
     attrs = load_access_attrs(satellite=satellite, var=var)
 
     if "global" in attrs.keys():
@@ -179,9 +174,8 @@ def anc_var_attributes_access(
 
 
 def coord_attributes_access(
-    coord: str, date: datetime.date = None, dtype=np.float32
+    coord: str, date: Optional[datetime.date] = None, dtype=np.float32
 ) -> dict[str, Any]:
-
     attrs = load_access_attrs(var=coord)
 
     if coord == "hours" and date is not None:
