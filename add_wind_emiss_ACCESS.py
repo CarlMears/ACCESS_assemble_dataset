@@ -88,7 +88,7 @@ def calc_emissivity_maps(
             )
 
     wind_ok = np.isfinite(w10n)
-    
+
     w10n_ok = w10n[wind_ok]
 
     sst = sst - 273.15
@@ -174,7 +174,6 @@ if __name__ == "__main__":
         action="store_true",
     )
 
-    
     args = parser.parse_args()
     access_root: Path = args.access_root
     output_root: Path = args.output_root
@@ -247,7 +246,12 @@ while date <= END_DAY:
                 emiss_filename_final.unlink()
 
             ocean_emiss = calc_emissivity_maps(
-                date=date, wind_source="era5", sst_source="era5", target_size=target_size,grid_type=grid_type, pole=pole
+                date=date,
+                wind_source="era5",
+                sst_source="era5",
+                target_size=target_size,
+                grid_type=grid_type,
+                pole=pole,
             )
 
             # common global_attributes for the project
@@ -269,7 +273,7 @@ while date <= END_DAY:
 
             var_attrs = var_attrs["var"]
 
-            if grid_type == 'equirectangular':
+            if grid_type == "equirectangular":
                 write_ocean_emiss_to_daily_ACCESS(
                     ocean_emiss=ocean_emiss,
                     current_day=date,
@@ -279,9 +283,9 @@ while date <= END_DAY:
                     var_attrs=var_attrs,
                     dataroot=access_root,
                     outputroot=output_root,
-                    verbose=True
+                    verbose=True,
                 )
-            elif grid_type == 'ease2':
+            elif grid_type == "ease2":
                 write_ocean_emiss_to_daily_ACCESS_polar(
                     ocean_emiss=ocean_emiss,
                     current_day=date,
@@ -296,7 +300,7 @@ while date <= END_DAY:
                     verbose=True,
                 )
             else:
-                raise ValueError(f'grid_type: {grid_type} is not valid')
+                raise ValueError(f"grid_type: {grid_type} is not valid")
         else:
             print(f"No Processing Needed for {var} on {date}")
 

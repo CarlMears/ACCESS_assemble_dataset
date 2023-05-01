@@ -15,7 +15,6 @@ import numpy as np
 from netCDF4 import Dataset
 from rss_lock.locked_dataset import LockedDataset
 
-<<<<<<< HEAD
 from access_io.access_output import get_access_output_filename_daily_folder
 from access_io.access_output import set_all_attrs
 from access_io.access_attr_define import common_global_attributes_access
@@ -23,7 +22,6 @@ from access_io.access_attr_define import atm_pars_era5_attributes_access
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 from util.file_times import need_to_process
-=======
 from access_io.access_attr_define import (
     atm_pars_era5_attributes_access,
     common_global_attributes_access,
@@ -32,7 +30,6 @@ from access_io.access_output import (
     get_access_output_filename_daily_folder,
     set_all_attrs,
 )
->>>>>>> origin/main
 from satellite_definitions.amsr2 import REF_FREQ_mapping
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
@@ -123,7 +120,6 @@ def write_atmosphere_to_daily_ACCESS(
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
 
-<<<<<<< HEAD
         # Do some logic about the region and file names
 
     if region == "global":
@@ -136,13 +132,9 @@ def write_atmosphere_to_daily_ACCESS(
             "resamp_tbs",
             grid_type=grid_type,
         )
-=======
     if verbose:
         print(f"Opening data for {satellite} on {current_day} in {dataroot}")
 
-    base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, dataroot, "resamp_tbs"
-    )
     try:
         with LockedDataset(base_filename, "r") as root_grp:
             if verbose:
@@ -165,7 +157,6 @@ def write_atmosphere_to_daily_ACCESS(
             atm_attrs = atm_pars_era5_attributes_access(
                 satellite, target_size=target_size, version=version, dtype=np.float32
             )
->>>>>>> origin/main
 
         atm_filename = get_access_output_filename_daily_folder(
             current_day,

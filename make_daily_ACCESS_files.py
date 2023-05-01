@@ -496,5 +496,5 @@ if __name__ == "__main__":
             )
             if args.plot_map:
                 plt.show()
-                
+
         day_to_do += datetime.timedelta(days=1)
