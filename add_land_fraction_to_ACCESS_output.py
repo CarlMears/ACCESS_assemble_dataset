@@ -63,19 +63,6 @@ def add_land_fraction_to_ACCESS_output(
         except FileNotFoundError:
             raise
 
-        write_daily_lf_netcdf(
-            date=date,
-            satellite=satellite,
-            target_size=target_size,
-            version=version,
-            lf_version=lf_version,
-            land_fraction=land_fraction_np,
-            dataroot=dataroot,
-            overwrite=overwrite,
-            script_name=script_name,
-            commit=commit,
-        )
-
     elif region == "global":
         if lf_version.lower() == "combined_hansen":
             land_file = (
