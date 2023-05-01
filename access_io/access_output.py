@@ -2,8 +2,12 @@ import datetime
 import os
 from contextlib import suppress
 from pathlib import Path
+<<<<<<< access_io/access_output.py
 from typing import Any, Optional, Sequence
 
+=======
+from typing import Optional, Sequence, Any, Union, Literal
+>>>>>>> access_io/access_output.py
 import numpy as np
 from netCDF4 import Variable
 from numpy.typing import ArrayLike, NDArray
@@ -69,6 +73,22 @@ class OkToSkipDay(Exception):
     pass
 
 
+<<<<<<< access_io/access_output.py
+=======
+def set_or_create_attr(var: Variable, attr_name: str, attr_value: Any) -> None:
+    """seems like something like this should be part
+    of the interface but I can not find it"""
+
+    if attr_name in var.ncattrs():
+        if attr_name != "_FillValue":
+            var.setncattr(attr_name, attr_value)
+        return
+    var.UnusedNameAttribute = attr_value
+    var.renameAttribute("UnusedNameAttribute", attr_name)
+    return
+
+
+>>>>>>> access_io/access_output.py
 def set_all_attrs(var: Variable, attrs: dict[str, Any]) -> None:
     for name, value in attrs.items():
         if name != "_FillValue":
@@ -387,7 +407,11 @@ def write_daily_ancillary_var_netcdf(
     anc_data: NDArray[Any],
     anc_name: str,
     anc_attrs: dict[str, Any],
+<<<<<<< access_io/access_output.py
     global_attrs: dict[str, Any],
+=======
+    global_attrs: Union[dict[str, Any], Literal["copy"]],
+>>>>>>> access_io/access_output.py
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
     base_filename = get_access_output_filename_daily_folder(
