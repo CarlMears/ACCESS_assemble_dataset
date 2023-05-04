@@ -94,7 +94,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Add 2D ERA5 Var Polar Linux",
+            "name": "Add 2D ERA5 Var Polar Linux 30 km",
             "type": "python",
             "request": "launch",
             "program": "add_ERA5_2D_vars_ACCESS_output.py",
@@ -105,6 +105,24 @@
                     "--end_date","2012-07-31",
                     "--sensor","amsr2",
                     "--target_size","30",
+                    "--version","v01r00",
+                    "--region","north",
+                    "-v", "tcwv","skt","tclw","u10n","v10n",
+                    "--overwrite"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Add 2D ERA5 Var Polar Linux 70 km",
+            "type": "python",
+            "request": "launch",
+            "program": "add_ERA5_2D_vars_ACCESS_output.py",
+            "args":["--access_root","/mnt/ops1p-ren/l/access/amsr2_out_NP_70",
+                    "--output_root","/mnt/ops1p-ren/l/access/amsr2_out_NP_70",
+                    "--temp_root","/mnt/b/data/_access_temp",
+                    "--start_date","2012-07-30",
+                    "--end_date","2012-07-31",
+                    "--sensor","amsr2",
+                    "--target_size","70",
                     "--version","v01r00",
                     "--region","north",
                     "-v", "tcwv","skt","tclw","u10n","v10n",

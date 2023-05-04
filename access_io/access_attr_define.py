@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Optional, Any, cast
 import numpy as np
 
-import numpy as np
-
 """
 The routines in this file define the attributes for the ACCESS project output file
 Constant attributes are read in from the .json files in attr_define_root

@@ -13,7 +13,6 @@ def find_sigma_from_FWHM(fwhm):
 
 def integral_of_2D_gaussian(fwhm, x1, x2, y1, y2):
 
-    sigma = find_sigma_from_FWHM(fwhm)
     sigma_sqrt2 = find_sigma_from_FWHM(fwhm) * np.sqrt(2)
 
     # print(np.exp(-(x2*x2)/(2.0*sigma*sigma)))
@@ -25,7 +24,8 @@ def integral_of_2D_gaussian(fwhm, x1, x2, y1, y2):
 
 
 def find_weights_1440_721(*, lat, lon, fwhm, compact=True):
-    """finds the weights for a 1/4-degree edge-centered grid for a arbitrary latitude/longitude location
+    """finds the weights for a 1/4-degree edge-centered grid for
+       a arbitrary latitude/longitude location
     Input:
          lat: latitude
          lon: longitude
@@ -39,11 +39,9 @@ def find_weights_1440_721(*, lat, lon, fwhm, compact=True):
          if compact is False
              the full 721x1440 array
     """
-    grid_delta = 0.25
-    grid_offset_lat = -90.0
-    grid_offset_lon = 0.0
-    ilat_ll = np.floor((lat - grid_offset_lat) / grid_delta)
-    ilon_ll = np.floor((lon - grid_offset_lon) / grid_delta)
+    # grid_delta = 0.25
+    # grid_offset_lat = -90.0
+    # grid_offset_lon = 0.0
 
 
 if __name__ == "__main__":

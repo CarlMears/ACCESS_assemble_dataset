@@ -39,7 +39,6 @@ def polar_stereo_interp_SP(polar_map, lats, lons):
         axis=(0),
     )
     interp_value = np.zeros(lats.shape)
-    interp_value2 = np.zeros(lats.shape)
 
     wt_upper_right = wt_y_upper[interp_ok] * wt_x_upper[interp_ok]
     wt_upper_left = wt_y_upper[interp_ok] * (1.0 - wt_x_upper)[interp_ok]
@@ -113,7 +112,6 @@ def polar_stereo_interp(polar_map, lats, lons):
         axis=(0),
     )
     interp_value = np.zeros(lats.shape)
-    interp_value2 = np.zeros(lats.shape)
 
     wt_upper_right = wt_y_upper[interp_ok] * wt_x_upper[interp_ok]
     wt_upper_left = wt_y_upper[interp_ok] * (1.0 - wt_x_upper)[interp_ok]
@@ -194,7 +192,8 @@ def polarstereo_fwd(
         lambda_0[phi_c < 0.0] = -lambda_0[phi_c < 0.0]
         phi_c[phi_c < 0.0] = -phi_c[phi_c < 0.0]
         # Equation numbers are from Snyder 1987 "Map Projections a Working Manual"
-        # A copy of the paper is in X:\DOCUMENT\Journal_Papers\Snyder_1987_projections_USGS.pdf
+        # A copy of the paper is in
+        # X:\DOCUMENT\Journal_Papers\Snyder_1987_projections_USGS.pdf
 
         t = np.tan(np.pi / 4.0 - phi / 2.0) / np.power(
             ((1 - e * np.sin(phi)) / (1 + e * np.sin(phi))), (e / 2)
@@ -203,9 +202,9 @@ def polarstereo_fwd(
             ((1 - e * np.sin(phi_c)) / (1 + e * np.sin(phi_c))), (e / 2)
         )  # eq 15-9, pg 161
 
-        m = np.cos(phi) / np.sqrt(
-            1 - e * e * np.square(np.sin(phi))
-        )  # eq 14-15, pg 160
+        # m = np.cos(phi) / np.sqrt(
+        #     1 - e * e * np.square(np.sin(phi))
+        # )  # eq 14-15, pg 160
         m_c = np.cos(phi_c) / np.sqrt(
             1 - e * e * np.square(np.sin(phi_c))
         )  # eq 14-15, pg 160
@@ -258,7 +257,8 @@ def polarstereo_fwd_SP(
         lambda_0[phi_c < 0.0] = -lambda_0[phi_c < 0.0]
         phi_c[phi_c < 0.0] = -phi_c[phi_c < 0.0]
         # Equation numbers are from Snyder 1987 "Map Projections a Working Manual"
-        # A copy of the paper is in X:\DOCUMENT\Journal_Papers\Snyder_1987_projections_USGS.pdf
+        # A copy of the paper is in
+        # X:\DOCUMENT\Journal_Papers\Snyder_1987_projections_USGS.pdf
 
         t = np.tan(np.pi / 4.0 - phi / 2.0) / np.power(
             ((1 - e * np.sin(phi)) / (1 + e * np.sin(phi))), (e / 2)
@@ -267,9 +267,9 @@ def polarstereo_fwd_SP(
             ((1 - e * np.sin(phi_c)) / (1 + e * np.sin(phi_c))), (e / 2)
         )  # eq 15-9, pg 161
 
-        m = np.cos(phi) / np.sqrt(
-            1 - e * e * np.square(np.sin(phi))
-        )  # eq 14-15, pg 160
+        # m = np.cos(phi) / np.sqrt(
+        #     1 - e * e * np.square(np.sin(phi))
+        # )  # eq 14-15, pg 160
         m_c = np.cos(phi_c) / np.sqrt(
             1 - e * e * np.square(np.sin(phi_c))
         )  # eq 14-15, pg 160
@@ -290,8 +290,9 @@ def polarstereo_inv(x, y, r_e=6378.2730, e=0.081816153, std_parallel=70.0, lon_y
     #   projection.
 
     # Equation numbers are from Snyder 1987 "Map Projections a Working Manual"
-    # A copy of the paper is in X:\DOCUMENT\Journal_Papers\Snyder_1987_projections_USGS.pdf
-    import numpy as np
+    # A copy of the paper is in
+    # X:\DOCUMENT\Journal_Papers\Snyder_1987_projections_USGS.pdf
+    # import numpy as np
 
     with np.errstate(invalid="ignore"):
         sgn = 1.0
@@ -334,7 +335,9 @@ def polarstereo_inv(x, y, r_e=6378.2730, e=0.081816153, std_parallel=70.0, lon_y
         )  # this is an approximation to the true inverse
         alat = alat + ((7.0 * e6 / 120.0) + (81.0 * e8 / 1120)) * np.sin(
             6.0 * chi
-        )  # it is accurate to more or less machine precision for locations near the pole.
+        )
+        # it is accurate to more or less machine precision for
+        # locations near the pole.
         alat = alat + (4279.0 * e8 / 161280.0) * np.sin(8.0 * chi)
 
         alat = sgn * alat
@@ -378,7 +381,9 @@ def ease2(lat, lon):
     sin_lat = np.sin(np.pi / 180.0 * lat)
     e_sin_lat = ecc * sin_lat
 
-    # q_theta = (1 - ecc**2) * (sin_lat / (1 - e_sin_lat**2) - 1 / (2 * ecc) * log((1 - e_sin_lat)/(1 + e_sin_lat)))
+    # q_theta = (1 - ecc**2) *
+    # (sin_lat / (1 - e_sin_lat**2) - 1 / (2 * ecc) *
+    # log((1 - e_sin_lat)/(1 + e_sin_lat)))
 
     q_theta = (1 - ecc * ecc) * (
         sin_lat / (1 - e_sin_lat * e_sin_lat)
@@ -410,7 +415,6 @@ class NSIDC_ease2_grids:
 
 def _load_NSIDC_ease2_grids(pole="north", resolution="25km"):
 
-    import numpy as np
     import xarray as xr
 
     if pole == "north":
@@ -517,7 +521,8 @@ def modis_tile_inv(
     south_pole=False,
 ):
 
-    # Computes the latitude and longitude of grid points in the MODIS 1km sea-ice tiles from NSIDC
+    # Computes the latitude and longitude of grid points in the MODIS 1km
+    # sea-ice tiles from NSIDC
 
     # The code was tested against results from the on-line calculator located at
     # https://landweb.modaps.eosdis.nasa.gov/cgi-bin/developer/tilemap.cgi
@@ -591,8 +596,10 @@ if __name__ == "__main__":
 
             print('-------------------------------------------')
 
-            test=np.array([-890000.0, -629000.0,  79.9641229, -99.7495626,1720000.0, -629000.0,  73.2101233,  24.9126514,
-                          -890000.0, -3410000.0, 58.2706251, -59.6277136,20000.0, -10000.0,     89.7592932, -18.2336765])
+            test=np.array([-890000.0, -629000.0,  79.9641229, -99.7495626,
+            1720000.0, -629000.0,  73.2101233,  24.9126514,
+                          -890000.0, -3410000.0, 58.2706251, -59.6277136,
+            20000.0, -10000.0,     89.7592932, -18.2336765])
 
             test = np.reshape(test,((4,4)))
             lats  = test[:,2]
@@ -647,7 +654,8 @@ if __name__ == "__main__":
 
         #
 
-            #print('check the code using Snyders example. Should get x=-1540033.6; y=-560526.4')
+            #print('check the code using Snyders example.
+            #Should get x=-1540033.6; y=-560526.4')
             #phi=-75; lambda=150;
             #x,y=polarstereo_fwd(phi,lambda,6378388.0,0.0819919,-71,-100)
             #print(x,y)
@@ -662,7 +670,8 @@ if __name__ == "__main__":
             ##    ! 2863500.0   2299500.0   -57.0043684 51.2332036
             ##    ! -2812000.0  -2384000.0  -56.8847122 -130.2911169
             ##    ! 2863500.0   -2384000.0  -56.5495152  129.7789915];
-            ##! [x,y]=polarstereo_fwd(test(:,3),test(:,4),6378137.0,axes2ecc(6378137.0, 6356752.3),-70,0);
+            ##! [x,y]=polarstereo_fwd(test(:,3),test(:,4),6378137.0,
+            ##! axes2ecc(6378137.0, 6356752.3),-70,0);
             ##! figure,hold on,plot(test(:,1),test(:,2),'.'),plot(x,y,'r+')
             ##! [test(:,1) test(:,1)-x],[test(:,2) test(:,2)-y]
             ##!error is less than half a meter (probably just round-off error).
@@ -670,19 +679,27 @@ if __name__ == "__main__":
             ##!!!!!!!!!!!
             ##!check with Greenland
             ##!!!!!!!!!!!
-            ##!projected from the WGS 84 Ellipsoid, with 70 N as the latitude of true scale and a rotation of 45.
-            ##! test=[-890000.0 -629000.0 79.9641229 -99.7495626 !center point of cell
+            ##!projected from the WGS 84 Ellipsoid, with 70 N as the latitude
+            ##!of true scale and a rotation of 45.
+            ##! test=[-890000.0 -629000.0 79.9641229 -99.7495626
+            ##!center point of cell
             ##    ! 1720000.0 -629000.0 73.2101233 24.9126514
             ##    ! -890000.0 -3410000.0 58.2706251 -59.6277136
             ##    ! 1720000.0 -3410000.0 55.7592932 -18.2336765];
-            ##! [x,y]=polarstereo_fwd(test(:,3),test(:,4),6378273,0.081816153,70,-45); !slightly off
-            ##! [x2,y2]=polarstereo_fwd(test(:,3),test(:,4),6378137.0,0.08181919,70,-45); !correct
-            ##! figure,hold on,plot(test(:,1),test(:,2),'.'),plot(x,y,'r+'),plot(x2,y2,'gx')
-            ##! [test(:,1) test(:,1)-x test(:,1)-x2],[test(:,2) test(:,2)-y test(:,2)-y2]
+            ##! [x,y]=polarstereo_fwd(test(:,3),test(:,4),
+            ##! 6378273,0.081816153,70,-45);
+            ##!slightly off
+            ##![x2,y2]=polarstereo_fwd(test(:,3),test(:,4),
+            # #! 6378137.0,0.08181919,70,-45);
+            ##!correct
+            ##! figure,hold on,plot(test(:,1),test(:,2),'.'),plot(x,y,'r+'),
+            ##! plot(x2,y2,'gx')
+            ##! [test(:,1) test(:,1)-x test(:,1)-x2],[test(:,2)
+            ##! test(:,2)-y test(:,2)-y2]
             ##!error is less than half a meter (probably just round-off error).
             ##!}
         """
-        ## north pole corner test
+        # north pole corner test
 
         test_lats = np.array([30.98, 39.43, 31.37, 56.35, 34.35, 43.28, 33.92, 55.50])
         test_lons = np.array(
@@ -707,7 +724,7 @@ if __name__ == "__main__":
                 )
             )
 
-        ## south pole corner test
+        # south pole corner test
         test_lons = np.array([317.76, 0.0, 42.24, 90.0, 135.0, 180.0, 225.0, 270.0])
         test_lats = np.array(
             [-39.23, -51.32, -39.23, -54.66, -41.45, -54.66, -41.45, -54.66]

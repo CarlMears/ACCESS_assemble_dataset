@@ -1,23 +1,10 @@
-import sys
-
-sys.path.append(
-    "m:/job_access/python/resample_wts/AMSR2"
-)  # contains the target footprint pattern code
+from AMSR2Antenna.AMSR2_Antenna_Gain import target_gain
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import pyproj as proj
 import warnings
 
-# from bin_ndarray import bin_ndarray
-# from gauss_kruger import local_geogauss
-
-from AMSR2_Antenna_Gain import target_gain
-
-import sys
-
-sys.path.append("M:/job_access/python/dataset_assembly/resampling_utils/")
 from polar_grids import NSIDC_ease2_grids
 
 # using this routine ensures that the target footprint for the land fraction is the same
@@ -99,21 +86,31 @@ if __name__ == "__main__":
             sub_map_edge_lat = 0.25 * (sub_map_edge_ilat - 360)
             sub_map_edge_lon = 0.25 * (sub_map_edge_ilon)
 
-            # could use code here to wrap over the pole but for now, only do -88 to 88
+            # could use code here to wrap over the pole but for now,
+            # only do -88 to 88
 
-            # The data is in lat/lon coordinates.  To integrate over the footprint, we need it to be
-            # in x,y (kilometer) coordinates.  Fortunately, the pyproj projection package does just this.
-            # The warnings from this package are suppressed.  Something about the way things are called
-            # here are deprecated (including internally to the package).  This needs to be cleaned up at
+            # The data is in lat/lon coordinates.  To integrate
+            # over the footprint, we need it to be
+            # in x,y (kilometer) coordinates.
+            # Fortunately, the pyproj projection
+            # package does just this.
+            # The warnings from this package are
+            # suppressed.  Something about the way things are called
+            # here are deprecated (including internally
+            # to the package).  This needs to be cleaned up at
             # some point, but for now it works.
             #
-            # construct a local projection, centered at the center of the target gaussian.
+            # construct a local projection, centered at the center of the target
+            # gaussian.
 
             crs_wgs = proj.Proj(
                 init="epsg:4326"
             )  # assuming you're using WGS84 geographic
             cust = proj.Proj(
-                f"+proj=aeqd +lat_0={latitude0} +lon_0={longitude0} +datum=WGS84 +units=m"
+                (
+                    f"+proj=aeqd +lat_0={latitude0} +lon_0={longitude0} "
+                    f"+datum=WGS84 +units=m"
+                )
             )
 
             # apply the local projection to obtain the mesh points in meters.
@@ -123,7 +120,8 @@ if __name__ == "__main__":
             yv = yv / 1000.0
             xv = xv / 1000.0
 
-            # calculate the footprint - don't care about normalization -- normalization is
+            # calculate the footprint - don't care about normalization --
+            # normalization is
             # done "by hand" later.
 
             dist_from_center = np.sqrt(np.square(xv) + np.square(yv))
@@ -162,7 +160,10 @@ if __name__ == "__main__":
             coords={"Y": iy_array, "X": ix_array, "Sample": sample_array},
         )
 
-        nc_file = f"L:/access/era5/resample_weights/resamp_wts_ease2_25km_SP_{int(footprint_diameter_km)}km.nc"
+        nc_file = (
+            f"L:/access/era5/resample_weights/resamp_wts_ease2_25km_SP"
+            f"_{int(footprint_diameter_km)}km.nc"
+        )
         encoding = {"weights": {"zlib": True, "complevel": 4}}
         resample_wts_DS.to_netcdf(nc_file, encoding=encoding)
         print(f"Finished Row = {iy}")

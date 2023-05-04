@@ -13,10 +13,9 @@ from rss_plotting.global_map import plot_global_map
 
 # these packages are located in folders in the local path
 from access_io.access_output import (
-    write_daily_tb_netcdf,
     edit_attrs_daily_tb_netcdf,
     get_access_output_filename_daily_folder,
-    write_daily_tb_netcdf,
+    write_daily_tb_netcdf
 )
 from access_io.access_output_polar import write_daily_tb_netcdf_polar
 from resampled_tbs.read_resampled_orbit import (
@@ -323,9 +322,10 @@ def make_daily_ACCESS_tb_file(
                     pole=pole,
                 )
             # There are a lot of possible errors for corrupted files
-            except:
+            except Exception:
                 print(
-                    f"File corrupt or missing for orbit: {orbit}, channel: {channel} - skipping channel"
+                    (f"File corrupt or missing for orbit: {orbit},"
+                     f" channel: {channel} - skipping channel")
                 )
                 continue
 

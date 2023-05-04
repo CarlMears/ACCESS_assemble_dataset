@@ -104,7 +104,6 @@ def get_access_output_filename_daily_folder(
     grid_type: str = "equirectangular",
     pole: str = "",
 ) -> Path:
-
     if grid_type == "equirectangular":
         if target_size > 0:
             return (
@@ -131,7 +130,10 @@ def get_access_output_filename_daily_folder(
                     / f"Y{date:%Y}"
                     / f"M{date:%m}"
                     / f"D{date:%d}"
-                    / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.{pole}.nc"
+                    / (
+                        f"{satellite.lower()}_{var}_{date:%Y_%m_%d}."
+                        f"{target_size:03d}km.{pole}.nc"
+                    )
                 )
             else:
                 raise ValueError(f"Pole={pole} must be north or south")
@@ -327,7 +329,6 @@ def write_daily_tb_netcdf(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-
     if pole is None:
         filename = get_access_output_filename_daily_folder(
             date, satellite, target_size, dataroot, "resamp_tbs"
@@ -490,14 +491,12 @@ def edit_attrs_daily_tb_netcdf(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-
     filename = get_access_output_filename_daily_folder(
         date, satellite, target_size, dataroot, "resamp_tbs"
     )
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "r+", 60) as nc_out:
-
         # set the global_attributes
         try:
             data_type = tb_array_by_hour.dtype
@@ -621,7 +620,6 @@ def edit_attrs_daily_ancillary_var_netcdf(
     global_attrs: dict,
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
     var_filename_final = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, anc_name
     )

@@ -11,7 +11,7 @@ def get_mtime_multi_try(path_to_file, max_num_trys=10):
         try:
             mtime = path_to_file.stat().st_mtime
             return mtime
-        except:
+        except Exception:
             # catch all errors
             num_so_far += 1
 

@@ -2,9 +2,11 @@
 """
 Created on Mon Dec 04 09:18:09 2018
 
-This script retrieves 10m neutral stability  and regular U amd V winds from the ERA5 reanalysis and stores them on N:/data/.
+This script retrieves 10m neutral stability  and regular U amd V
+winds from the ERA5 reanalysis and stores them on N:/data/.
 
-In order to use it, the New Copernicus Data Server needs to be installed in your version of python.
+In order to use it, the New Copernicus Data Server needs to be
+installed in your version of python.
 
 see https://cds.climate.copernicus.eu/api-how-to
 
@@ -12,9 +14,9 @@ see https://cds.climate.copernicus.eu/api-how-to
 """
 
 # !/usr/bin/env python
-import calendar
+
 import os.path
-import os, errno
+import os
 
 
 def era5_hourly_skin_temp_request(year, month, target_path):

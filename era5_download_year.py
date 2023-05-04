@@ -1,16 +1,10 @@
-import argparse
-from contextlib import suppress
+
 import datetime
-import git
 import os
 from pathlib import Path
-from typing import Tuple, Union
-from netCDF4 import Dataset as netcdf_dataset
-import numpy as np
 
 from era5_request.era5_requests import era5_hourly_single_level_request
-from access_io.access_output import get_access_output_filename_daily_folder
-from access_io.access_output import write_daily_ancillary_var_netcdf
+# from access_io.access_output import write_daily_ancillary_var_netcdf
 
 
 output_root = Path("N:/data/model/ERA5/hourly")

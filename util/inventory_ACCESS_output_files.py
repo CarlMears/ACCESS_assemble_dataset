@@ -23,7 +23,10 @@ def look_for_missing_files(
         )
 
         for file_template in list_of_files:
-            file_name = f"{file_template}{date.year:04d}_{date.month:02d}_{date.day:02d}.{footprint_size:03d}km.nc"
+            file_name = (f"{file_template}"
+                         f"{date.year:04d}_{date.month:02d}_"
+                         F"{date.day:02d}.{footprint_size:03d}km.nc"
+                         )
             path_to_file = access_output_root_this_day / file_name
             if path_to_file.is_file():
                 num_good += 1

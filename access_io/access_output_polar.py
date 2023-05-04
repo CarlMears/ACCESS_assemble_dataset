@@ -99,7 +99,6 @@ def write_daily_lf_netcdf_polar(
     script_name: str,
     commit: str,
 ) -> None:
-
     if pole in ["north", "south"]:
         filename = get_access_output_filename_daily_folder(
             date,
@@ -113,11 +112,11 @@ def write_daily_lf_netcdf_polar(
         if pole == "north":
             lats = ease2_grid_25km_north.latitude
             lons = ease2_grid_25km_north.longitude
-            crs_attrs = ease2_grid_25km_north.crs
+            # crs_attrs = ease2_grid_25km_north.crs
         elif pole == "south":
             lats = ease2_grid_25km_south.latitude
             lons = ease2_grid_25km_south.longitude
-            crs_attrs = ease2_grid_25km_south.crs
+            # crs_attrs = ease2_grid_25km_south.crs
         else:
             raise ValueError(f"Pole {pole} is not valid")
 
@@ -158,7 +157,6 @@ def write_daily_lf_netcdf_polar(
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     os.makedirs(filename.parent, exist_ok=True)
     with LockedDataset(filename, "w", 60) as nc_out:
-
         set_all_attrs_polar(nc_out, global_attrs)
 
         nc_out.createDimension("x", NUM_X_POLE)
@@ -245,7 +243,6 @@ def write_daily_tb_netcdf_polar(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-
     if pole in ["north", "south"]:
         filename = get_access_output_filename_daily_folder(
             date,
@@ -270,7 +267,6 @@ def write_daily_tb_netcdf_polar(
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "w", 60) as nc_out:
-
         # set the global_attributes
 
         glb_attrs = common_global_attributes_access(
@@ -441,7 +437,6 @@ def write_daily_ancillary_var_netcdf_polar(
     global_attrs: dict,
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
     if pole in ["north", "south"]:
         base_filename = get_access_output_filename_daily_folder(
             date,
@@ -471,16 +466,16 @@ def write_daily_ancillary_var_netcdf_polar(
             pole=pole,
         )
 
-        lats = ease2_grid_25km_north.latitude
-        lons = ease2_grid_25km_north.longitude
-        crs_attrs = ease2_grid_25km_north.crs
+        # if pole == "north":
+        #     crs_attrs = ease2_grid_25km_north.crs
+        # else:
+        #     crs_attrs = ease2_grid_25km_south.crs
 
     else:
         raise ValueError(f"pole = {pole} is not valid")
 
     with LockedDataset(var_filename, "w", 60) as nc_out:
         with LockedDataset(base_filename, "r", 60) as root_grp:
-
             # Create the dimensions of the file from the base file
             for name, dim in root_grp.dimensions.items():
                 if name in ["hours", "x", "y"]:
@@ -544,7 +539,6 @@ def edit_attrs_daily_ancillary_var_netcdf(
     global_attrs: dict,
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
     var_filename_final = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, anc_name
     )
@@ -576,9 +570,8 @@ def write_ocean_emiss_to_daily_ACCESS_polar(
     outputroot: Path,
     verbose: bool = False,
 ) -> None:
-
-    if satellite.lower() == "amsr2":
-        from satellite_definitions.amsr2 import REF_FREQ
+    # if satellite.lower() == "amsr2":
+    #     from satellite_definitions.amsr2 import REF_FREQ
 
     base_filename = get_access_output_filename_daily_folder(
         current_day, satellite, target_size, dataroot, "resamp_tbs", grid_type, pole
@@ -593,16 +586,12 @@ def write_ocean_emiss_to_daily_ACCESS_polar(
         pole,
     )
 
-    if pole == "north":
-        lats = ease2_grid_25km_north.latitude
-        lons = ease2_grid_25km_north.longitude
-        crs_attrs = ease2_grid_25km_north.crs
-    elif pole == "south":
-        lats = ease2_grid_25km_south.latitude
-        lons = ease2_grid_25km_south.longitude
-        crs_attrs = ease2_grid_25km_south.crs
-    else:
-        raise ValueError(f"Pole: {pole} is not valid")
+    # if pole == "north":
+    #     crs_attrs = ease2_grid_25km_north.crs
+    # elif pole == "south":
+    #     crs_attrs = ease2_grid_25km_south.crs
+    # else:
+    #     raise ValueError(f"Pole: {pole} is not valid")
 
     try:
         with LockedDataset(emiss_filename_final, "w", 60) as nc_out:

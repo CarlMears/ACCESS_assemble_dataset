@@ -9,11 +9,6 @@ import xarray as xr
 
 from access_io.access_output import write_daily_lf_netcdf
 from access_io.access_output_polar import write_daily_lf_netcdf_polar
-from access_io.access_output import (
-    write_daily_tb_netcdf,
-    edit_attrs_daily_tb_netcdf,
-    get_access_output_filename_daily_folder,
-)
 
 
 def add_land_fraction_to_ACCESS_output(
@@ -35,15 +30,9 @@ def add_land_fraction_to_ACCESS_output(
         land_path = Path("/mnt/ops1p-ren/l/access/land_water")
 
     if region == "global":
-        # filename = get_access_output_filename_daily_folder(
-        #     current_day, satellite, target_size, dataroot, "resamp_tbs"
-        # )
         grid_type = "equirectangular"
         pole = None
     elif region in ["north", "south"]:
-        # filename = get_access_output_filename_daily_folder(
-        # current_day, satellite, target_size, dataroot, "resamp_tbs",grid_type='ease2',pole='north'
-        # )
         grid_type = "ease2"
         pole = region
     else:
@@ -55,8 +44,9 @@ def add_land_fraction_to_ACCESS_output(
 
         land_file = (
             land_path
-            / f"land_fraction_1440_721_{target_size}km.from_nsidc_3km_mask.{region}.ease25.v5.nc"
-        )
+            / (f"land_fraction_1440_721_{target_size}km."
+               f"from_nsidc_3km_mask.{region}.ease25.v5.nc")
+            )
         try:
             land_fraction_xr = xr.open_dataset(land_file)
             land_fraction_np = land_fraction_xr["land_fraction"].values

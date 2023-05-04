@@ -3,9 +3,7 @@ import numpy as np
 import datetime
 import matplotlib.pyplot as plt
 from rss_plotting.plot_2d_array import plot_2d_array
-import sys
 
-sys.path.append("/mnt/ops1p-ren/m/job_access/python/dataset_assembly/")
 from access_io.access_output import get_access_output_filename_daily_folder
 
 

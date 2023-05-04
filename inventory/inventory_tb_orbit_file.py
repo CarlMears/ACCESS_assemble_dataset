@@ -147,13 +147,19 @@ if __name__ == "__main__":
         print(np.sum(exists))
         fig, ax = plot_orbit_summary(start_orbit, end_orbit, exists, channel_list)
         ax.set_title(
-            f"AMSR2 Tb Orbit Inventory {start_orbit:05d}-{end_orbit:05d} {region} {footprint_size:03d}km"
+            (
+                f"AMSR2 Tb Orbit Inventory {start_orbit:05d}-{end_orbit:05d}"
+                f" {region} {footprint_size:03d}km"
+            )
         )
         print()
         png_file = (
             tb_orbit_root
             / "inventory"
-            / f"tb_orbit_inv_r{start_orbit:05d}_{end_orbit:05d}.{footprint_size:03d}km.{region}.png"
+            / (
+                f"tb_orbit_inv_r{start_orbit:05d}_{end_orbit:05d}."
+                f"{footprint_size:03d}km.{region}.png"
+            )
         )
         os.makedirs(png_file.parent, exist_ok=True)
         fig.savefig(png_file)

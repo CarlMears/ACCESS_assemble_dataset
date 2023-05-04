@@ -16,15 +16,8 @@ from access_io.access_attr_define import (
 )  # old version
 
 from util.file_times import need_to_process
-
-from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
-from access_io.access_attr_define import (  # old version
-    anc_var_attributes_access,
-    common_global_attributes_access,
-)
 from access_io.access_output import (
     get_access_output_filename_daily_folder,
-    write_ocean_emiss_to_daily_ACCESS,
 )
 from satellite_definitions.amsr2 import REF_EIA, REF_FREQ
 

@@ -95,8 +95,8 @@ vars = ["tclw_era5", "tcwv_era5", "rainfall_rate", "u10n_era5", "land_frac_modis
 varmin = [0.0, 0.0, 0.0, -15.0, 0.0]
 varmax = [1.0, 60.0, 10.0, 15.0, 1.0]
 var_units = [
-    "$\mathregular{kg/m^{2}}$",
-    "$\mathregular{kg/m^{2}}$",
+    "$\mathregular{kg/m^{2}}$",  # noqa: W605
+    "$\mathregular{kg/m^{2}}$",  # noqa: W605
     "mm/hour",
     "m/s",
     "",
