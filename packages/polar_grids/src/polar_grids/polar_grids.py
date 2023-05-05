@@ -333,9 +333,7 @@ def polarstereo_inv(x, y, r_e=6378.2730, e=0.081816153, std_parallel=70.0, lon_y
         ) * np.sin(
             4.0 * chi
         )  # this is an approximation to the true inverse
-        alat = alat + ((7.0 * e6 / 120.0) + (81.0 * e8 / 1120)) * np.sin(
-            6.0 * chi
-        )
+        alat = alat + ((7.0 * e6 / 120.0) + (81.0 * e8 / 1120)) * np.sin(6.0 * chi)
         # it is accurate to more or less machine precision for
         # locations near the pole.
         alat = alat + (4279.0 * e8 / 161280.0) * np.sin(8.0 * chi)

@@ -37,7 +37,6 @@ def redo_imerg_rain_rate_attrs_ACCESS(
     script_name: str,
     commit: str,
 ) -> None:
-
     imerge_filename_final = get_access_output_filename_daily_folder(
         current_day, satellite, footprint_diameter_km, outputroot, "rainfall_rate"
     )
@@ -101,7 +100,6 @@ def write_imerg_rain_rate_for_ACCESS(
         overwrite=overwrite,
         update=update,
     ):
-
         with suppress(FileNotFoundError):
             imerge_filename_final.unlink()
 

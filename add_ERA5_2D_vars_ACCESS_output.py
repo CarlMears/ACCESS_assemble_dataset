@@ -7,12 +7,14 @@ from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
 
 from Era5_requests.era5_requests import era5_hourly_single_level_request
+
 # from access_io.access_output import get_access_output_filename_daily_folder
 # from access_io.access_output import write_daily_ancillary_var_netcdf
 from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from typing import Any, Tuple
 
 import git
+
 # from netCDF4 import Dataset as netcdf_dataset
 
 from access_io.access_attr_define import (
@@ -49,7 +51,6 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     commit: str,
     resampler=None,
 ) -> None:
-
     # Do some logic about the region and file names
 
     if region == "global":
@@ -111,7 +112,6 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         grid_type=grid_type,
         pole=pole,
     ):
-
         if not base_filename.is_file():
             print(f"base file for {current_day} does not exist, skipping")
             return
@@ -373,7 +373,6 @@ if __name__ == "__main__":
 
         date = START_DAY
         while date <= END_DAY:
-
             # common global_attributes for the project
             glb_attrs = common_global_attributes_access(
                 date, satellite, target_size, version

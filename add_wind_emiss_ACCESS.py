@@ -33,7 +33,6 @@ class OkToSkipDay(Exception):
 def calc_emissivity_maps(
     *, date, wind_source, sst_source, target_size, grid_type, pole
 ):
-
     print(f"{date}")
 
     # Get u wind info from data repository
@@ -202,7 +201,6 @@ while date <= END_DAY:
         raise ValueError(f"Region: {region} not valid")
 
     while date <= END_DAY:
-
         emiss_filename_final = get_access_output_filename_daily_folder(
             date,
             satellite,

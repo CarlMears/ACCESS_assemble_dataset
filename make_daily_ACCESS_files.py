@@ -15,7 +15,7 @@ from rss_plotting.global_map import plot_global_map
 from access_io.access_output import (
     edit_attrs_daily_tb_netcdf,
     get_access_output_filename_daily_folder,
-    write_daily_tb_netcdf
+    write_daily_tb_netcdf,
 )
 from access_io.access_output_polar import write_daily_tb_netcdf_polar
 from resampled_tbs.read_resampled_orbit import (
@@ -52,7 +52,6 @@ AVAILABLE_CHANNELS = [
 
 
 def get_mtime_multi_try(path_to_file, max_num_trys=10):
-
     num_so_far = 0
     while num_so_far < max_num_trys:
         try:
@@ -75,7 +74,6 @@ def decide_not_to_process(
     overwrite: bool,
     update: bool,
 ):
-
     """Logic to determine if a daily Tb file needs to be reprocessed
     If the daily file does not exist:
          process
@@ -148,7 +146,6 @@ def redo_attrs_daily_ACCESS_tb_file(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-
     filename = get_access_output_filename_daily_folder(
         current_day, satellite, target_size, dataroot, "resamp_tbs"
     )
@@ -324,8 +321,10 @@ def make_daily_ACCESS_tb_file(
             # There are a lot of possible errors for corrupted files
             except Exception:
                 print(
-                    (f"File corrupt or missing for orbit: {orbit},"
-                     f" channel: {channel} - skipping channel")
+                    (
+                        f"File corrupt or missing for orbit: {orbit},"
+                        f" channel: {channel} - skipping channel"
+                    )
                 )
                 continue
 

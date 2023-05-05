@@ -12,7 +12,6 @@ def find_sigma_from_FWHM(fwhm):
 
 
 def integral_of_2D_gaussian(fwhm, x1, x2, y1, y2):
-
     sigma_sqrt2 = find_sigma_from_FWHM(fwhm) * np.sqrt(2)
 
     # print(np.exp(-(x2*x2)/(2.0*sigma*sigma)))
@@ -45,14 +44,12 @@ def find_weights_1440_721(*, lat, lon, fwhm, compact=True):
 
 
 if __name__ == "__main__":
-
     fwhm = 30.0
     lat = 60.0
 
     wts_all = np.zeros((15, 15, 721), dtype=np.float32)
 
     for ilat, lat in enumerate(np.arange(-90.0, 90.1, 0.25)):
-
         delta_y = 0.25 * 111
         delta_x = 0.25 * 111 * np.cos(lat * np.pi / 180.0)
 

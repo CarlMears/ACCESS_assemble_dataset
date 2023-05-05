@@ -18,7 +18,6 @@ def inventory_access_output_files(
     base_template: str,
     templates: list[str],
 ) -> tuple:
-
     debug = True
     list_of_missing_files = []
     exists = np.zeros(len(templates) + 1, np.int32)
@@ -44,7 +43,6 @@ def inventory_access_output_files(
 
     if exists[0] > 0:
         for file_index, file_template in enumerate(templates):
-
             var_filename = get_access_output_filename_daily_folder(
                 date_to_do,
                 satellite,
@@ -77,7 +75,6 @@ def plot_summary(
     base_template: Path,
     templates: list[Path],
 ):
-
     import matplotlib.dates as mdates
 
     yvals = np.arange(len(templates) + 1)
@@ -103,7 +100,6 @@ def plot_summary(
 
 
 if __name__ == "__main__":
-
     import os
 
     if os.name == "nt":

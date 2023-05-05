@@ -28,7 +28,6 @@ To do this:
 
 
 def resample_iy_row(xindex, yindex, weights, var, iy):
-
     if iy % 10 == 0:
         print(iy)
     numx = xindex.shape[0]
@@ -52,7 +51,6 @@ def resample_iy_row(xindex, yindex, weights, var, iy):
 
 class ResampleERA5:
     def __init__(self, *, target_size, region):
-
         if os.name == "nt":
             resample_wt_path = Path("L:/access/era5/resample_weights")
         elif os.name == "posix":
@@ -109,7 +107,6 @@ class ResampleERA5:
         self.numx = self.weights.shape[1]
 
     def resample(self, var):
-
         """This python only version is much, much slower than the fortran version,
         even though it uses multiple processes"""
 
@@ -147,7 +144,6 @@ class ResampleERA5:
         return var_resamp
 
     def resample_fortran(self, var, verbose=False):
-
         # To import the following, the module needs to be installed using build/f2py
         #
         # see instruction in the README.md in
@@ -188,7 +184,6 @@ class ResampleERA5:
 
 
 if __name__ == "__main__":
-
     from rss_plotting.plot_2d_array import plot_2d_array
 
     resampler = ResampleERA5(target_size=70, region="north")

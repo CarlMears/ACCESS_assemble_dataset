@@ -42,11 +42,10 @@ def add_land_fraction_to_ACCESS_output(
         if region == "south":
             raise ValueError("South Pole not Implemented")
 
-        land_file = (
-            land_path
-            / (f"land_fraction_1440_721_{target_size}km."
-               f"from_nsidc_3km_mask.{region}.ease25.v5.nc")
-            )
+        land_file = land_path / (
+            f"land_fraction_1440_721_{target_size}km."
+            f"from_nsidc_3km_mask.{region}.ease25.v5.nc"
+        )
         try:
             land_fraction_xr = xr.open_dataset(land_file)
             land_fraction_np = land_fraction_xr["land_fraction"].values

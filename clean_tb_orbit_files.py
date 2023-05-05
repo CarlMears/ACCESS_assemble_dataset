@@ -3,7 +3,6 @@ import numpy as np
 
 
 def range_str(iorbit):
-
     irange = int(np.floor((iorbit - 1) / 5000))
     lower_orbit = 1 + irange * 5000
     upper_orbit = lower_orbit + 4999
@@ -12,7 +11,6 @@ def range_str(iorbit):
 
 
 if __name__ == "__main__":
-
     import os
 
     if os.name == "nt":

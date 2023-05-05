@@ -13,7 +13,6 @@ from polar_grids import NSIDC_ease2_grids
 warnings.filterwarnings("ignore")
 
 if __name__ == "__main__":
-
     warnings.filterwarnings("ignore")
     restart = False
 

@@ -31,6 +31,7 @@ from access_io.access_output import (
     set_all_attrs,
 )
 from satellite_definitions.amsr2 import REF_FREQ_mapping
+
 # from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 from era5.resample_ERA5 import ResampleERA5
@@ -230,7 +231,6 @@ def write_atmosphere_to_daily_ACCESS(
         grid_type=grid_type,
         pole=pole,
     ):
-
         if atm_filename_final.is_file():
             if overwrite or update:
                 atm_filename_final.unlink()
@@ -245,7 +245,6 @@ def write_atmosphere_to_daily_ACCESS(
 
         try:
             with LockedDataset(base_filename, "r", lock_stale_time=0.1) as root_grp:
-
                 if verbose:
                     print(
                         f"Reading ERA5 computed RTM data {satellite} "
@@ -393,10 +392,7 @@ def write_atmosphere_to_daily_ACCESS(
                             var = np.moveaxis(var, -1, 0)
 
                             if resample_required:
-
-                                print(
-                                    f"Resamp {varname} polar map for freq = {freq}"
-                                )
+                                print(f"Resamp {varname} polar map for freq = {freq}")
                                 # time_begin = datetime.datetime.now()
                                 var = resampler.resample_fortran(var)
                                 # time = datetime.datetime.now() - time_begin

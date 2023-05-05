@@ -5,7 +5,6 @@ from rss_plotting.plot_2d_array import plot_2d_array
 
 
 def is_file_multiple_try(path_to_test: Path, max_tries: int = 10):
-
     num_tries = 0
     is_file_multiple = False
     while num_tries < max_tries:
@@ -27,7 +26,6 @@ def inventory_access_tb_orbit_files(
     footprint_size: int,
     file_template: str,
 ) -> np.ndarray:
-
     debug = False
     if os.name == "nt":
         AMSR2_L2B_root = Path("J:/AMSR2/L2B_V08.2/")
@@ -70,7 +68,6 @@ def inventory_access_tb_orbit_files(
 def plot_orbit_summary(
     start_orbit: int, end_orbit: int, file_exists_all: np.ndarray, channel_list: list
 ):
-
     channel_names = []
     for channel in channel_list:
         channel_names.append(f"ch{channel:02d}")
@@ -90,7 +87,6 @@ def plot_orbit_summary(
 
 
 if __name__ == "__main__":
-
     import os
 
     if os.name == "nt":

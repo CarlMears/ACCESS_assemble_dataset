@@ -39,7 +39,6 @@ def get_resampled_file_name(
     pole: str = "north",
     dataroot: Path = ACCESS_ROOT,
 ):
-
     if grid_type == "equirectangular":
         folder = f"GL_{target_size}"
     elif grid_type == "ease2":

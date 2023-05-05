@@ -6,7 +6,6 @@ from rss_plotting.plot_2d_array import plot_2d_array
 
 
 def is_file_multiple(path_to_test: Path, max_tries: int = 10):
-
     num_tries = 0
     is_file_multiple = False
     while num_tries < max_tries:
@@ -20,7 +19,6 @@ def is_file_multiple(path_to_test: Path, max_tries: int = 10):
 
 
 def radiance_file_exists(date: datetime.date, output_root: Path):
-
     file = output_root / f"era5_tbs_{date.year:04d}-{date.month:02d}-{date.day:02d}.nc"
 
     return is_file_multiple(file)
@@ -29,7 +27,6 @@ def radiance_file_exists(date: datetime.date, output_root: Path):
 def plot_summary(
     start_date: datetime.date, end_date: datetime.date, file_exists_all: np.ndarray
 ):
-
     import matplotlib.dates as mdates
 
     yvals = np.arange(2)
@@ -53,7 +50,6 @@ def plot_summary(
 
 
 if __name__ == "__main__":
-
     import os
 
     if os.name == "nt":
