@@ -10,7 +10,6 @@ else:
 
 
 def polar_stereo_interp_SP(polar_map, lats, lons):
-
     """This routine interpolates values given in polar map onto the locations
     given by lats and lons"""
 
@@ -83,7 +82,6 @@ def polar_stereo_interp_SP(polar_map, lats, lons):
 
 
 def polar_stereo_interp(polar_map, lats, lons):
-
     """This routine interpolates values given in polar map onto the locations
     given by lats and lons"""
 
@@ -400,7 +398,6 @@ def ease2(lat, lon):
 
 class NSIDC_ease2_grids:
     def __init__(self, pole="north", resolution="25km"):
-
         lats, lons, crs = _load_NSIDC_ease2_grids(pole=pole, resolution=resolution)
 
         self.latitude = lats
@@ -412,7 +409,6 @@ class NSIDC_ease2_grids:
 
 
 def _load_NSIDC_ease2_grids(pole="north", resolution="25km"):
-
     import xarray as xr
 
     if pole == "north":
@@ -518,7 +514,6 @@ def modis_tile_inv(
     lambda0=0.0,
     south_pole=False,
 ):
-
     # Computes the latitude and longitude of grid points in the MODIS 1km
     # sea-ice tiles from NSIDC
 
