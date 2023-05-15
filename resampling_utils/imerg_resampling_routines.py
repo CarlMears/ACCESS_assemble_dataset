@@ -9,9 +9,11 @@ import pyproj as proj
 import xarray as xr
 
 from resampling_utils.AMSR2_Antenna_Gain import target_gain
-
+from resampling_utils.resample_imerg_polar import ResampleIMERG
 NUM_LATS = 721
 NUM_LONS = 1440
+NUM_LATS_EASE2 = 720
+NUM_LONS_EASE2 = 720
 NUM_HOURS = 24
 hdf5_access = Lock()
 
@@ -169,9 +171,27 @@ def resample_to_quarter(
 
     return resampled_map
 
+def resample_to_ease(map_rain, mask, resampler):
+    """
+    Inputs a map of rain rates at a given time along with
+    latitude and longitude, outputs resampled data on an EASE2 grid.
+    """
+    resampled_map = np.full((NUM_LATS_EASE2, NUM_LONS_EASE2), np.nan)
+
+    var_in = np.squeeze(map_rain)
+    var_in = np.transpose(var_in)
+    var_in = np.roll(var_in, shift=1800, axis=1)
+
+    var_out = resampler.resample_fortran(var_in)
+    # var_out = np.transpose(var_out) # will need to be removed when Fortran is fiex
+    resampled_map = var_out
+    resampled_map[~mask] = np.nan
+
+
+    return resampled_map
 
 def resample_hour(
-    hour, times, time_intervals, date, footprint_diameter_km, target_path
+    hour, times, time_intervals, date, footprint_diameter_km, region, resampler, target_path
 ):
     sat_time = times[:, :, hour]
 
@@ -203,76 +223,90 @@ def resample_hour(
         minutes_of_day=minutes_of_day_end, date=date, target_path=target_path
     )
 
-    # for_parallel = [
-    #     [rain_beg, lat_beg, lon_beg, hour_beg, footprint_diameter_km],
-    #     [rain_end, lat_end, lon_end, hour_end, footprint_diameter_km],
-    # ]
 
-    # Processing 2 IMERG files for one hour in parallel
-    # print("Starting jobs")
-    # with multiprocessing.Pool(5, init_worker) as p:
-    #     print("Waiting for results")
-    #     try:
-    #         res = p.starmap(resample_to_quarter, for_parallel)
-    #     except KeyboardInterrupt:
-    #         print("Caught KeyboardInterrupt, terminating workers")
-    #         p.terminate()
-    # print("Normal termination")
+    if region == 'global':
+        res = np.full((2, NUM_LATS, NUM_LONS), np.nan)
 
-    # p.join()  # this waits for all worker processes to terminate.
+        mp = resample_to_quarter(
+            map_rain=rain_beg,
+            lat_rain=lat_beg,
+            lon_rain=lon_beg,
+            mask=hour_beg,
+            footprint_diameter_km=footprint_diameter_km,
+            window=0.5,
+        )
+        res[0, :, :] = mp
+        mp = resample_to_quarter(
+            map_rain=rain_end,
+            lat_rain=lat_end,
+            lon_rain=lon_end,
+            mask=hour_end,
+            footprint_diameter_km=footprint_diameter_km,
+            window=0.5,
+        )
+        res[1, :, :] = mp
 
-    res = np.full((2, NUM_LATS, NUM_LONS), np.nan)
+        hour_map = np.nanmean((res), axis=0)
+    elif region in ['north', 'south']:
+        res = np.full((2, NUM_LATS_EASE2, NUM_LONS_EASE2), np.nan)
+        mp = resample_to_ease(
+            map_rain=rain_beg,
+            mask=hour_beg,
+            resampler=resampler,
+        )
 
-    mp = resample_to_quarter(
-        map_rain=rain_beg,
-        lat_rain=lat_beg,
-        lon_rain=lon_beg,
-        mask=hour_beg,
-        footprint_diameter_km=footprint_diameter_km,
-        window=0.5,
-    )
-    res[0, :, :] = mp
-    mp = resample_to_quarter(
-        map_rain=rain_end,
-        lat_rain=lat_end,
-        lon_rain=lon_end,
-        mask=hour_end,
-        footprint_diameter_km=footprint_diameter_km,
-        window=0.5,
-    )
-    res[1, :, :] = mp
+        res[0,:,:] = mp
 
-    hour_map = np.nanmean((res), axis=0)
+        mp = resample_to_ease(
+            map_rain=rain_end,
+            mask=hour_end,
+            resampler=resampler,
+        )
+
+        res[1,:,:] = mp
+
+        hour_map = np.nanmean((res), axis=0)
 
     return (hour_map, hour, last_modified_beg)
 
 
 def resample_imerg_day(
-    times, time_intervals, date, footprint_diameter_km, target_path=Path(".")
+    times, time_intervals, date, footprint_diameter_km, region, target_path=Path(".")
 ):
-    total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
+    if region == 'global':
+        total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
+        resampler = False
+    elif region in ['north', 'south']:
+        total_hour = np.full((NUM_LATS_EASE2, NUM_LONS_EASE2, NUM_HOURS), np.nan)
+        resampler = ResampleIMERG(target_size=footprint_diameter_km, region=region) # so we only need to do this once
+    else:
+        print(f"{region} not recognized")
 
-    # Using process pool for resampling
-    with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
-        results = {
-            executor.submit(
-                resample_hour,
-                hour,
-                times,
-                time_intervals,
-                date,
-                footprint_diameter_km,
-                target_path,
-            ): hour
-            for hour in range(0, NUM_HOURS)
-        }
-        for future in concurrent.futures.as_completed(results):
-            try:
-                (map, idx, modtime) = future.result()
-                total_hour[:, :, idx] = map
-            except KeyboardInterrupt:
-                return
-            except Exception as e:
-                print(f"Error in run: {e}")
-
+    # Using process pool for resampling global
+    if region == 'global':
+        with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
+            results = {
+                executor.submit(
+                    resample_hour,
+                    hour,
+                    times,
+                    time_intervals,
+                    date,
+                    footprint_diameter_km,
+                    target_path,
+                ): hour
+                for hour in range(0, NUM_HOURS)
+            }
+            for future in concurrent.futures.as_completed(results):
+                try:
+                    (map, idx, modtime) = future.result()
+                    total_hour[:, :, idx] = map
+                except KeyboardInterrupt:
+                    return
+                except Exception as e:
+                    print(f"Error in run: {e}")
+    elif region in ['north', 'south']:  # no parallel processing if EASE2 resampling
+        for hour in range(0, NUM_HOURS):
+            map, idx, modtime = resample_hour(hour,times,time_intervals,date,footprint_diameter_km, region, resampler, target_path)
+            total_hour[:, :, idx] = map
     return total_hour, modtime
