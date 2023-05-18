@@ -201,7 +201,7 @@ def make_daily_ACCESS_tb_file(
             current_day, satellite, target_size, dataroot, "resamp_tbs"
         )
         grid_type = "equirectangular"
-        pole = None
+        pole = 'None'
     elif region in ["north", "south"]:
         filename = get_access_output_filename_daily_folder(
             current_day,
@@ -242,8 +242,8 @@ def make_daily_ACCESS_tb_file(
         target_size=target_size,
         grid_type=grid_type,
         pole=pole,
-        orbits_to_do=orbits_to_do,
-        channels_to_do=channels,
+        orbits_to_do=list(orbits_to_do),
+        channels_to_do=list(channels),
         dataroot=dataroot,
         outputroot=dataroot,
         var="resamp_tbs",
@@ -462,21 +462,24 @@ if __name__ == "__main__":
     day_to_do = START_DAY
     while day_to_do <= END_DAY:
         if args.redo_attrs:
-            redo_attrs_daily_ACCESS_tb_file(
-                current_day=day_to_do,
-                satellite=satellite,
-                target_size=target_size,
-                region=args.region,
-                version=args.version,
-                dataroot=access_root,
-                channels=channels,
-                verbose=args.verbose,
-                plot_example_map=args.plot_map,
-                overwrite=args.overwrite,
-                update=args.update,
-                script_name=script_name,
-                commit=commit,
-            )
+            if args.region == 'global':
+                redo_attrs_daily_ACCESS_tb_file(
+                    current_day=day_to_do,
+                    satellite=satellite,
+                    target_size=target_size,
+                    # region=args.region,  #Need to add this capability if needed
+                    version=args.version,
+                    dataroot=access_root,
+                    channels=channels,
+                    verbose=args.verbose,
+                    plot_example_map=args.plot_map,
+                    overwrite=args.overwrite,
+                    # update=args.update,
+                    script_name=script_name,
+                    commit=commit,
+                )
+            else:
+                raise ValueError(f'Region {args.region} no valid for updates')
         else:
             make_daily_ACCESS_tb_file(
                 current_day=day_to_do,

@@ -39,7 +39,7 @@ def find_orbits_in_day(
         )[0]
         orbits = np.insert(orbits, 0, orbits[0] - 1)
     except IndexError:
-        orbits = []
+        orbits = np.empty((0),dtype=np.int32)
         return orbits
 
     orbits = np.append(orbits, orbits[-1] + 1)
