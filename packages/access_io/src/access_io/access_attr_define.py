@@ -31,46 +31,22 @@ float32_attributes = [
     "geospatial_lon_max",
 ]
 
-
-# def parse_attrs(raw_attrs, inherited_type=None):
-#     dict_out = {}
-#     for key, item in raw_attrs.items():
-#         if isinstance(item, dict):
-#             if (
-#                 "value" in item.keys()
-#             ):  # bottom level - should have "value" and "type" keys
-#                 try:
-#                     type_str = item["type"]
-#                 except AttributeError:
-#                     raise AttributeError(f"'type' missing from {key}")
-#                 if type_str == "inherited":
-#                     if inherited_type in _allowed_numeric_types:
-#                         type_str = inherited_type
-#                     else:
-#                         raise ValueError(
-#                             f"Invalid Inherited type {inherited_type} in parse_attrs"
-#                         )
-#                 if type_str in _allowed_numeric_types:
-#                     bare_type = type_str.split(".")[1]  # strip off the "np."
-#                     val = np.asarray(
-#                         item["value"], dtype=np.dtype(getattr(np, bare_type))
-#                     )
-#                     dict_out[key] = val
-#                 elif type_str == "str":
-#                     if key == "type":
-#                         inherited_type = item["value"]
-#                     else:
-#                         dict_out[key] = item["value"]
-#                 else:
-#                     raise ValueError(f"type: {type_str} invalid")
-#             else:
-#                 dict_out[key] = parse_attrs(item, inherited_type=inherited_type)
-#     return dict_out
-
-
 def load_attrs(
     *, project: Optional[str] = None, satellite: Optional[str] = None, var: str
 ) -> dict[str, Any]:
+
+    """
+    Loads attributes from a JSON file based on the specified project, satellite, and variable.
+
+    Parameters:
+        project (Optional[str]): The project name. Default is None.
+        satellite (Optional[str]): The satellite name. Default is None.
+        var (str): The variable name.
+
+    Returns:
+        dict[str, Any]: The loaded attributes.
+    """
+
     if len(var) == 0:
         raise ValueError("var must be specified")
 
@@ -88,13 +64,39 @@ def load_attrs(
     return cast(dict[str, Any], attrs)
 
 
-def load_access_attrs(*, satellite: Optional[str] = None, var: str) -> dict:
+def load_access_attrs(*, satellite: Optional[str] = None, 
+                       var: str) -> dict:
+
+    """
+    Loads access attributes from a JSON file based on the specified satellite and variable.
+
+    Parameters:
+        satellite (Optional[str]): The satellite name. Default is None.
+        var (str): The variable name.
+
+    Returns:
+        dict: The loaded access attributes.
+    """
+
     project = "access"
 
     return load_attrs(project=project, satellite=satellite, var=var)
 
 
-def fix_attr_types(attrs: dict, var_dtype):
+def fix_attr_types(attrs: dict, 
+                   var_dtype):
+
+        """
+    Fixes the attribute types in the given dictionary based on the specified variable data type.
+
+    Parameters:
+        attrs (dict): The attributes dictionary.
+        var_dtype: The variable data type.
+
+    Returns:
+        dict: The fixed attributes dictionary.
+    """
+
     for att_name, value in attrs.items():
         if isinstance(value, dict):
             fix_attr_types(value, var_dtype)
@@ -114,6 +116,21 @@ def common_global_attributes_access(
     version: str = "v00r00",
     dtype=np.float32,
 ) -> dict:
+
+    """
+    Retrieves common global attributes for a specific date, satellite, target size, and version.
+
+    Parameters:
+        date (datetime.date): The date.
+        satellite (str): The satellite name.
+        target_size (int): The target size.
+        version (str): The version. Default is "v00r00".
+        dtype: The data type. Default is np.float32.
+
+    Returns:
+        dict: The common global attributes.
+    """
+
     attrs = load_access_attrs(var="common")
 
     day_boundary = datetime.datetime.combine(date, datetime.time())
@@ -138,6 +155,20 @@ def common_global_attributes_access(
 
 
 def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float32):
+    
+    
+    """
+    Retrieves resampled brightness temperature attributes for a specific satellite and version.
+
+    Parameters:
+        satellite (str): The satellite name.
+        version (str): The version. Default is "v01r00".
+        dtype: The data type. Default is np.float32.
+
+    Returns:
+        dict: The resampled brightness temperature attributes.
+    """
+    
     attrs = load_access_attrs(satellite=satellite, var="resamp_tbs")
     if version is not None:
         attrs["global"]["version"] = version
@@ -149,6 +180,20 @@ def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float
 def atm_pars_era5_attributes_access(
     satellite: str, target_size: int, version="v00r00", dtype=np.float32
 ):
+
+    """
+    Retrieves atmospheric parameters (ERA5) attributes for a specific satellite, target size, and version.
+
+    Parameters:
+        satellite (str): The satellite name.
+        target_size (int): The target size.
+        version (str): The version. Default is "v00r00".
+        dtype: The data type. Default is np.float32.
+
+    Returns:
+        dict: The atmospheric parameters (ERA5) attributes.
+    """
+
     attrs = load_access_attrs(satellite=satellite, var="atm_pars_era5")
     attrs["global"]["version"] = version
     attrs["global"]["date_accessed"] = f"{datetime.datetime.now()}"
@@ -159,6 +204,20 @@ def atm_pars_era5_attributes_access(
 def anc_var_attributes_access(
     satellite: str, var: str, version="v00r00", dtype=np.float32
 ):
+
+    """
+    Retrieves ancillary variable attributes for a specific satellite, variable, and version.
+
+    Parameters:
+        satellite (str): The satellite name.
+        var (str): The variable name.
+        version (str): The version. Default is "v00r00".
+        dtype: The data type. Default is np.float32.
+
+    Returns:
+        dict: The ancillary variable attributes.
+    """
+
     attrs = load_access_attrs(satellite=satellite, var=var)
 
     if "global" in attrs.keys():
@@ -174,6 +233,19 @@ def anc_var_attributes_access(
 def coord_attributes_access(
     coord: str, date: Optional[datetime.date] = None, dtype=np.float32
 ) -> dict[str, Any]:
+
+    """
+    Retrieves coordinate attributes for a specific coordinate and date.
+
+    Parameters:
+        coord (str): The coordinate name.
+        date (Optional[datetime.date]): The date. Default is None.
+        dtype: The data type. Default is np.float32.
+
+    Returns:
+        dict[str, Any]: The coordinate attributes.
+    """
+
     attrs = load_access_attrs(var=coord)
 
     if coord == "hours" and date is not None:
@@ -184,6 +256,18 @@ def coord_attributes_access(
 
 
 def attrs_as_string(attrs, prefix=""):
+
+    """
+    Converts attributes dictionary to a string representation.
+
+    Parameters:
+        attrs (dict): The attributes dictionary.
+        prefix (str): The prefix string. Default is an empty string.
+
+    Returns:
+        str: The string representation of the attributes.
+    """
+
     out_str = ""
     for key in attrs.keys():
         if isinstance(attrs[key], dict):
