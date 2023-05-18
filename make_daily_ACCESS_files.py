@@ -201,7 +201,7 @@ def make_daily_ACCESS_tb_file(
             current_day, satellite, target_size, dataroot, "resamp_tbs"
         )
         grid_type = "equirectangular"
-        pole = 'None'
+        pole = "None"
     elif region in ["north", "south"]:
         filename = get_access_output_filename_daily_folder(
             current_day,
@@ -462,7 +462,7 @@ if __name__ == "__main__":
     day_to_do = START_DAY
     while day_to_do <= END_DAY:
         if args.redo_attrs:
-            if args.region == 'global':
+            if args.region == "global":
                 redo_attrs_daily_ACCESS_tb_file(
                     current_day=day_to_do,
                     satellite=satellite,
@@ -479,7 +479,7 @@ if __name__ == "__main__":
                     commit=commit,
                 )
             else:
-                raise ValueError(f'Region {args.region} no valid for updates')
+                raise ValueError(f"Region {args.region} no valid for updates")
         else:
             make_daily_ACCESS_tb_file(
                 current_day=day_to_do,

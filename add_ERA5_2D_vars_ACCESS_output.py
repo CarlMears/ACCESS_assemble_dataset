@@ -62,7 +62,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             current_day, satellite, target_size, dataroot, anc_name
         )
         grid_type = "equirectangular"
-        pole = 'None'
+        pole = "None"
     elif region in ["north", "south"]:
         pole = region
         base_filename = get_access_output_filename_daily_folder(
