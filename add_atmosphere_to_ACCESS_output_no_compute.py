@@ -397,7 +397,7 @@ def write_atmosphere_to_daily_ACCESS(
                                 if resampler is not None:
                                     var = resampler.resample_fortran(var)
                                 else:
-                                    raise Exception(f"resampler not initialized")
+                                    raise Exception("resampler not initialized")
                                 # time = datetime.datetime.now() - time_begin
 
                             var_times = rtm_data.time_in_day

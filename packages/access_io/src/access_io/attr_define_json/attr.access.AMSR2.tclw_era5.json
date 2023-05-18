@@ -1,0 +1,17 @@
+{   "name":  "total column cloud water",
+    "global": { "summary":   "Total Column Cloud Water corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
+                "keywords":  "EARTH SCIENCE > ATMOSPHERE > CLOUDS > CLOUD MICROPHYSICS > CLOUD LIQUID WATER",
+                "title":     "Total Column Cloud Water from ERA5 on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
+                "history":   "Created from ERA5 data downloaded from the Copernicus Climate Data Store",
+                "source":     "Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. 2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803. ERA5 hourly data on single levels from 1959 to present. 0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. Dataset DOI: 10.24381/cds.adbb2d47"
+    },
+    "var": {    "standard_name":  "atmosphere_mass_content_of_cloud_liquid_water",
+                "long_name":  "Total column cloud liquid water interpolated from hourly ERA5 output",
+                "valid_min":  0.0,
+                "valid_max":  20.0,
+                "units":  "kg/m^2",
+                "_FillValue":  -999.0,
+                "missing_value":  -999.0,
+                "coordinates":  "latitude longitude"
+    }
+}
