@@ -56,6 +56,7 @@ def resample_iy_row(xindex,yindex,weights,var,iy,imerglat,imerglon):
                 var_resamp[itime,ix] = temp
     return var_resamp,iy
 
+
 class ResampleIMERG:
 
     def __init__(self,*,target_size,region):
@@ -63,7 +64,7 @@ class ResampleIMERG:
         if os.name == "nt":
             resample_wt_path = Path("L:/access/era5/resample_weights")
         elif os.name == "posix":
-            resample_wt_path = Path("/mnt/L/access/imerg/resample_weights/")
+            resample_wt_path = Path("/mnt/ops1p-ren/l/access/imerg/resample_weights/")
         if region in ['north','south']:
             grid_type = 'ease2'
             if region == 'north':
