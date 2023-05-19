@@ -19,6 +19,7 @@ from access_io.access_output import (
     get_access_output_filename_daily_folder,
     write_daily_ancillary_var_netcdf,
 )
+from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from imerg_request.imerg_requests import imerg_half_hourly_request
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
 from util.file_times import need_to_process
@@ -76,19 +77,47 @@ def write_imerg_rain_rate_for_ACCESS(
     outputroot: Path,
     temproot: Path,
     footprint_diameter_km: int,
+    region: str,
     overwrite: bool = False,
     update: bool = False,
     script_name: str,
     commit: str,
 ) -> None:
-    base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs"
-    )
-
-    var = "rainfall_rate"
-    imerge_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite, footprint_diameter_km, outputroot, var
-    )
+    
+    if region == "global":
+        base_filename = get_access_output_filename_daily_folder(
+            current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs")
+        var = "rainfall_rate"
+        imerge_filename_final = get_access_output_filename_daily_folder(
+            current_day, satellite, footprint_diameter_km, outputroot, var
+        )
+        grid_type = "equirectangular"
+        pole = None
+    elif region in ["north", "south"]:
+        pole = region
+        base_filename = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            footprint_diameter_km,
+            dataroot,
+            "resamp_tbs",
+            grid_type="ease2",
+            pole=pole,
+        )
+        var = "rainfall_rate"
+        imerge_filename_final = get_access_output_filename_daily_folder(
+            current_day,
+            satellite,
+            footprint_diameter_km,
+            dataroot,
+            var,
+            grid_type="ease2",
+            pole=pole,
+        )
+        grid_type = "ease2"
+        pole = region
+    else:
+        raise ValueError(f"region {region} not valid")
 
     if need_to_process(
         date=current_day,
@@ -99,6 +128,8 @@ def write_imerg_rain_rate_for_ACCESS(
         var=var,
         overwrite=overwrite,
         update=update,
+        grid_type=grid_type,
+        pole=pole,
     ):
         with suppress(FileNotFoundError):
             imerge_filename_final.unlink()
@@ -136,6 +167,7 @@ def write_imerg_rain_rate_for_ACCESS(
             hourly_intervals,
             date,
             footprint_diameter_km,
+            region,
             target_path=temproot / "imerg",
         )
 
@@ -166,16 +198,32 @@ def write_imerg_rain_rate_for_ACCESS(
         global_attrs["commit"] = commit
         global_attrs["script_name"] = script_name
 
-        write_daily_ancillary_var_netcdf(
-            date=date,
-            satellite=satellite,
-            target_size=footprint_diameter_km,
-            anc_data=rr_for_access,
-            anc_name="rainfall_rate",
-            anc_attrs=var_attrs,
-            global_attrs=global_attrs,
-            dataroot=dataroot,
-        )
+        # write the results to a separate output file
+        if grid_type == "equirectangular":
+            write_daily_ancillary_var_netcdf(
+                date=date,
+                satellite=satellite,
+                target_size=footprint_diameter_km,
+                anc_data=rr_for_access,
+                anc_name="rainfall_rate",
+                anc_attrs=var_attrs,
+                global_attrs=global_attrs,
+                dataroot=dataroot,
+            )
+        elif grid_type == "ease2":
+
+            write_daily_ancillary_var_netcdf_polar(
+                date=date,
+                satellite=satellite,
+                target_size=footprint_diameter_km,
+                grid_type=grid_type,
+                pole=pole,
+                anc_data=rr_for_access,
+                anc_name="rainfall_rate",
+                anc_attrs=var_attrs,
+                global_attrs=global_attrs,
+                dataroot=dataroot,
+            )
     else:
         print(f"No processing needed for  {var} on {date}")
 
@@ -214,6 +262,10 @@ if __name__ == "__main__":
         nargs="?",
         default=30,
     )
+
+    parser.add_argument(
+        "region", help="region to process", choices=["global", "north", "south"]
+    )
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
@@ -245,6 +297,7 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     footprint_diameter_km = args.footprint_diameter
+    region = args.region
 
     overwrite = args.overwrite
     update = args.update
@@ -273,6 +326,7 @@ if __name__ == "__main__":
                 outputroot=output_root,
                 temproot=temp_root,
                 footprint_diameter_km=footprint_diameter_km,
+                region=region,
                 overwrite=overwrite,
                 update=update,
                 script_name=script_name,
