@@ -1,0 +1,17 @@
+{   "name":  "skin temperature",
+    "global": {"summary":  "Skin Temperature corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
+              "keywords":  "EARTH SCIENCE > LAND SURFACE > SURFACE THERMAL PROPERTIES > SKIN TEMPERATURE, EARTH SCIENCE > OCEANS > OCEAN TEMPERATURE > SEA SURFACE TEMPERATURE > SEA SURFACE SKIN TEMPERATURE",
+              "title":     "ERA5 skin temperature, resampled to circular Gaussian footprints 0.25 degree Earth grid",
+              "history":   "Created from ERA5 data downloaded from the Copernicus Climate Data Store",
+              "source":    "Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., et al. 2020). The ERA5 global reanalysis. Quarterly Journal of the Royal Meteorological Society, 146(730), 1999–2049. https://doi.org/10.1002/qj.3803. ERA5 hourly data on single levels from 1959 to present. 0.25 degree x 0.25 degree gridded data downloaded from the Copernicus Climate Data Store. Dataset DOI: 10.24381/cds.adbb2d47"
+    },
+    "var": {"standard_name":   "surface_temperature",
+            "long_name":       "skin temperature interpolated from hourly ERA5 output",
+            "valid_min":       150.0,
+            "valid_max":       400.0,
+            "units":           "kelvin",
+            "_FillValue":      -999.0,
+            "missing_value":   -999.0,
+            "coordinates":   "latitude longitude"
+    }
+}

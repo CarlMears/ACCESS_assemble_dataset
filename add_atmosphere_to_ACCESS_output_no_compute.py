@@ -15,10 +15,10 @@ import numpy as np
 from netCDF4 import Dataset
 from rss_lock.locked_dataset import LockedDataset
 
-from access_io.access_output import get_access_output_filename_daily_folder
-from access_io.access_output import set_all_attrs
-from access_io.access_attr_define import common_global_attributes_access
-from access_io.access_attr_define import atm_pars_era5_attributes_access
+# from access_io.access_output import get_access_output_filename_daily_folder
+# from access_io.access_output import set_all_attrs
+# from access_io.access_attr_define import common_global_attributes_access
+# from access_io.access_attr_define import atm_pars_era5_attributes_access
 
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 from util.file_times import need_to_process
@@ -31,7 +31,8 @@ from access_io.access_output import (
     set_all_attrs,
 )
 from satellite_definitions.amsr2 import REF_FREQ_mapping
-from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
+
+# from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
 from era5.resample_ERA5 import ResampleERA5
 
@@ -182,7 +183,7 @@ def write_atmosphere_to_daily_ACCESS(
                     grid_type=grid_type,
                 )
                 grid_type = "equirectangular"
-                pole = None
+                pole = "None"
         except FileNotFoundError:
             raise
     elif region in ["north", "south"]:
@@ -230,7 +231,6 @@ def write_atmosphere_to_daily_ACCESS(
         grid_type=grid_type,
         pole=pole,
     ):
-
         if atm_filename_final.is_file():
             if overwrite or update:
                 atm_filename_final.unlink()
@@ -245,7 +245,6 @@ def write_atmosphere_to_daily_ACCESS(
 
         try:
             with LockedDataset(base_filename, "r", lock_stale_time=0.1) as root_grp:
-
                 if verbose:
                     print(
                         f"Reading ERA5 computed RTM data {satellite} "
@@ -393,13 +392,13 @@ def write_atmosphere_to_daily_ACCESS(
                             var = np.moveaxis(var, -1, 0)
 
                             if resample_required:
-
-                                print(
-                                    f"Resampling {varname} to polar map for freq = {freq}"
-                                )
-                                time_begin = datetime.datetime.now()
-                                var = resampler.resample_fortran(var)
-                                time = datetime.datetime.now() - time_begin
+                                print(f"Resamp {varname} polar map for freq = {freq}")
+                                # time_begin = datetime.datetime.now()
+                                if resampler is not None:
+                                    var = resampler.resample_fortran(var)
+                                else:
+                                    raise Exception("resampler not initialized")
+                                # time = datetime.datetime.now() - time_begin
 
                             var_times = rtm_data.time_in_day
                             var = np.moveaxis(var, 1, -1)
@@ -428,15 +427,6 @@ def write_atmosphere_to_daily_ACCESS(
                                 trg[varname][
                                     :, :, hour_index, freq_index
                                 ] = var_at_time_map
-
-                                # fig,ax = plot_global_map(time_map,vmin=0,vmax=86400,plt_colorbar=True)
-                                # fig.savefig(debug_root /'time_map.png')
-
-                                # fig,ax = plot_global_map(var[0,:,:],vmin=0.9,vmax=1.0,plt_colorbar=True)
-                                # fig.savefig(debug_root /'trans_map.png')
-
-                                # fig,ax = plot_global_map(var_at_time_map,vmin=0.9,vmax=1.0,plt_colorbar=True)
-                                # fig.savefig(debug_root /'trans_map_at_time.png')
 
                                 print(".", end="")
                             print()

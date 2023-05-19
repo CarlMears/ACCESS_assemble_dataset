@@ -6,14 +6,15 @@ from pathlib import Path
 import concurrent.futures
 
 """
-To use the python-wrapped fortran version of the resampler, the f2py-based resamp_using_wts must be installed
+To use the python-wrapped fortran version of the resampler,
+the f2py-based resamp_using_wts must be installed
 
 To do this:
-    clone the project from http://gitlab.remss.com/access/resample_using_weights_fortran_python
+    clone the project from http://gitlab.remss.com/access/
+    resample_using_weights_fortran_python
     (or cd to http://gitlab.remss.com/access/resample_using_weights_fortran_python)
+    issue the command
 
-    issue the command 
-    
     python -m build
 
     Ideally, this will build the project with no errors.  There are a LOT of warnings.
@@ -26,18 +27,7 @@ To do this:
 """
 
 
-def init_worker() -> None:
-    """
-    This is a function which will allow the user to stop all workers
-    with a Ctrl-C event.  Otherwise the code gets caught in an odd loop in
-    which it does not terminate.  This appears to be a Python bug:
-    https://stackoverflow.com/questions/1408356/keyboard-interrupts-with-pythons-multiprocessing-pool
-    """
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
 def resample_iy_row(xindex, yindex, weights, var, iy):
-
     if iy % 10 == 0:
         print(iy)
     numx = xindex.shape[0]
@@ -61,7 +51,6 @@ def resample_iy_row(xindex, yindex, weights, var, iy):
 
 class ResampleERA5:
     def __init__(self, *, target_size, region):
-
         if os.name == "nt":
             resample_wt_path = Path("L:/access/era5/resample_weights")
         elif os.name == "posix":
@@ -118,7 +107,6 @@ class ResampleERA5:
         self.numx = self.weights.shape[1]
 
     def resample(self, var):
-
         """This python only version is much, much slower than the fortran version,
         even though it uses multiple processes"""
 
@@ -156,7 +144,6 @@ class ResampleERA5:
         return var_resamp
 
     def resample_fortran(self, var, verbose=False):
-
         # To import the following, the module needs to be installed using build/f2py
         #
         # see instruction in the README.md in
@@ -197,9 +184,7 @@ class ResampleERA5:
 
 
 if __name__ == "__main__":
-
     from rss_plotting.plot_2d_array import plot_2d_array
-    import matplotlib.pyplot as plt
 
     resampler = ResampleERA5(target_size=70, region="north")
 

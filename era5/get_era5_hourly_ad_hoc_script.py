@@ -1,12 +1,7 @@
 import datetime
+from Era5_requests.era5_requests import era5_hourly_single_level_request
 import os
-from netCDF4 import Dataset as netcdf_dataset
 from pathlib import Path
-import sys
-
-sys.path.append("M:/job_access/python/dataset_assembly/")
-from era5_request.era5_requests import era5_hourly_single_level_request
-
 
 # variable = ("total_column_cloud_liquid_water", "tclw")
 variable = ("Total column water vapour", "tcwv")

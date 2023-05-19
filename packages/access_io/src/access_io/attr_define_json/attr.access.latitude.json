@@ -1,0 +1,9 @@
+{
+    "standard_name": "latitude",
+    "long_name": "latitude",
+    "units": "degrees_north",
+    "valid_min": -90.0,
+    "valid_max": 90.0,
+    "missing_value": -999.0,
+	"_FillValue": -999.0
+}

@@ -5,13 +5,12 @@ from resampled_tbs.read_resampled_orbit import get_resampled_file_name
 
 
 def get_mtime_multi_try(path_to_file, max_num_trys=10):
-
     num_so_far = 0
     while num_so_far < max_num_trys:
         try:
             mtime = path_to_file.stat().st_mtime
             return mtime
-        except:
+        except Exception:
             # catch all errors
             num_so_far += 1
 
@@ -31,7 +30,6 @@ def need_to_process(
     overwrite: bool,
     update: bool,
 ):
-
     base_filename = get_access_output_filename_daily_folder(
         date,
         satellite,
@@ -81,7 +79,6 @@ def need_to_process_base_file(
     overwrite: bool,
     update: bool,
 ):
-
     if len(orbits_to_do) <= 0:
         return False
 

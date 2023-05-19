@@ -15,7 +15,7 @@ from access_io.access_attr_define import (  # atm_pars_era5_attributes_access,
     resamp_tb_attributes_access,
 )
 
-from resampling_utils.polar_grids import NSIDC_ease2_grids
+from polar_grids import NSIDC_ease2_grids
 
 ease2_grid_25km_north = NSIDC_ease2_grids(pole="north", resolution="25km")
 ease2_grid_25km_south = NSIDC_ease2_grids(pole="south", resolution="25km")
@@ -104,6 +104,26 @@ def get_access_output_filename_daily_folder(
     grid_type: str = "equirectangular",
     pole: str = "",
 ) -> Path:
+    """
+    Generates the output filename path for a daily satellite dataset.
+
+    Args:
+        date (datetime.date): The date of the dataset.
+        satellite (str): The name of the satellite.
+        target_size (int): The target size in kilometers.
+        dataroot (Path): The root directory for the data.
+        var (str): The variable name.
+        grid_type (str, optional): The grid type. Defaults to "equirectangular".
+        pole (str, optional): The pole type (valid only for grid_type="ease2"). Defaults to "".
+
+    Returns:
+        Path: The output filename path.
+
+    Raises:
+        ValueError: If the pole is not "north" or "south" (valid only for grid_type="ease2").
+        ValueError: If the target size is not specified (valid only for grid_type="ease2").
+        ValueError: If the grid type is not valid.
+    """
 
     if grid_type == "equirectangular":
         if target_size > 0:
@@ -131,7 +151,10 @@ def get_access_output_filename_daily_folder(
                     / f"Y{date:%Y}"
                     / f"M{date:%m}"
                     / f"D{date:%d}"
-                    / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.{pole}.nc"
+                    / (
+                        f"{satellite.lower()}_{var}_{date:%Y_%m_%d}."
+                        f"{target_size:03d}km.{pole}.nc"
+                    )
                 )
             else:
                 raise ValueError(f"Pole={pole} must be north or south")
@@ -215,6 +238,29 @@ def write_daily_lf_netcdf(
     script_name: str,
     commit: str,
 ) -> None:
+    """
+    Writes a daily land fraction NetCDF file.
+
+    Args:
+        date (datetime.date): The date of the dataset.
+        satellite (str): The name of the satellite.
+        target_size (int): The target size in kilometers.
+        pole (str, optional): The pole type. Defaults to None.
+        version (str): The version string.
+        lf_version (str): The land fraction version string.
+        land_fraction (ArrayLike): The land fraction data.
+        dataroot (Path, optional): The root directory for the data. Defaults to ACCESS_ROOT.
+        overwrite (bool): Whether to overwrite the existing file if it exists.
+        script_name (str): The name of the script that generated the file.
+        commit (str): The commit string for the code that generated the file.
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If the pole is not "north" or "south".
+    """
+
     tb_fill = -999.0
     lf_string = f"land_frac_{lf_version}"
     filename = get_access_output_filename_daily_folder(
@@ -327,6 +373,29 @@ def write_daily_tb_netcdf(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
+    """
+    Writes a daily brightness temperature NetCDF file.
+
+    Args:
+        date (datetime.date): The date of the dataset.
+        satellite (str): The name of the satellite.
+        target_size (int): The target size in kilometers.
+        pole (str, optional): The pole type. Defaults to None.
+        version (str): The version string.
+        tb_array_by_hour (NDArray[Any]): The brightness temperature array by hour.
+        time_array_by_hour (NDArray[Any]): The time array by hour.
+        dataroot (Path, optional): The root directory for the data. Defaults to ACCESS_ROOT.
+        freq_list (NDArray[Any]): The frequency list.
+        file_list (Optional[Sequence[Path]]): The list of file paths. Defaults to None.
+        script_name (str, optional): The name of the script. Defaults to "unavailable".
+        commit (str, optional): The commit string. Defaults to "unavailable".
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If the pole is not "north" or "south".
+    """
 
     if pole is None:
         filename = get_access_output_filename_daily_folder(
@@ -490,14 +559,12 @@ def edit_attrs_daily_tb_netcdf(
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
-
     filename = get_access_output_filename_daily_folder(
         date, satellite, target_size, dataroot, "resamp_tbs"
     )
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "r+", 60) as nc_out:
-
         # set the global_attributes
         try:
             data_type = tb_array_by_hour.dtype
@@ -545,6 +612,24 @@ def write_daily_ancillary_var_netcdf(
     global_attrs: Union[dict[str, Any], Literal["copy"]],
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
+    """
+    Writes a daily NetCDF file for an ancillary variable.
+
+    Args:
+        date (datetime.date): The date of the dataset.
+        satellite (str): The name of the satellite.
+        target_size (int): The target size in kilometers.
+        anc_data (NDArray[Any]): The ancillary data array.
+        anc_name (str): The name of the ancillary variable.
+        anc_attrs (dict[str, Any]): The attributes for the ancillary variable.
+        global_attrs (Union[dict[str, Any], Literal["copy"]]): The global attributes for the NetCDF file.
+            It can be a dictionary or the string "copy" to copy attributes from another file.
+        dataroot (Path, optional): The root directory for the data. Defaults to ACCESS_ROOT.
+
+    Returns:
+        None
+    """
+
     base_filename = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, "resamp_tbs"
     )
@@ -621,7 +706,6 @@ def edit_attrs_daily_ancillary_var_netcdf(
     global_attrs: dict,
     dataroot: Path = ACCESS_ROOT,
 ) -> None:
-
     var_filename_final = get_access_output_filename_daily_folder(
         date, satellite.lower(), target_size, dataroot, anc_name
     )
@@ -651,6 +735,27 @@ def write_ocean_emiss_to_daily_ACCESS(
     outputroot: Path,
     verbose: bool = False,
 ) -> None:
+    """
+    Writes the ocean emissivity data to a daily ACCESS NetCDF file.
+
+    Args:
+        ocean_emiss (ArrayLike): The ocean emissivity data array.
+        current_day (datetime.date): The current day.
+        satellite (str): The name of the satellite.
+        target_size (int): The target size in kilometers.
+        glb_attrs (dict[str, Any]): The global attributes for the NetCDF file.
+        var_attrs (dict[str, Any]): The variable attributes for the emissivity variable.
+        dataroot (Path): The root directory for the input data.
+        outputroot (Path): The root directory for the output data.
+        verbose (bool, optional): Whether to print verbose output. Defaults to False.
+
+    Returns:
+        None
+
+    Raises:
+        OkToSkipDay: If the base file is not found, indicating it is OK to skip the day.
+    """
+
     if verbose:
         print(f"Opening base file for {satellite} on {current_day} in {dataroot}")
 

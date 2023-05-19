@@ -9,7 +9,6 @@ def look_for_missing_files(
     list_of_files: list[str],
     footprint_size: int,
 ) -> dict:
-
     date = start_date
 
     while date <= end_date:
@@ -23,7 +22,11 @@ def look_for_missing_files(
         )
 
         for file_template in list_of_files:
-            file_name = f"{file_template}{date.year:04d}_{date.month:02d}_{date.day:02d}.{footprint_size:03d}km.nc"
+            file_name = (
+                f"{file_template}"
+                f"{date.year:04d}_{date.month:02d}_"
+                f"{date.day:02d}.{footprint_size:03d}km.nc"
+            )
             path_to_file = access_output_root_this_day / file_name
             if path_to_file.is_file():
                 num_good += 1
@@ -38,7 +41,6 @@ def look_for_missing_files(
 
 
 if __name__ == "__main__":
-
     start_date = datetime.date(2013, 1, 1)
     end_date = datetime.date(2020, 12, 31)
     access_output_root = Path("/mnt/ops1p-ren/l/access/amsr2_out_test3")

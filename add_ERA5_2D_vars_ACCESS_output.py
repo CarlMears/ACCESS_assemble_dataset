@@ -3,19 +3,19 @@ import datetime
 import os
 from contextlib import suppress
 from pathlib import Path
-from typing import Tuple, Union
 from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
 
-from era5_request.era5_requests import era5_hourly_single_level_request
-from access_io.access_output import get_access_output_filename_daily_folder
-from access_io.access_output import write_daily_ancillary_var_netcdf
+from Era5_requests.era5_requests import era5_hourly_single_level_request
+
+# from access_io.access_output import get_access_output_filename_daily_folder
+# from access_io.access_output import write_daily_ancillary_var_netcdf
 from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from typing import Any, Tuple
 
 import git
-import numpy as np
-from netCDF4 import Dataset as netcdf_dataset
+
+# from netCDF4 import Dataset as netcdf_dataset
 
 from access_io.access_attr_define import (
     anc_var_attributes_access,
@@ -25,7 +25,7 @@ from access_io.access_output import (
     get_access_output_filename_daily_folder,
     write_daily_ancillary_var_netcdf,
 )
-from era5_request.era5_requests import era5_hourly_single_level_request
+
 from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 from util.file_times import need_to_process
 
@@ -51,7 +51,6 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     commit: str,
     resampler=None,
 ) -> None:
-
     # Do some logic about the region and file names
 
     if region == "global":
@@ -63,7 +62,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             current_day, satellite, target_size, dataroot, anc_name
         )
         grid_type = "equirectangular"
-        pole = None
+        pole = "None"
     elif region in ["north", "south"]:
         pole = region
         base_filename = get_access_output_filename_daily_folder(
@@ -113,7 +112,6 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         grid_type=grid_type,
         pole=pole,
     ):
-
         if not base_filename.is_file():
             print(f"base file for {current_day} does not exist, skipping")
             return
@@ -205,9 +203,9 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 # should be done at a higher level, but just in case....
                 resampler = ResampleERA5(target_size=target_size, region=region)
 
-            time_begin = datetime.datetime.now()
+            # time_begin = datetime.datetime.now()
             var = resampler.resample_fortran(var)
-            time = datetime.datetime.now() - time_begin
+            # time = datetime.datetime.now() - time_begin
             # print(time)
 
         # list of times, each hour.
@@ -217,14 +215,14 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
         var_by_hour = np.full_like(times, np.nan).filled()
 
-        time_begin = datetime.datetime.now()
+        # time_begin = datetime.datetime.now()
         for hour_index in range(0, 24):
             time_map = times[:, :, hour_index]
             var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
                 var, var_times, time_map
             )
             var_by_hour[:, :, hour_index] = var_at_time_map
-        time = datetime.datetime.now() - time_begin
+        # time = datetime.datetime.now() - time_begin
 
         if "_FillValue" in var_attrs.keys():
             var_by_hour[~np.isfinite(var_by_hour)] = var_attrs["_FillValue"]
@@ -375,7 +373,6 @@ if __name__ == "__main__":
 
         date = START_DAY
         while date <= END_DAY:
-
             # common global_attributes for the project
             glb_attrs = common_global_attributes_access(
                 date, satellite, target_size, version
