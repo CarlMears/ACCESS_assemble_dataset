@@ -17,14 +17,12 @@ from access_io.access_output import (
     write_daily_ancillary_var_netcdf,
     edit_attrs_daily_ancillary_var_netcdf,
     get_access_output_filename_daily_folder,
-    write_daily_ancillary_var_netcdf,
 )
 from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from imerg_request.imerg_requests import imerg_half_hourly_request
 from resampling_utils.resample_imerg_polar import ResampleIMERG
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
 from util.file_times import need_to_process
-import git
 
 
 def redo_imerg_rain_rate_attrs_ACCESS(
@@ -228,8 +226,6 @@ def write_imerg_rain_rate_for_ACCESS(
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(
         description=(
             "Interpolate and append IMERG rainfall data to ACCESS output file. "

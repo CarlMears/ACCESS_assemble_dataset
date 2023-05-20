@@ -1,19 +1,20 @@
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 import os
 from pathlib import Path
-import concurrent.futures
+
 
 """
-To use the python-wrapped fortran version of the resampler, the f2py-based resamp_using_wts must be installed
+To use the python-wrapped fortran version of the resampler, the f2py-based
+resamp_using_wts must be installed
 
 To do this:
-    clone the project from http://gitlab.remss.com/access/resample_using_weights_fortran_python
+    clone the project from
+    http://gitlab.remss.com/access/resample_using_weights_fortran_python
     (or cd to http://gitlab.remss.com/access/resample_using_weights_fortran_python)
 
-    issue the command 
-    
+    issue the command
+
     python -m build
 
     Ideally, this will build the project with no errors.  There are a LOT of warnings.
@@ -25,23 +26,24 @@ To do this:
 
 """
 
+
 class ResampleIMERG:
-    def __init__(self, *, target_size : int, region : str):
+    def __init__(self, *, target_size: int, region: str):
         if os.name == "nt":
             resample_wt_path = Path("L:/access/era5/resample_weights")
         elif os.name == "posix":
             resample_wt_path = Path("/mnt/ops1p-ren/l/access/imerg/resample_weights/")
+        target_size = int(target_size)
         if region in ["north", "south"]:
             grid_type = "ease2"
             if region == "north":
                 nc_file = (
                     resample_wt_path
-                    / f"resamp_wts_ease2_25km_NP_{int(target_size)}km_imerg_largewindow.nc"
+                    / f"resamp_wts_ease2_25km_NP_{target_size}km_imerg_largewindow.nc"
                 )
             else:
                 nc_file = (
-                    resample_wt_path
-                    / f"resamp_wts_ease2_25km_NP_{int(target_size)}km.nc"
+                    resample_wt_path / f"resamp_wts_ease2_25km_NP_{target_size}km.nc"
                 )
         elif region == "global":
             grid_type = "equirectangular"

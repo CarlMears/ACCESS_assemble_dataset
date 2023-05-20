@@ -36,7 +36,8 @@ def load_attrs(
     *, project: Optional[str] = None, satellite: Optional[str] = None, var: str
 ) -> dict[str, Any]:
     """
-    Loads attributes from a JSON file based on the specified project, satellite, and variable.
+    Loads attributes from a JSON file based on the specified project,
+    satellite, and variable.
 
     Parameters:
         project (Optional[str]): The project name. Default is None.
@@ -66,7 +67,8 @@ def load_attrs(
 
 def load_access_attrs(*, satellite: Optional[str] = None, var: str) -> dict:
     """
-    Loads access attributes from a JSON file based on the specified satellite and variable.
+    Loads access attributes from a JSON file based on the specified
+    satellite and variable.
 
     Parameters:
         satellite (Optional[str]): The satellite name. Default is None.
@@ -83,7 +85,8 @@ def load_access_attrs(*, satellite: Optional[str] = None, var: str) -> dict:
 
 def fix_attr_types(attrs: dict, var_dtype):
     """
-    Fixes the attribute types in the given dictionary based on the specified variable data type.
+    Fixes the attribute types in the given dictionary based on
+    the specified variable data type.
 
     Parameters:
         attrs (dict): The attributes dictionary.
@@ -113,7 +116,8 @@ def common_global_attributes_access(
     dtype=np.float32,
 ) -> dict:
     """
-    Retrieves common global attributes for a specific date, satellite, target size, and version.
+    Retrieves common global attributes for a specific date,
+    satellite, target size, and version.
 
     Parameters:
         date (datetime.date): The date.
@@ -151,7 +155,8 @@ def common_global_attributes_access(
 
 def resamp_tb_attributes_access(satellite: str, version="v01r00", dtype=np.float32):
     """
-    Retrieves resampled brightness temperature attributes for a specific satellite and version.
+    Retrieves resampled brightness temperature attributes for a
+    specific satellite and version.
 
     Parameters:
         satellite (str): The satellite name.
@@ -174,7 +179,8 @@ def atm_pars_era5_attributes_access(
     satellite: str, target_size: int, version="v00r00", dtype=np.float32
 ):
     """
-    Retrieves atmospheric parameters (ERA5) attributes for a specific satellite, target size, and version.
+    Retrieves atmospheric parameters (ERA5) attributes for a
+    specific satellite, target size, and version.
 
     Parameters:
         satellite (str): The satellite name.
@@ -197,7 +203,8 @@ def anc_var_attributes_access(
     satellite: str, var: str, version="v00r00", dtype=np.float32
 ):
     """
-    Retrieves ancillary variable attributes for a specific satellite, variable, and version.
+    Retrieves ancillary variable attributes for a specific
+    satellite, variable, and version.
 
     Parameters:
         satellite (str): The satellite name.
