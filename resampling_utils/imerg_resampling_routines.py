@@ -17,8 +17,6 @@ NUM_LONS_EASE2 = 720
 NUM_HOURS = 24
 hdf5_access = Lock()
 
-resampler = False
-
 
 def init_worker() -> None:
     """
