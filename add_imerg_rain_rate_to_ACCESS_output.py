@@ -85,10 +85,10 @@ def write_imerg_rain_rate_for_ACCESS(
     commit: str,
     resampler: Optional[ResampleIMERG],
 ) -> None:
-    
     if region == "global":
         base_filename = get_access_output_filename_daily_folder(
-            current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs")
+            current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs"
+        )
         var = "rainfall_rate"
         imerge_filename_final = get_access_output_filename_daily_folder(
             current_day, satellite, footprint_diameter_km, outputroot, var
@@ -214,7 +214,6 @@ def write_imerg_rain_rate_for_ACCESS(
                 dataroot=dataroot,
             )
         elif grid_type == "ease2":
-
             write_daily_ancillary_var_netcdf_polar(
                 date=date,
                 satellite=satellite,
@@ -307,7 +306,7 @@ if __name__ == "__main__":
 
     redo_attrs = args.redo_attrs
 
-    #Initialize resampler
+    # Initialize resampler
     if region in ["north", "south"]:
         resampler = ResampleIMERG(target_size=footprint_diameter_km, region=region)
     else:
@@ -325,7 +324,7 @@ if __name__ == "__main__":
                 temproot=temp_root,
                 footprint_diameter_km=footprint_diameter_km,
                 script_name=script_name,
-                commit=commit
+                commit=commit,
             )
         else:
             write_imerg_rain_rate_for_ACCESS(

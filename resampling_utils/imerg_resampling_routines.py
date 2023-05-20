@@ -3,6 +3,7 @@ import datetime
 import signal
 from pathlib import Path
 from threading import Lock
+from typing import Optional
 
 import numpy as np
 import pyproj as proj
@@ -10,6 +11,7 @@ import xarray as xr
 
 from resampling_utils.AMSR2_Antenna_Gain import target_gain
 from resampling_utils.resample_imerg_polar import ResampleIMERG
+
 NUM_LATS = 721
 NUM_LONS = 1440
 NUM_LATS_EASE2 = 720
@@ -171,6 +173,7 @@ def resample_to_quarter(
 
     return resampled_map
 
+
 def resample_to_ease(map_rain, mask, resampler):
     """
     Inputs a map of rain rates at a given time along with
@@ -187,11 +190,18 @@ def resample_to_ease(map_rain, mask, resampler):
     resampled_map = var_out
     resampled_map[~mask] = np.nan
 
-
     return resampled_map
 
+
 def resample_hour(
-    hour, times, time_intervals, date, footprint_diameter_km, region, resampler, target_path
+    hour,
+    times,
+    time_intervals,
+    date,
+    footprint_diameter_km,
+    region,
+    resampler,
+    target_path,
 ):
     sat_time = times[:, :, hour]
 
@@ -223,8 +233,7 @@ def resample_hour(
         minutes_of_day=minutes_of_day_end, date=date, target_path=target_path
     )
 
-
-    if region == 'global':
+    if region == "global":
         res = np.full((2, NUM_LATS, NUM_LONS), np.nan)
 
         mp = resample_to_quarter(
@@ -247,7 +256,7 @@ def resample_hour(
         res[1, :, :] = mp
 
         hour_map = np.nanmean((res), axis=0)
-    elif region in ['north', 'south']:
+    elif region in ["north", "south"]:
         res = np.full((2, NUM_LATS_EASE2, NUM_LONS_EASE2), np.nan)
         mp = resample_to_ease(
             map_rain=rain_beg,
@@ -255,7 +264,7 @@ def resample_hour(
             resampler=resampler,
         )
 
-        res[0,:,:] = mp
+        res[0, :, :] = mp
 
         mp = resample_to_ease(
             map_rain=rain_end,
@@ -263,7 +272,7 @@ def resample_hour(
             resampler=resampler,
         )
 
-        res[1,:,:] = mp
+        res[1, :, :] = mp
 
         hour_map = np.nanmean((res), axis=0)
 
@@ -271,17 +280,18 @@ def resample_hour(
 
 
 def resample_imerg_day(
-    times, 
-    time_intervals,
-    date,
-    footprint_diameter_km,
-    region, 
-    target_path=Path("."),resampler=False
+    times: np.ndarray,
+    time_intervals: np.ndarray,
+    date: datetime.date,
+    footprint_diameter_km: int,
+    region: str,
+    target_path=Path("."),
+    resampler: Optional[ResampleIMERG] = None,
 ):
-    if region == 'global':
+    if region == "global":
         total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
         resampler = False
-    elif region in ['north', 'south']:
+    elif region in ["north", "south"]:
         total_hour = np.full((NUM_LATS_EASE2, NUM_LONS_EASE2, NUM_HOURS), np.nan)
         # Only initialize the resampler if we need to
         if not isinstance(resampler, ResampleIMERG):
@@ -291,7 +301,7 @@ def resample_imerg_day(
 
     # Using process pool for resampling global
 
-    if region == 'global':
+    if region == "global":
         with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
             results = {
                 executor.submit(
@@ -313,8 +323,17 @@ def resample_imerg_day(
                     return
                 except Exception as e:
                     print(f"Error in run: {e}")
-    elif region in ['north', 'south']:  # no parallel processing if EASE2 resampling
+    elif region in ["north", "south"]:  # no parallel processing if EASE2 resampling
         for hour in range(0, NUM_HOURS):
-            map, idx, modtime = resample_hour(hour,times,time_intervals,date,footprint_diameter_km, region, resampler, target_path)
+            map, idx, modtime = resample_hour(
+                hour,
+                times,
+                time_intervals,
+                date,
+                footprint_diameter_km,
+                region,
+                resampler,
+                target_path,
+            )
             total_hour[:, :, idx] = map
     return total_hour, modtime
