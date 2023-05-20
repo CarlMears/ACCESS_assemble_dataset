@@ -4,7 +4,7 @@ import argparse
 from contextlib import suppress
 import datetime
 from pathlib import Path
-
+from typing import Optional
 import git
 import numpy as np
 from netCDF4 import Dataset as netcdf_dataset
@@ -21,6 +21,7 @@ from access_io.access_output import (
 )
 from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from imerg_request.imerg_requests import imerg_half_hourly_request
+from resampling_utils.resample_imerg_polar import ResampleIMERG
 from resampling_utils.imerg_resampling_routines import resample_imerg_day
 from util.file_times import need_to_process
 import git
@@ -78,10 +79,11 @@ def write_imerg_rain_rate_for_ACCESS(
     temproot: Path,
     footprint_diameter_km: int,
     region: str,
-    overwrite: bool = False,
-    update: bool = False,
+    overwrite: Optional[bool] = False,
+    update: Optional[bool] = False,
     script_name: str,
     commit: str,
+    resampler: Optional[ResampleIMERG],
 ) -> None:
     
     if region == "global":
@@ -169,6 +171,7 @@ def write_imerg_rain_rate_for_ACCESS(
             footprint_diameter_km,
             region,
             target_path=temproot / "imerg",
+            resampler=resampler,
         )
 
         rr_for_access = np.roll(rr_for_access, 720, axis=1)
@@ -304,6 +307,12 @@ if __name__ == "__main__":
 
     redo_attrs = args.redo_attrs
 
+    #Initialize resampler
+    if region in ["north", "south"]:
+        resampler = ResampleIMERG(target_size=footprint_diameter_km, region=region)
+    else:
+        resampler = None
+
     date = START_DAY
     while date <= END_DAY:
         print(f"{date}")
@@ -316,7 +325,7 @@ if __name__ == "__main__":
                 temproot=temp_root,
                 footprint_diameter_km=footprint_diameter_km,
                 script_name=script_name,
-                commit=commit,
+                commit=commit
             )
         else:
             write_imerg_rain_rate_for_ACCESS(
@@ -331,5 +340,6 @@ if __name__ == "__main__":
                 update=update,
                 script_name=script_name,
                 commit=commit,
+                resampler=resampler,
             )
         date += datetime.timedelta(days=1)

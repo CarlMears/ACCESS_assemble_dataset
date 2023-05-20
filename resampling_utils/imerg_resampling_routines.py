@@ -273,26 +273,26 @@ def resample_hour(
 
 
 def resample_imerg_day(
-    times, time_intervals, date, footprint_diameter_km, region, target_path=Path(".")
+    times, 
+    time_intervals,
+    date,
+    footprint_diameter_km,
+    region, 
+    target_path=Path("."),resampler=False
 ):
-    global resampler    
     if region == 'global':
         total_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
         resampler = False
     elif region in ['north', 'south']:
         total_hour = np.full((NUM_LATS_EASE2, NUM_LONS_EASE2, NUM_HOURS), np.nan)
-
         # Only initialize the resampler if we need to
-        if isinstance(resampler, ResampleIMERG):
-            if ((footprint_diameter_km != resampler.target_size) or 
-                (region != resampler.region)):
-                resampler = ResampleIMERG(target_size=footprint_diameter_km, region=region)
-        else:
-            resampler = ResampleIMERG(target_size=footprint_diameter_km, region=region) # so we only need to do this once
+        if not isinstance(resampler, ResampleIMERG):
+            raise ValueError("Need to initialize resampler for EASE2 resampling")
     else:
         print(f"{region} not recognized")
 
     # Using process pool for resampling global
+
     if region == 'global':
         with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
             results = {
