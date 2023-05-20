@@ -276,13 +276,15 @@ def write_daily_tb_netcdf_polar(
     commit: str = "unavailable",
 ) -> None:
     """
-    Writes daily brightness temperature (TB) data to a NetCDF file in a polar grid format.
+    Writes daily brightness temperature (TB) data to a NetCDF file
+    in a polar grid format.
 
     Parameters:
         date (datetime.date): Date of the TB data.
         satellite (str): Satellite name.
         target_size (int): Target size of the resampled grid in kilometers.
-        pole (str, optional): Pole direction. Valid values are "north" or "south". Defaults to None.
+        pole (str, optional): Pole direction. Valid values are "north" or "south".
+                                Defaults to None.
         version (str): Version of the TB data.
         tb_array_by_hour (ArrayLike): Array of TB values by hour.
         time_array_by_hour (ArrayLike): Array of time values by hour.

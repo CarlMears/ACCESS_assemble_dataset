@@ -114,14 +114,17 @@ def get_access_output_filename_daily_folder(
         dataroot (Path): The root directory for the data.
         var (str): The variable name.
         grid_type (str, optional): The grid type. Defaults to "equirectangular".
-        pole (str, optional): The pole type (valid only for grid_type="ease2"). Defaults to "".
+        pole (str, optional): The pole type (valid only for grid_type="ease2").
+                            Defaults to "".
 
     Returns:
         Path: The output filename path.
 
     Raises:
-        ValueError: If the pole is not "north" or "south" (valid only for grid_type="ease2").
-        ValueError: If the target size is not specified (valid only for grid_type="ease2").
+        ValueError: If the pole is not "north" or "south"
+                    (valid only for grid_type="ease2").
+        ValueError: If the target size is not specified
+                    (valid only for grid_type="ease2").
         ValueError: If the grid type is not valid.
     """
 
@@ -249,7 +252,8 @@ def write_daily_lf_netcdf(
         version (str): The version string.
         lf_version (str): The land fraction version string.
         land_fraction (ArrayLike): The land fraction data.
-        dataroot (Path, optional): The root directory for the data. Defaults to ACCESS_ROOT.
+        dataroot (Path, optional): The root directory for the data.
+                                    Defaults to ACCESS_ROOT.
         overwrite (bool): Whether to overwrite the existing file if it exists.
         script_name (str): The name of the script that generated the file.
         commit (str): The commit string for the code that generated the file.
@@ -384,7 +388,8 @@ def write_daily_tb_netcdf(
         version (str): The version string.
         tb_array_by_hour (NDArray[Any]): The brightness temperature array by hour.
         time_array_by_hour (NDArray[Any]): The time array by hour.
-        dataroot (Path, optional): The root directory for the data. Defaults to ACCESS_ROOT.
+        dataroot (Path, optional): The root directory for the data.
+            Defaults to ACCESS_ROOT.
         freq_list (NDArray[Any]): The frequency list.
         file_list (Optional[Sequence[Path]]): The list of file paths. Defaults to None.
         script_name (str, optional): The name of the script. Defaults to "unavailable".
@@ -622,9 +627,12 @@ def write_daily_ancillary_var_netcdf(
         anc_data (NDArray[Any]): The ancillary data array.
         anc_name (str): The name of the ancillary variable.
         anc_attrs (dict[str, Any]): The attributes for the ancillary variable.
-        global_attrs (Union[dict[str, Any], Literal["copy"]]): The global attributes for the NetCDF file.
-            It can be a dictionary or the string "copy" to copy attributes from another file.
-        dataroot (Path, optional): The root directory for the data. Defaults to ACCESS_ROOT.
+        global_attrs (Union[dict[str, Any], Literal["copy"]]):
+            the global attributes for the NetCDF file.
+            It can be a dictionary or the string "copy" to copy attributes
+                from another file.
+        dataroot (Path, optional): The root directory for the data.
+            Defaults to ACCESS_ROOT.
 
     Returns:
         None
