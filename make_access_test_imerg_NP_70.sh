@@ -1,9 +1,9 @@
-access_root=/home/rss_user/access-data/output_files/amsr2_out_NP_70
-output_root=/home/rss_user/access-data/output_files/amsr2_out_NP_70
-temp_root=/home/rss_user/access-data/_temp
-rmt_data_root=/home/rss_user/access-data/_temp
-start_date=2016-07-02
-end_date=2016-07-05
+access_root=/mnt/ops1p-ren/l/access/amsr2_out_NP_70
+output_root=/mnt/ops1p-ren/l/access/amsr2_out_NP_70
+temp_root=/mnt/a/data/_access_temp
+rtm_data_root=/mnt/a/data/_access_temp
+start_date=2012-08-01
+end_date=2021-12-31
 satellite=amsr2
 target_size=70
 region=north
