@@ -146,9 +146,6 @@ def write_imerg_rain_rate_for_ACCESS(
                 )
             except KeyError:
                 raise ValueError(f'Error finding "time" in {base_filename}')
-        # except FileNotFoundError:
-        #     print(f"File: {base_filename} not found, skipping")
-        #     return
 
         # Downloding all IMERG files for the day
         try:

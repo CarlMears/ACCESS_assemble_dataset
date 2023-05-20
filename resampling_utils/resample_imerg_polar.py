@@ -25,39 +25,8 @@ To do this:
 
 """
 
-
-def resample_iy_row(xindex, yindex, weights, var, iy, imerglat, imerglon):
-    if iy % 10 == 0:
-        print(iy)
-    numx = xindex.shape[0]
-    i = imerglat
-    j = imerglon
-    # num_time_steps = var.shape[0]
-
-    # num_time_steps = var.shape[2]
-    num_time_steps = 1
-    var_resamp = np.full((num_time_steps, numx), np.nan, dtype=np.float32)
-    for ix in np.arange(numx):
-        wts = weights[ix, :]
-        x_indices = xindex[ix, :]
-        y_indices = yindex[ix, :]
-        if np.min(x_indices) < 0:
-            continue
-        if np.min(y_indices) < 0:
-            continue
-        # print('now here')
-        for itime in range(num_time_steps):
-            # var_sub = var[:,:,itime][y_indices,x_indices] # for resampled IMERG
-            # var_sub = var[x_indices, y_indices] # for raw imerg
-            var_sub = var[y_indices, x_indices]
-            # print(var_sub)
-            temp = np.sum(var_sub * wts)
-            var_resamp[itime, ix] = temp
-    return var_resamp, iy
-
-
 class ResampleIMERG:
-    def __init__(self, *, target_size, region):
+    def __init__(self, *, target_size : int, region : str):
         if os.name == "nt":
             resample_wt_path = Path("L:/access/era5/resample_weights")
         elif os.name == "posix":
