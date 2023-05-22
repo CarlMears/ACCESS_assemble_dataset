@@ -184,8 +184,10 @@ def try_download(
 
     try:
         with xr.open_dataset(target, group="Grid") as hr1:
-            # This is just a check to make sure the file is valid and has the
-            # expected variables.  If it doesn't, we'll delete it and try again.
+            # This is a check to make sure the file is valid and has the
+            # expected variables.  If it doesn't, we'll delete it and try 
+            # again.  Some of the IMERG files appeared to be corrupt after downloading
+            # and storing.
             _ = hr1["precipitationCal"].values
             _ = hr1["lat"].values
             _ = hr1["lon"].values
