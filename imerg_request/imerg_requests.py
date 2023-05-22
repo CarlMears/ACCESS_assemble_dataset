@@ -19,8 +19,10 @@ import time
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+import xarray as xr
 
 import requests
+from contextlib import suppress
 
 
 @lru_cache
@@ -180,10 +182,19 @@ def try_download(
     file = file_url.split("/")[-1]
     target = target_path / file
 
-    if target.exists():
+    try:
+        with xr.open_dataset(target, group="Grid") as hr1:
+            # This is just a check to make sure the file is valid and has the
+            # expected variables.  If it doesn't, we'll delete it and try again.
+            _ = hr1["precipitationCal"].values
+            _ = hr1["lat"].values
+            _ = hr1["lon"].values
         print(f"File: {target} already exists, skipping")
         return target
-    else:
+    except Exception:
+        with suppress(FileNotFoundError):
+            # If the file exists but is invalid, delete it
+            target.unlink()
         print(f"Getting: {target}")
         for attempt in range(max_attempts):
             result = session.get(file_url)
