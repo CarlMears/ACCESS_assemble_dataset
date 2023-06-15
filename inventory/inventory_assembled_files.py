@@ -110,7 +110,7 @@ if __name__ == "__main__":
         raise ValueError
 
     satellite = "amsr2"
-    footprint_size = 30
+    footprint_size = 70
     region = "north"
 
     if region == "global":
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"region {region} not valid")
 
-    for year in range(2013, 2022):
+    for year in range(2012, 2023):
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 
@@ -180,4 +180,5 @@ if __name__ == "__main__":
         summary_path = output_root / "summaries"
         png_file = summary_path / f"dataset_summary_{year:04d}.png"
         os.makedirs(png_file.parent, exist_ok=True)
+        print(png_file)
         fig.savefig(png_file)

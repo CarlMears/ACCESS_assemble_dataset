@@ -22,7 +22,7 @@ if __name__ == "__main__":
     ilat_map = np.full((720, 720, 100), -9999, dtype=np.int16)
 
     ease2_grid_25km_north = NSIDC_ease2_grids(pole="north", resolution="25km")
-    ease2_grid_25km_south = NSIDC_ease2_grids(pole="north", resolution="25km")
+    ease2_grid_25km_south = NSIDC_ease2_grids(pole="south", resolution="25km")
 
     for iy in np.arange(0, 720):
         for ix in np.arange(0, 720):

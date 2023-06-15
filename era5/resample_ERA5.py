@@ -65,7 +65,7 @@ class ResampleERA5:
             else:
                 nc_file = (
                     resample_wt_path
-                    / f"resamp_wts_ease2_25km_NP_{int(target_size)}km.nc"
+                    / f"resamp_wts_ease2_25km_SP_{int(target_size)}km.nc"
                 )
         elif region == "global":
             grid_type = "equirectangular"

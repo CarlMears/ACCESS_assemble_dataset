@@ -45,7 +45,7 @@ def get_resampled_file_name(
         if pole == "north":
             folder = f"NP_{target_size}"
         elif pole == "south":
-            folder = f"NP_{target_size}"
+            folder = f"SP_{target_size}"
         else:
             raise ValueError(f"Pole: {pole} not valid")
     else:

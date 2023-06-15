@@ -22,7 +22,7 @@ from polar_grids import NSIDC_ease2_grids
 from access_io.access_output import get_access_output_filename_daily_folder
 
 ease2_grid_25km_north = NSIDC_ease2_grids(pole="north", resolution="25km")
-ease2_grid_25km_south = NSIDC_ease2_grids(pole="north", resolution="25km")
+ease2_grid_25km_south = NSIDC_ease2_grids(pole="south", resolution="25km")
 
 
 if os.name == "nt":
@@ -307,10 +307,16 @@ def write_daily_tb_netcdf_polar(
             grid_type="ease2",
             pole=pole,
         )
-        lats = ease2_grid_25km_north.latitude
-        lons = ease2_grid_25km_north.longitude
-        crs_attrs = ease2_grid_25km_north.crs
-
+        if pole == "north":
+            lats = ease2_grid_25km_north.latitude
+            lons = ease2_grid_25km_north.longitude
+            crs_attrs = ease2_grid_25km_north.crs
+        elif pole == "south":
+            lats = ease2_grid_25km_south.latitude
+            lons = ease2_grid_25km_south.longitude
+            crs_attrs = ease2_grid_25km_south.crs
+        else:
+            raise ValueError(f"pole = {pole} is not valid")
     else:
         raise ValueError(f"pole = {pole} is not valid")
 

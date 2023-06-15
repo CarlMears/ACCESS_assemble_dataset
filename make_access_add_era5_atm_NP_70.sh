@@ -1,12 +1,12 @@
 satellite=amsr2
-target_size=30
+target_size=70
 
 access_root="/mnt/ops1p-ren/l/access/"$satellite"_out_NP_"$target_size
-access_root="/mnt/ops1p-ren/l/access/"$satellite"_out_NP_"$target_size
+output_root="/mnt/ops1p-ren/l/access/"$satellite"_out_NP_"$target_size
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date=2012-08-01
-end_date=2021-12-31
+start_date="2021-01-01"
+end_date="2021-12-31"
 
 region=north
 land_mask_source=modis

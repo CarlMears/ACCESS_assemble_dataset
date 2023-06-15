@@ -210,7 +210,7 @@ def make_daily_ACCESS_tb_file(
             dataroot,
             "resamp_tbs",
             grid_type="ease2",
-            pole="north",
+            pole=region,
         )
         grid_type = "ease2"
         pole = region
@@ -467,7 +467,7 @@ if __name__ == "__main__":
                     current_day=day_to_do,
                     satellite=satellite,
                     target_size=target_size,
-                    # region=args.region,  #Need to add this capability if needed
+                    #Xregion=args.region,  #Need to add this capability if needed
                     version=args.version,
                     dataroot=access_root,
                     channels=channels,

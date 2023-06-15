@@ -35,13 +35,18 @@ def add_land_fraction_to_ACCESS_output(
     elif region in ["north", "south"]:
         grid_type = "ease2"
         pole = region
+        if region == 'north':
+            assert('NP' in str(dataroot))
+            
+        if region == 'south':
+            assert('SP' in str(dataroot))
+      
+
     else:
         raise ValueError(f"region {region} not valid")
 
     if region in ["north", "south"]:
-        if region == "south":
-            raise ValueError("South Pole not Implemented")
-
+        
         land_file = land_path / (
             f"land_fraction_1440_721_{target_size}km."
             f"from_nsidc_3km_mask.{region}.ease25.v5.nc"
