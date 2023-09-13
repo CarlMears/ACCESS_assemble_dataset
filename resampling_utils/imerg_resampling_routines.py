@@ -200,8 +200,8 @@ def resample_hour(
     date,
     footprint_diameter_km,
     region,
-    resampler,
-    target_path,
+    resampler=None,
+    target_path=None,
 ):
     sat_time = times[:, :, hour]
 
@@ -311,7 +311,8 @@ def resample_imerg_day(
                     time_intervals,
                     date,
                     footprint_diameter_km,
-                    target_path,
+                    region,
+                    target_path=target_path,
                 ): hour
                 for hour in range(0, NUM_HOURS)
             }
@@ -332,8 +333,8 @@ def resample_imerg_day(
                 date,
                 footprint_diameter_km,
                 region,
-                resampler,
-                target_path,
+                resampler=resampler,
+                target_path=target_path,
             )
             total_hour[:, :, idx] = map
     return total_hour, modtime

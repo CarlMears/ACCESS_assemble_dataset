@@ -1,0 +1,40 @@
+{   "name": "resampled_brightness_temperature",
+    "global":{
+        "summary" : "Atmospheric radiation parameters corresponding to Remote Sensing Systems (RSS) Resampled brightness temperature",
+        "keywords": "EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > SPECTRAL IRRADIANCE, EARTH SCIENCE > ATMOSPHERE > ATMOSPHERIC RADIATION > TRANSMITTANCE",    
+        "title": "Atmospheric radiation parameters computed from ERA5 profile on a 0.25 degree Earth grid, time interpolated to satellite overpass time",
+        "history": "Created from ERA5 data downloaded from the Copernicus Climate Data Store using the RSS radiative transfer model"
+    },
+    "downwelling_tb":{
+        "standard_name": "brightness temperature",
+        "long_name": "downwelling atmospheric brightness temperature",
+        "units": "kelvin",
+        "_FillValue": -999.0,
+        "missing_value": -999.0,
+        "valid_min": 0.0,
+        "valid_max": 250.0,
+        "coordinates": "latitude longitude"
+    },
+    "upwelling_tb":{
+        "standard_name": "brightness temperature",
+        "long_name": "upwelling atmospheric brightness temperature",
+        "units": "kelvin",
+        "_FillValue": -999.0,
+        "missing_value": -999.0,
+        "valid_min": 0.0,
+        "valid_max": 250.0,
+        "coordinates": "latitude longitude"
+    },
+    "transmissivity":{
+        "standard_name": "transmissivity",
+        "long_name": "atmospheric transmissivty",
+        "units": "dimensionless",
+        "_FillValue": -999.0,
+        "missing_value": -999.0,
+        "valid_min": 0.0,
+        "valid_max": 1.0,
+        "coordinates": "latitude longitude"
+    }
+}
+
+

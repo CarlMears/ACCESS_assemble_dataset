@@ -8,6 +8,8 @@ import git
 import matplotlib.pyplot as plt
 import numpy as np
 
+from rss_sat_readers.rss_smap_l2c import find_SMAP_L1C_filenames_for_orbit,find_SMAP_resampled_filenames_for_date,orbit_numbers_from_filenames
+
 # must be installed from rss_plotting package
 from rss_plotting.global_map import plot_global_map
 
@@ -19,11 +21,13 @@ from access_io.access_output import (
 )
 from access_io.access_output_polar import write_daily_tb_netcdf_polar
 from resampled_tbs.read_resampled_orbit import (
-    read_AMSR2_resampled_tbs,
+    read_resampled_tbs,
     get_resampled_file_name,
 )
+
 from util.numpy_date_utils import convert_to_sec_in_day
 from util.orbit_times_amsr2 import find_orbits_in_day, read_amsr2_orbit_times
+from util.orbit_times_ssmi import read_ssmi_orbit_times
 from util.file_times import need_to_process_base_file
 
 NUM_LATS = 721
@@ -31,8 +35,8 @@ NUM_LONS = 1440
 NUM_X = 720
 NUM_Y = 720
 NUM_HOURS = 24
-NUM_CHANNELS = 14  # all possible AMSR2 channels
-AVAILABLE_CHANNELS = [
+
+AVAILABLE_CHANNELS_AMSR2 = [
     "time",
     "6V",
     "6H",
@@ -49,6 +53,20 @@ AVAILABLE_CHANNELS = [
     "89V",
     "89H",
 ]
+AVAILABLE_CHANNELS_SSMI = ["time","19V", "19H", "22V", "22H", "37V", "37H", "85V", "85H"]
+AVAILABLE_CHANNELS_SMAP = ["time","1.4V", "1.4H", "1.4THIRD", "1.4FOURTH"]
+
+def set_satellite_constants(satellite: str):
+    if satellite.lower() == "amsr2":
+        AVAILABLE_CHANNELS = AVAILABLE_CHANNELS_AMSR2
+        NUM_CHANNELS = len(AVAILABLE_CHANNELS)
+        return AVAILABLE_CHANNELS
+    elif satellite.lower() == "ssmi":
+        AVAILABLE_CHANNELS = AVAILABLE_CHANNELS_SSMI
+        NUM_CHANNELS = len(AVAILABLE_CHANNELS)
+        return AVAILABLE_CHANNELS_SSMI
+    else:
+        raise ValueError(f"Satellite: {satellite} not valid")
 
 
 def get_mtime_multi_try(path_to_file, max_num_trys=10):
@@ -110,6 +128,7 @@ def decide_not_to_process(
                             channel=channel,
                             target_size=target_size,
                             orbit=orbit,
+                            ksat=ksat
                         )
                         if tb_orbit_file.is_file():
                             tb_file_time = tb_orbit_file.stat().st_mtime
@@ -169,11 +188,13 @@ def make_daily_ACCESS_tb_file(
     *,
     current_day: date,
     satellite: str,
+    ksat: str,
     target_size: int,
     region: str = "global",
     version: str,
     dataroot: Path,
     channels: Collection[int],
+    look: int,
     verbose: bool = False,
     plot_example_map: bool = True,
     overwrite: bool = False,
@@ -193,12 +214,39 @@ def make_daily_ACCESS_tb_file(
         assert SAT_NAME.lower() == satellite.lower()
         NUM_FREQS = len(REF_FREQ)
         NUM_POLS = 2
+        NUM_LOOKS = 1
+    elif satellite.lower() == "ssmi":
+        orbit_times = read_ssmi_orbit_times(ksat=ksat)
+        from satellite_definitions.ssmi import (
+            CHANNEL_TO_FREQ_MAP,
+            CHANNEL_TO_POL_MAP,
+            REF_FREQ,
+            SAT_NAME,
+            NUM_LOOKS
+        )
+
+        assert SAT_NAME.lower() == satellite.lower()
+        NUM_FREQS = len(REF_FREQ)
+        NUM_POLS = 2
+        NUM_LOOKS = 1
+    elif satellite.lower() == "smap":
+        from satellite_definitions.smap import (
+            CHANNEL_TO_FREQ_MAP,
+            CHANNEL_TO_POL_MAP,
+            REF_FREQ,
+            SAT_NAME,
+        )
+
+        assert SAT_NAME.lower() == satellite.lower()
+        NUM_FREQS = len(REF_FREQ)
+        NUM_POLS = 4
+        NUM_LOOKS = 2
     else:
         raise ValueError(f"No satellite definition file for {satellite}")
 
     if region == "global":
         filename = get_access_output_filename_daily_folder(
-            current_day, satellite, target_size, dataroot, "resamp_tbs"
+            current_day, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat
         )
         grid_type = "equirectangular"
         pole = "None"
@@ -217,39 +265,35 @@ def make_daily_ACCESS_tb_file(
     else:
         raise ValueError(f"region {region} not valid")
 
-    orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
+    if satellite.lower() == 'smap':
+        files = find_SMAP_resampled_filenames_for_date(date=current_day,path=temp_root)
+        orbits_to_do,file_name_dict = orbit_numbers_from_filenames(files)
+    else:
+        orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
     # TODO: what is the actual exception expected? AssertionError?
 
     if len(orbits_to_do) == 0:
         print(f"No orbits found for {current_day}")
         return []
 
-    # if decide_not_to_process(
-    #     filename=filename,
-    #     satellite=satellite,
-    #     channels=channels,
-    #     target_size=target_size,
-    #     orbits_to_do=orbits_to_do,
-    #     overwrite=overwrite,
-    #     update=update,
-    # ):
-    #     print(f"No processing needed for {satellite} base file on {current_day}")
-    #     return []
-
-    need_to_process = need_to_process_base_file(
-        date=current_day,
-        satellite=satellite,
-        target_size=target_size,
-        grid_type=grid_type,
-        pole=pole,
-        orbits_to_do=list(orbits_to_do),
-        channels_to_do=list(channels),
-        dataroot=dataroot,
-        outputroot=dataroot,
-        var="resamp_tbs",
-        overwrite=overwrite,
-        update=update,
-    )
+    if satellite.lower() == "smap":
+        need_to_process = True
+    else:
+        need_to_process = need_to_process_base_file(
+            date=current_day,
+            satellite=satellite,
+            ksat=ksat,
+            target_size=target_size,
+            grid_type=grid_type,
+            pole=pole,
+            orbits_to_do=list(orbits_to_do),
+            channels_to_do=list(channels),
+            dataroot=dataroot,
+            outputroot=dataroot,
+            var="resamp_tbs",
+            overwrite=overwrite,
+            update=update,
+        )
 
     if need_to_process is False:
         print(f"No processing needed for {satellite} base file on {current_day}")
@@ -276,25 +320,31 @@ def make_daily_ACCESS_tb_file(
 
     print(f"Processing {current_day:%Y/%m/%d}, orbit: ", end="")
     for orbit in orbits_to_do:
-        print(f"{orbit} ", end="")
+
+        print(f"{orbit}:{look} ", end="")
 
         # get the times for this orbit, and convert to time within the day...
         try:
-            ob_time, filename = read_AMSR2_resampled_tbs(
+            ob_time, filename = read_resampled_tbs(
                 satellite=satellite,
+                ksat=ksat,
                 channel="time",
+                look=look,
                 target_size=target_size,
                 orbit=orbit,
                 grid_type=grid_type,
                 pole=pole,
-                verbose=False,
+                verbose=verbose,
+                file_name_dict=file_name_dict
             )
         except FileNotFoundError:
             print(f"Time file corrupt or missing for orbit: {orbit}, - skipping orbit")
             continue
 
         file_list.append(filename)
-        obtime_in_day = convert_to_sec_in_day(ob_time, current_day)
+        ref_year = 2000
+
+        obtime_in_day = convert_to_sec_in_day(ob_time, current_day,ref_year=ref_year)
         for hour in range(0, 24):
             time_slice = time_array_by_hour[:, :, hour]
             start_time_sec = hour * 3600.0
@@ -308,15 +358,20 @@ def make_daily_ACCESS_tb_file(
 
         if verbose:
             print("reading resampled tb files")
+
         for channel in channels:
             try:
-                tbs, filename = read_AMSR2_resampled_tbs(
+                tbs, filename = read_resampled_tbs(
                     satellite=satellite,
+                    ksat=ksat,
                     channel=channel,
+                    look=look,
                     target_size=target_size,
                     orbit=orbit,
                     grid_type=grid_type,
                     pole=pole,
+                    verbose=verbose,
+                    file_name_dict=file_name_dict
                 )
             # There are a lot of possible errors for corrupted files
             except Exception:
@@ -345,9 +400,10 @@ def make_daily_ACCESS_tb_file(
                 if num_ok > 0:
                     tb_slice[ok] = tbs[ok]
                     if verbose:
+                        channel_list = set_satellite_constants(satellite)
                         print(
                             f"orbit:{orbit}, "
-                            f"channel:{AVAILABLE_CHANNELS[channel]}, "
+                            f"channel:{channel_list[channel]}, "
                             f"time_range({start_time_sec}:{end_time_sec}) "
                             f"Num Obs: {num_ok}"
                         )
@@ -356,16 +412,22 @@ def make_daily_ACCESS_tb_file(
     if at_least_one_orbit:
         if plot_example_map:
             plot_global_map(tb_array_by_hour[:, :, 0, 5], vmin=0.0, vmax=330)
+        
+        # set 22H to nan for SSMI
+        if satellite.lower() == "ssmi":
+                tb_array_by_hour[:,:,:,1,1]=np.nan
 
         if region == "global":
             write_daily_tb_netcdf(
                 date=current_day,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=target_size,
                 version=version,
                 tb_array_by_hour=tb_array_by_hour,
                 time_array_by_hour=time_array_by_hour,
                 freq_list=REF_FREQ,
+                look=look,
                 file_list=file_list,
                 dataroot=dataroot,
                 script_name=script_name,
@@ -375,6 +437,7 @@ def make_daily_ACCESS_tb_file(
             write_daily_tb_netcdf_polar(
                 date=current_day,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=target_size,
                 pole=pole,
                 version=version,
@@ -414,7 +477,8 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2","ssmi","smap"], help="Microwave sensor to use")
+    parser.add_argument("--ksat", choices=["13","15"],help="Satellite number for SSMI")
     parser.add_argument(
         "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
@@ -448,12 +512,20 @@ if __name__ == "__main__":
     START_DAY = args.start_date
     END_DAY = args.end_date
     satellite = args.sensor.upper()
+    ksat = args.ksat
     target_size = int(args.target_size)
 
-    if target_size == 30:
-        channels = list(range(5, 13))
+    if satellite == "AMSR2":
+        if target_size == 30:
+            channels = list(range(5, 13))
+        else:
+            channels = list(range(1, 13))
+    elif satellite == "SSMI":
+        channels = list(range(1, 7))
+    elif satellite == "SMAP":
+        channels = list(range(1, 5))
     else:
-        channels = list(range(1, 13))
+        raise ValueError(f"Sensor {satellite} is not valid")
 
     script_name = parser.prog
     repo = git.Repo(search_parent_directories=True)
@@ -484,11 +556,13 @@ if __name__ == "__main__":
             make_daily_ACCESS_tb_file(
                 current_day=day_to_do,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=target_size,
                 region=args.region,
                 version=args.version,
                 dataroot=access_root,
                 channels=channels,
+                look=0,
                 verbose=args.verbose,
                 plot_example_map=args.plot_map,
                 overwrite=args.overwrite,

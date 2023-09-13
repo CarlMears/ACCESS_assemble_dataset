@@ -1,8 +1,9 @@
 pyproject.toml
-src/__init__.py
+setup.cfg
 src/polar_grids/__init__.py
 src/polar_grids/polar_grids.py
 src/polar_grids.egg-info/PKG-INFO
 src/polar_grids.egg-info/SOURCES.txt
 src/polar_grids.egg-info/dependency_links.txt
+src/polar_grids.egg-info/requires.txt
 src/polar_grids.egg-info/top_level.txt

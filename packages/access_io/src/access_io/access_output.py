@@ -103,6 +103,8 @@ def get_access_output_filename_daily_folder(
     var: str,
     grid_type: str = "equirectangular",
     pole: str = "",
+    ksat="13",
+    look=0,
 ) -> Path:
     """
     Generates the output filename path for a daily satellite dataset.
@@ -127,6 +129,18 @@ def get_access_output_filename_daily_folder(
                     (valid only for grid_type="ease2").
         ValueError: If the grid type is not valid.
     """
+    if satellite.lower() == "ssmi":
+        dataroot = dataroot / f'f{ksat}'
+
+    suffix = ".nc"
+    if satellite.lower() == "smap":
+        if look == 0:
+            suffix = ".fore.nc"
+        elif look == 1:
+            suffix = ".aft.nc"
+        else:
+            raise ValueError("look must be 0 or 1")
+
 
     if grid_type == "equirectangular":
         if target_size > 0:
@@ -135,7 +149,7 @@ def get_access_output_filename_daily_folder(
                 / f"Y{date:%Y}"
                 / f"M{date:%m}"
                 / f"D{date:%d}"
-                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
+                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km{suffix}"
             )
         else:
             return (
@@ -143,7 +157,7 @@ def get_access_output_filename_daily_folder(
                 / f"Y{date:%Y}"
                 / f"M{date:%m}"
                 / f"D{date:%d}"
-                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.nc"
+                / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}{suffix}"
             )
     elif grid_type == "ease2":
         if target_size > 0:
@@ -156,7 +170,7 @@ def get_access_output_filename_daily_folder(
                     / f"D{date:%d}"
                     / (
                         f"{satellite.lower()}_{var}_{date:%Y_%m_%d}."
-                        f"{target_size:03d}km.{pole}.nc"
+                        f"{target_size:03d}km.{pole}{suffix}"
                     )
                 )
             else:
@@ -169,7 +183,7 @@ def get_access_output_filename_daily_folder(
             / f"Y{date:%Y}"
             / f"M{date:%m}"
             / f"D{date:%d}"
-            / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km.nc"
+            / f"{satellite.lower()}_{var}_{date:%Y_%m_%d}.{target_size:03d}km{suffix}"
         )
     else:
         raise ValueError(f"Grid type {grid_type} not valid")
@@ -231,6 +245,7 @@ def write_daily_lf_netcdf(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str,
     target_size: int,
     pole: str = None,
     version: str,
@@ -267,13 +282,13 @@ def write_daily_lf_netcdf(
 
     tb_fill = -999.0
     lf_string = f"land_frac_{lf_version}"
-    filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, dataroot, lf_string
-    )
+    # filename = get_access_output_filename_daily_folder(
+    #     date, satellite, target_size, dataroot, lf_string, ksat=ksat
+    # )
 
     if pole is None:
         filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, lf_string
+            date, satellite, target_size, dataroot, lf_string, ksat=ksat
         )
         lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
         lons = np.arange(0, NUM_LONS) * 0.25
@@ -286,6 +301,7 @@ def write_daily_lf_netcdf(
             lf_string,
             grid_type="ease2",
             pole=pole,
+            ksat=ksat
         )
         if pole == "north":
             lats = ease2_grid_25km_north.latitude
@@ -366,6 +382,7 @@ def write_daily_tb_netcdf(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str = '13',
     target_size: int,
     pole: str = None,
     version: str,
@@ -374,6 +391,7 @@ def write_daily_tb_netcdf(
     dataroot: Path = ACCESS_ROOT,
     freq_list: NDArray[Any],
     file_list: Optional[Sequence[Path]],
+    look: int = 0,
     script_name: str = "unavailable",
     commit: str = "unavailable",
 ) -> None:
@@ -404,7 +422,7 @@ def write_daily_tb_netcdf(
 
     if pole is None:
         filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, "resamp_tbs"
+            date, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat,look=look
         )
         lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
         lons = np.arange(0, NUM_LONS) * 0.25
@@ -417,6 +435,7 @@ def write_daily_tb_netcdf(
             "resamp_tbs",
             grid_type="ease2",
             pole=pole,
+            ksat=ksat
         )
         if pole == "north":
             lats = ease2_grid_25km_north.latitude
@@ -430,7 +449,10 @@ def write_daily_tb_netcdf(
     os.makedirs(filename.parent, exist_ok=True)
 
     num_freq = len(freq_list)
-    num_pol = 2
+    if satellite.lower() == "smap":
+        num_pol = 4
+    else:
+        num_pol = 2
 
     # with netcdf_dataset(filename, "w", format="NETCDF4") as nc_out:
     with LockedDataset(filename, "w", 60) as nc_out:
@@ -528,7 +550,8 @@ def write_daily_tb_netcdf(
         longitude[:] = lons
         hours[:] = np.arange(NUM_HOURS)
         freq[:] = freq_list
-        pol[:] = np.array([0, 1], dtype=np.int32)
+        
+        pol[:] = np.arange(num_pol, dtype=np.int32)
 
         # write the time layer
         time_to_put = (
@@ -736,6 +759,7 @@ def write_ocean_emiss_to_daily_ACCESS(
     ocean_emiss: ArrayLike,
     current_day: datetime.date,
     satellite: str,
+    ksat: str = "13",
     target_size: int,
     glb_attrs: dict[str, Any],
     var_attrs: dict[str, Any],
@@ -771,10 +795,10 @@ def write_ocean_emiss_to_daily_ACCESS(
         from satellite_definitions.amsr2 import REF_FREQ
 
     base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, dataroot, "resamp_tbs"
+        current_day, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat
     )
     emiss_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, outputroot, "ocean_emiss_era5"
+        current_day, satellite, target_size, outputroot, "ocean_emiss_era5",ksat=ksat
     )
 
     try:
@@ -783,14 +807,14 @@ def write_ocean_emiss_to_daily_ACCESS(
 
             with LockedDataset(emiss_filename_final, mode="w") as trg:
                 for name, dim in root_grp.dimensions.items():
-                    if name in ["hours", "latitude", "longitude"]:
+                    if name in ["hours", "latitude", "longitude","freq","pol"]:
                         trg.createDimension(
                             name, len(dim) if not dim.isunlimited() else None
                         )
 
                 # create the new dimensions needed for the emissivity data
-                trg.createDimension("freq", len(REF_FREQ))
-                trg.createDimension("pol", 2)
+                #trg.createDimension("freq", len(REF_FREQ))
+                #trg.createDimension("pol", 2)
 
                 set_all_attrs(trg, glb_attrs)
 

@@ -9,7 +9,7 @@ if os.name == "nt":
 elif os.name == "posix":
     ACCESS_ROOT = Path("/mnt/ops1p-ren/l/access")
 
-IMPLEMENTED_SATELLITES = ["amsr2"]
+IMPLEMENTED_SATELLITES = ["amsr2","ssmi","smap"]
 
 AVAILABLE_CHANNELS = [
     "time",
@@ -38,6 +38,7 @@ def get_resampled_file_name(
     grid_type: str = "equirectangular",
     pole: str = "north",
     dataroot: Path = ACCESS_ROOT,
+    ksat: str = "13"
 ):
     if grid_type == "equirectangular":
         folder = f"GL_{target_size}"
@@ -51,15 +52,31 @@ def get_resampled_file_name(
     else:
         raise ValueError(f"grid_type: {grid_type} is not valid")
     orbit_lower, orbit_upper = get_AMSR2_orbit_range(orbit)
-    orbit_dir = (
-        dataroot
-        / f"{satellite}_tb_orbits"
-        / folder
-        / f"r{orbit_lower:05d}_{orbit_upper:05d}"
-    )
-    orbit_dir_time = (
-        dataroot / f"{satellite}_tb_orbits" / f"r{orbit_lower:05d}_{orbit_upper:05d}"
-    )
+
+    if satellite.lower() == "ssmi": 
+        folder = f"f{ksat}/" + folder 
+        orbit_dir = (
+            dataroot
+            / f"{satellite}_tb_orbits"
+            / folder
+            / f"r{orbit_lower:06d}_{orbit_upper:06d}"
+        )
+        orbit_dir_time = (
+            dataroot / f"{satellite}_tb_orbits" / f"r{orbit_lower:06d}_{orbit_upper:06d}"
+        )
+    elif satellite.lower() == "smap":
+        raise ValueError("SMAP not implemented")
+    else:
+
+        orbit_dir = (
+            dataroot
+            / f"{satellite}_tb_orbits"
+            / folder
+            / f"r{orbit_lower:05d}_{orbit_upper:05d}"
+        )
+        orbit_dir_time = (
+            dataroot / f"{satellite}_tb_orbits" / f"r{orbit_lower:05d}_{orbit_upper:05d}"
+        )
 
     if isinstance(channel, int):
         if (channel >= 0) and (channel <= 99):
@@ -73,21 +90,38 @@ def get_resampled_file_name(
 
     if grid_type == "equirectangular":
         if channel_str == "time":
-            filename = orbit_dir_time / f"r{orbit:05d}.time.nc"
+            if satellite.lower() == "ssmi":
+                filename = orbit_dir_time / f"f{ksat}_{orbit:06d}.time.nc"
+            else:
+                filename = orbit_dir_time / f"r{orbit:05d}.time.nc"
         else:
-            filename = (
-                orbit_dir / f"r{orbit:05d}.grid_tb.{channel_str}.{target_size:03d}km.nc"
-            )
+            if satellite.lower() == "ssmi":
+                filename = (
+                    orbit_dir / f"f{ksat}_{orbit:06d}.grid_tb.{channel_str}.{target_size:03d}km.nc"
+                )
+            else:
+                filename = (
+                    orbit_dir / f"r{orbit:05d}.grid_tb.{channel_str}.{target_size:03d}km.nc"
+                )
         return filename
     elif grid_type == "ease2":
         if pole in ["north", "south"]:
             if channel_str == "time":
-                filename = orbit_dir_time / f"r{orbit:05d}.polar_grid_time.{pole}.nc"
+                if satellite.lower() == "ssmi":
+                    filename = orbit_dir_time / f"f{ksat}_{orbit:06d}.polar_grid_time.{pole}.nc"
+                else:
+                    filename = orbit_dir_time / f"r{orbit:05d}.polar_grid_time.{pole}.nc"
             else:
-                filename = (
-                    orbit_dir / f"r{orbit:05d}.polar_grid_tb.{pole}."
-                    f"{channel_str}.{target_size:03d}km.nc"
-                )
+                if satellite.lower() == "ssmi":
+                    filename = (
+                        orbit_dir / f"f{ksat}_{orbit:06d}.polar_grid_tb.{pole}."
+                        f"{channel_str}.{target_size:03d}km.nc"
+                    )
+                else:
+                    filename = (
+                        orbit_dir / f"r{orbit:05d}.polar_grid_tb.{pole}."
+                        f"{channel_str}.{target_size:03d}km.nc"
+                    )
         else:
             raise ValueError(f"Pole {pole} must be north or south")
         return filename
@@ -112,32 +146,54 @@ def get_AMSR2_orbit_range(orbit: int) -> Tuple[int, int]:
     return orbit_lower, orbit_upper
 
 
-def read_AMSR2_resampled_tbs(
+def read_resampled_tbs(
     *,
     satellite: str,
+    ksat: str = "13",
     channel: Union[str, int],
+    look: int,
     target_size: int,
     orbit: int,
     grid_type: str = "equirectangular",
     pole: str = "north",
     dataroot: Path = ACCESS_ROOT,
     verbose: bool = False,
+    file_name_dict: dict = None,
 ) -> Tuple[Any, Path]:
     """Using xarray here to take advantage of lazy reading"""
 
     if satellite.lower() not in IMPLEMENTED_SATELLITES:
         raise ValueError(f"Satellite {satellite} is not implemented")
 
-    filename = get_resampled_file_name(
-        satellite=satellite,
-        channel=channel,
-        target_size=target_size,
-        orbit=orbit,
-        grid_type=grid_type,
-        pole=pole,
-        dataroot=dataroot,
-    )
-    if verbose:
-        print(filename)
-    ds = xr.open_dataset(filename)
-    return ds.Data.values, filename
+    if satellite.lower() == "smap":
+        filename=file_name_dict[orbit]
+
+        smap_var_dict = {
+            'time': 'resamp_times',
+            1: 'resamp_tbs',
+            2: 'resamp_tbs',
+            3: 'resamp_tbs',
+            4: 'resamp_tbs'
+        }
+        
+        ds = xr.open_dataset(filename)
+        z = ds[smap_var_dict[channel]].values
+        if channel in [1,2,3,4]:
+            return z[:, :, look, channel-1], filename
+        else:
+            return z[:,:,look], filename
+    else:
+        filename = get_resampled_file_name(
+            satellite=satellite,
+            ksat=ksat,
+            channel=channel,
+            target_size=target_size,
+            orbit=orbit,
+            grid_type=grid_type,
+            pole=pole,
+            dataroot=dataroot,
+        )
+        if verbose:
+            print(filename)
+        ds = xr.open_dataset(filename)
+        return ds.Data.values, filename

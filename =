@@ -1,0 +1,5 @@
+Requirement already satisfied: black in /home/carl/anaconda3/envs/rss-analysis310/lib/python3.10/site-packages (22.6.0)
+Collecting version
+  Downloading version-0.1.1.tar.gz (2.0 kB)
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'error'

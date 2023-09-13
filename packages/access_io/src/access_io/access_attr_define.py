@@ -15,7 +15,7 @@ if os.name == "nt":
     )
 elif os.name == "posix":
     _attr_define_root = Path(
-        "/mnt/ops1p-ren/m/job_access/python/dataset_assembly/access_io/attr_define_json"
+        "/mnt/ops1p-ren/m/job_access/python/dataset_assembly/packages/access_io/src/access_io/attr_define_json"
     )
 
 _allowed_numeric_types = ["np.float32", "np.float64", "np.int32", "np.int64"]

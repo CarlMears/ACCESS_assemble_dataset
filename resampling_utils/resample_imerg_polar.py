@@ -43,7 +43,8 @@ class ResampleIMERG:
                 )
             else:
                 nc_file = (
-                    f"resamp_wts_ease2_25km_SP_{target_size}km_imerg_largewindow.nc"
+                    resample_wt_path
+                    / f"resamp_wts_ease2_25km_SP_{target_size}km_imerg_largewindow.nc"
                 )
         elif region == "global":
             grid_type = "equirectangular"

@@ -146,14 +146,14 @@ def write_imerg_rain_rate_for_ACCESS(
                 raise ValueError(f'Error finding "time" in {base_filename}')
 
         # Downloding all IMERG files for the day
-        try:
-            imerg_half_hourly_request(
-                date=current_day,
-                target_path=temproot / "imerg",
-            )
+        # try:
+        #     imerg_half_hourly_request(
+        #         date=current_day,
+        #         target_path=temproot / "imerg",
+        #     )
 
-        except Exception as e:
-            raise RuntimeError("Problem downloading IMERG data") from e
+        # except Exception as e:
+        #     raise RuntimeError("Problem downloading IMERG data") from e
 
         # An array of hour times in seconds
         hourly_intervals = np.arange(0, 86401, 3600)
@@ -233,25 +233,25 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
-        "access_root", type=Path, help="Root directory to ACCESS project"
+        "--access_root", type=Path, help="Root directory to ACCESS project"
     )
-    parser.add_argument("output_root", type=Path, help="Root directory to write files")
+    parser.add_argument("--output_root", type=Path, help="Root directory to write files")
     parser.add_argument(
-        "temp_root", type=Path, help="Root directory store temporary files"
+        "--temp_root", type=Path, help="Root directory store temporary files"
     )
     parser.add_argument(
-        "start_date",
+        "--start_date",
         type=datetime.date.fromisoformat,
         help="First Day to process, as YYYY-MM-DD",
     )
     parser.add_argument(
-        "end_date",
+        "--end_date",
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
     parser.add_argument(
-        "footprint_diameter",
+        "--footprint_diameter",
         type=int,
         help="Diameter of resampling footprint (in km). Default=30km",
         nargs="?",
@@ -259,7 +259,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "region", help="region to process", choices=["global", "north", "south"]
+        "--region", help="region to process", choices=["global", "north", "south"]
     )
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"

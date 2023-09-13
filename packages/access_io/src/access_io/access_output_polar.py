@@ -99,6 +99,7 @@ def write_daily_lf_netcdf_polar(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str,
     target_size: int,
     pole: str = None,
     grid_type: str = None,
@@ -140,6 +141,7 @@ def write_daily_lf_netcdf_polar(
             "resamp_tbs",
             grid_type="ease2",
             pole=pole,
+            ksat=ksat
         )
         if pole == "north":
             lats = ease2_grid_25km_north.latitude
@@ -158,7 +160,7 @@ def write_daily_lf_netcdf_polar(
     lf_fill = -999.0
     lf_string = f"land_frac_{lf_version}"
     filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, dataroot, lf_string, grid_type, pole
+        date, satellite, target_size, dataroot, lf_string, grid_type, pole, ksat=ksat
     )
 
     if filename.is_file() and not overwrite:
@@ -264,6 +266,7 @@ def write_daily_tb_netcdf_polar(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str,
     target_size: int,
     pole: str = None,
     version: str,
@@ -306,6 +309,7 @@ def write_daily_tb_netcdf_polar(
             "resamp_tbs",
             grid_type="ease2",
             pole=pole,
+            ksat=ksat
         )
         if pole == "north":
             lats = ease2_grid_25km_north.latitude

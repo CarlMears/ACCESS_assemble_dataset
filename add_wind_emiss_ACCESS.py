@@ -19,7 +19,7 @@ from util.file_times import need_to_process
 from access_io.access_output import (
     get_access_output_filename_daily_folder,
 )
-from satellite_definitions.amsr2 import REF_EIA, REF_FREQ
+#from satellite_definitions.amsr2 import REF_EIA, REF_FREQ
 
 # these are for debugging only
 # from rss_plotting.global_map import plot_global_map
@@ -31,7 +31,7 @@ class OkToSkipDay(Exception):
 
 
 def calc_emissivity_maps(
-    *, date, wind_source, sst_source, target_size, grid_type, pole
+    *, date, wind_source, sst_source, target_size, grid_type, pole,
 ):
     print(f"{date}")
 
@@ -84,7 +84,7 @@ def calc_emissivity_maps(
     w10n_ok = w10n[wind_ok]
 
     sst = sst - 273.15
-    sst[sst < -3.0] = 3.0
+    sst[sst < -3.0] = -3.0
     sst[sst > 34.0] = 34.0
     sst_ok = sst[wind_ok]
 
@@ -148,7 +148,8 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
+    parser.add_argument("--ksat", choices=["13"], help="Satellite Number for SSMI")
     parser.add_argument("--target_size", choices=["30", "70"], help="Target size in km")
     parser.add_argument(
         "--region", help="region to process", choices=["global", "north", "south"]
@@ -173,6 +174,7 @@ if __name__ == "__main__":
     sst_source = args.sst
     version = args.version
     satellite = args.sensor
+    ksat = args.ksat
     target_size = int(args.target_size)
     region = args.region
     overwrite = args.overwrite
@@ -185,10 +187,41 @@ if __name__ == "__main__":
     START_DAY = args.start_date
     END_DAY = args.end_date
     satellite = args.sensor.upper()
+
+    if satellite.lower() == "amsr2":
+        #orbit_times = read_amsr2_orbit_times()
+        from satellite_definitions.amsr2 import (
+            CHANNEL_TO_FREQ_MAP,
+            CHANNEL_TO_POL_MAP,
+            REF_FREQ,
+            REF_EIA,
+            SAT_NAME,
+        )
+
+        assert SAT_NAME.lower() == satellite.lower()
+        NUM_FREQS = len(REF_FREQ)
+        NUM_POLS = 2
+    elif satellite.lower() == "ssmi":
+        #orbit_times = read_ssmi_orbit_times(ksat=ksat)
+        from satellite_definitions.ssmi import (
+            CHANNEL_TO_FREQ_MAP,
+            CHANNEL_TO_POL_MAP,
+            REF_FREQ,
+            REF_EIA,
+            SAT_NAME,
+        )
+
+        assert SAT_NAME.lower() == satellite.lower()
+        NUM_FREQS = len(REF_FREQ)
+        NUM_POLS = 2
+    else:
+        raise ValueError(f"No satellite definition file for {satellite}")
+    
     date = START_DAY
+
 while date <= END_DAY:
     emiss_filename_final = get_access_output_filename_daily_folder(
-        date, satellite, target_size, output_root, "ocean_emiss_era5"
+        date, satellite, target_size, output_root, "ocean_emiss_era5",ksat=ksat
     )
 
     if region in ["north", "south"]:
@@ -209,6 +242,7 @@ while date <= END_DAY:
             "ocean_emiss_era5",
             grid_type=grid_type,
             pole=pole,
+            ksat=ksat,
         )
 
         base_filename = get_access_output_filename_daily_folder(
@@ -219,11 +253,13 @@ while date <= END_DAY:
             "resamp_tbs",
             grid_type=grid_type,
             pole=pole,
+            ksat=ksat
         )
         var = "ocean_emiss_era5"
         if need_to_process(
             date=date,
             satellite=satellite,
+            ksat=ksat,
             target_size=target_size,
             grid_type=grid_type,
             pole=pole,

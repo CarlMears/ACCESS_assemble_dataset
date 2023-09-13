@@ -1,29 +1,27 @@
-satellite=amsr2
-target_size=70
-
-access_root="/mnt/ops1p-ren/l/access/"$satellite"_out_NP_"$target_size
-output_root="/mnt/ops1p-ren/l/access/"$satellite"_out_NP_"$target_size
+access_root=/mnt/ops1p-ren/l/access/amsr2_out_SP_70
+output_root=/mnt/ops1p-ren/l/access/amsr2_out_SP_70
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date="2021-01-01"
-end_date="2021-12-31"
-
-region=north
+start_date=2012-08-01
+end_date=2021-12-31
+satellite=amsr2
+target_size=70
+region=south
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
 version=test_01
 
-# python add_land_fraction_to_ACCESS_output.py \
-#                        --output_root $output_root \
-#                        --temp_root $temp_root \
-#                        --start_date $start_date \
-#                        --end_date $end_date \
-#                        --sensor $satellite \
-#                        --target_size $target_size \
-#                        --version $version \
-#                        --region $region \
-#                        --lf_version $land_mask_source
+python add_land_fraction_to_ACCESS_output.py \
+                       --output_root $output_root \
+                       --temp_root $temp_root \
+                       --start_date $start_date \
+                       --end_date $end_date \
+                       --sensor $satellite \
+                       --target_size $target_size \
+                       --version $version \
+                       --region $region \
+                       --lf_version $land_mask_source
 
 # python make_daily_ACCESS_files.py \
 #                     $output_root \
@@ -46,17 +44,17 @@ version=test_01
 #                     $version \
 #                     "--update" 
 
-python add_atmosphere_to_ACCESS_output_no_compute.py \
-                    --access_root $access_root \
-                    --output_root $output_root \
-                    --temp_root $rtm_data_root \
-                    --start_date $start_date \
-                    --end_date $end_date \
-                    --sensor $satellite \
-                    --target_size $target_size \
-                    --version $version \
-                    --region $region \
-                    --overwrite
+# python add_atmosphere_to_ACCESS_output_no_compute.py \
+#                     --access_root $access_root \
+#                     --output_root $output_root \
+#                     --temp_root $rtm_data_root \
+#                     --start_date $start_date \
+#                     --end_date $end_date \
+#                     --sensor $satellite \
+#                     --target_size $target_size \
+#                     --version $version \
+#                     --region $region \
+#                     --overwrite
                     
 # python add_ERA5_2D_vars_ACCESS_output.py \
 #                        --access_root $output_root \

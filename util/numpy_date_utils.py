@@ -46,12 +46,15 @@ def convert_to_sec_in_day(
     date_jan1_2000 = np.datetime64(f"{ref_year:04d}-01-01T00:00:00")
     start_of_day = np.datetime64(f"{date:%Y-%m-%d}T00:00:00")
 
-    bad = ob_time < 100.0
-    ob_time = ob_time.astype(np.int64)
-    dt_obs = ob_time.astype("timedelta64[s]")
-    obs_datetime = dt_obs + date_jan1_2000
-    obtime_in_day = (obs_datetime - start_of_day).astype(np.float32)
-    obtime_in_day[bad] = np.nan
+    bad = np.abs(ob_time) < 0.001  # bad data is often stored as zero
+    ob_time[bad] = np.nan
+
+    obtime_in_day = (ob_time.astype("timedelta64[s]") + 
+                     date_jan1_2000 - 
+                     start_of_day).astype(np.float32)
+
+    obtime_in_day[obtime_in_day < 3600.0] = np.nan
+    obtime_in_day[obtime_in_day > 86400.0] = np.nan
 
     return obtime_in_day
 

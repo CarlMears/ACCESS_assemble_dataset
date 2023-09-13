@@ -21,6 +21,7 @@ def need_to_process(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str = "13",
     target_size: int,
     grid_type: str = "equirectangular",
     pole: str = "",
@@ -38,10 +39,11 @@ def need_to_process(
         "resamp_tbs",
         grid_type=grid_type,
         pole=pole,
+        ksat=ksat
     )
 
     var_filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, outputroot, var, grid_type=grid_type, pole=pole
+        date, satellite, target_size, outputroot, var, grid_type=grid_type, pole=pole,ksat=ksat
     )
 
     if base_filename.is_file():
@@ -68,6 +70,7 @@ def need_to_process_base_file(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str = "13",
     target_size: int,
     grid_type: str = "equirectangular",
     pole: str,
@@ -90,11 +93,13 @@ def need_to_process_base_file(
         "resamp_tbs",
         grid_type=grid_type,
         pole=pole,
+        ksat=ksat 
     )
 
     found_tb_orbit_file = False
     tb_orbit_file_newer_than_base_file = False
 
+    satellite = satellite.lower()
     if base_filename.is_file():
         base_file_time = get_mtime_multi_try(base_filename)
     else:
@@ -104,6 +109,7 @@ def need_to_process_base_file(
         for channel in channels_to_do:
             tb_orbit_file = get_resampled_file_name(
                 satellite=satellite,
+                ksat=ksat,
                 channel=channel,
                 target_size=target_size,
                 orbit=orbit,
@@ -114,7 +120,7 @@ def need_to_process_base_file(
                 found_tb_orbit_file = True
                 tb_file_time = get_mtime_multi_try(tb_orbit_file)
                 if tb_file_time > base_file_time:
-                    tb_orbit_file_newer_than_base_file
+                    tb_orbit_file_newer_than_base_file = True
 
     if base_filename.is_file():
         if found_tb_orbit_file:

@@ -138,18 +138,18 @@ def write_atmosphere_to_daily_ACCESS(
 
         try:
             with LockedDataset(base_filename, "r") as root_grp:
-                if verbose:
-                    print(
-                        f"Reading ERA5 computed RTM data {satellite} "
-                        + f"on {current_day} in {temproot}"
-                    )
+                # if verbose:
+                #     print(
+                #         f"Reading ERA5 computed RTM data {satellite} "
+                #         + f"on {current_day} in {temproot}"
+                #     )
 
                 # num_lats = root_grp["latitude"].shape[0]
                 # num_lons = root_grp["longitude"].shape[0]
                 # num_hours = root_grp["hours"].shape[0]
                 # num_chan = len(REF_FREQ)
 
-                rtm_data = DailyRtm(current_day, temproot)
+                # rtm_data = DailyRtm(current_day, temproot)
 
                 glb_attrs = common_global_attributes_access(
                     current_day,
@@ -423,10 +423,16 @@ def write_atmosphere_to_daily_ACCESS(
                                 var_at_time_map = time_interpolate_synoptic_maps_ACCESS(
                                     var, var_times, time_map
                                 )
-
-                                trg[varname][
+                                if grid_type == "equirectangular":
+                                    trg[varname][
                                     :, :, hour_index, freq_index
-                                ] = var_at_time_map
+                                    ] = np.transpose(var_at_time_map)
+                                elif grid_type == "ease2":
+                                    trg[varname][
+                                        :, :, hour_index, freq_index
+                                    ] = var_at_time_map
+                                else:           
+                                    raise ValueError(f"Grid Type {grid_type} is not valid")
 
                                 print(".", end="")
                             print()

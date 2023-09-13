@@ -15,6 +15,7 @@ def add_land_fraction_to_ACCESS_output(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str,
     target_size: int,
     region: str = "global",
     version: str,
@@ -72,18 +73,23 @@ def add_land_fraction_to_ACCESS_output(
                 "resampled_modis_land_water_mask"
             ].values
 
-            # we need the other dataset to fill in a few spots....
+            # we need the hansen/nsidc dataset to fill in a few spots that are missing in
+            # the modis dataset
+
             land_file = (
-                land_path / "land_fraction_1440_721_30km.combined_hansen_nsidc.nc"
+                land_path / f"land_fraction_1440_721_{target_size}km.combined_hansen_nsidc.nc"
             )
             land_fraction_xr = xr.open_dataset(land_file)
             land_fraction_np_hansen = land_fraction_xr["land_fraction"].values
 
-            # for areas of missing data, use the hansen map
+            # for areas of missing data, use the hansen/nsidc map
             land_fraction_np[~np.isfinite(land_fraction_np)] = land_fraction_np_hansen[
                 ~np.isfinite(land_fraction_np)
             ]
-            # also use for lats southward of -75.0
+            # also use for lats southward of -75.0, where there is a lot of missing modis data
+            # and the modis data is a little suspect because of sea ice.  We assume the NSIDC knows
+            # what it is doing in these areas.
+            
             land_fraction_np[0:60, :] = land_fraction_np_hansen[0:60, :]
 
         else:
@@ -96,6 +102,7 @@ def add_land_fraction_to_ACCESS_output(
             write_daily_lf_netcdf_polar(
                 date=date,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=target_size,
                 pole=pole,
                 grid_type=grid_type,
@@ -115,6 +122,7 @@ def add_land_fraction_to_ACCESS_output(
                 date=date,
                 satellite=satellite,
                 target_size=target_size,
+                ksat=ksat,
                 version=version,
                 lf_version=lf_version,
                 land_fraction=land_fraction_np,
@@ -151,7 +159,8 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
+    parser.add_argument("--ksat", choices=["13"], help="Satellite Number for SSMI")
     parser.add_argument("--target_size")
     parser.add_argument("--version")
     parser.add_argument("--region", help="region to process")
@@ -186,6 +195,7 @@ if __name__ == "__main__":
         add_land_fraction_to_ACCESS_output(
             date=day_to_do,
             satellite=satellite,
+            ksat=args.ksat,
             target_size=target_size,
             region=args.region,
             version=args.version,

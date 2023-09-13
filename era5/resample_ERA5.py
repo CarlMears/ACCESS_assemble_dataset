@@ -70,7 +70,7 @@ class ResampleERA5:
         elif region == "global":
             grid_type = "equirectangular"
             nc_file = (
-                resample_wt_path / f"resamp_wts_1440)721)rect_{int(target_size)}km.nc"
+                resample_wt_path / f"resamp_wts_1440_721_rect_{int(target_size)}km.nc"
             )
 
         print(f"Initializing resampler for {target_size} targets for {region}")
@@ -172,7 +172,11 @@ class ResampleERA5:
                     np.transpose(var[itime, :, :]),
                     iverbose,
                 )
-                var_resamp[itime, :, :] = var_resamp_step
+                if var_resamp_step.shape != (self.numy, self.numx):
+                    var_resamp[itime, :, :] = np.transpose(var_resamp_step)
+                else:
+                    var_resamp[itime, :, :] = var_resamp_step
+                
         else:
             var_resamp = resamp_using_wts(
                 self.xindexF, self.yindexF, self.weightsF, np.transpose(var), iverbose

@@ -39,6 +39,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     glb_attrs: dict[str, Any],
     var_attrs: dict[str, Any],
     satellite: str,
+    ksat: str,
     target_size: int,
     region: str,
     dataroot: Path,
@@ -55,11 +56,11 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
     if region == "global":
         base_filename = get_access_output_filename_daily_folder(
-            current_day, satellite, target_size, dataroot, "resamp_tbs"
+            current_day, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat
         )
         anc_name = f"{variable[0]}_era5"
         var_filename_final = get_access_output_filename_daily_folder(
-            current_day, satellite, target_size, dataroot, anc_name
+            current_day, satellite, target_size, dataroot, anc_name,ksat=ksat
         )
         grid_type = "equirectangular"
         pole = "None"
@@ -73,6 +74,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             "resamp_tbs",
             grid_type="ease2",
             pole=pole,
+            ksat=ksat
         )
         anc_name = f"{variable[0]}_era5"
         var_filename_final = get_access_output_filename_daily_folder(
@@ -83,6 +85,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             anc_name,
             grid_type="ease2",
             pole=pole,
+            ksat=ksat
         )
         grid_type = "ease2"
         pole = region
@@ -296,7 +299,8 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
+    parser.add_argument("--ksat", choices=["13"],help="SSMI Satellite Number")
     parser.add_argument(
         "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
@@ -328,6 +332,7 @@ if __name__ == "__main__":
     START_DAY = args.start_date
     END_DAY = args.end_date
     satellite = args.sensor.upper()
+    ksat = args.ksat
     target_size = int(args.target_size)
     region = args.region
     version = args.version
@@ -394,6 +399,7 @@ if __name__ == "__main__":
                 var_attrs=var_attrs,
                 glb_attrs=glb_attrs,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=target_size,
                 region=region,
                 dataroot=access_root,

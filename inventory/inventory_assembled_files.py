@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     satellite = "amsr2"
     footprint_size = 70
-    region = "north"
+    region = "south"
 
     if region == "global":
         grid_type = "equirectangular"
@@ -123,13 +123,13 @@ if __name__ == "__main__":
         if pole == "north":
             output_root = output_root / f"{satellite}_out_NP_{footprint_size}"
         elif pole == "south":
-            output_root = output_root / f"{satellite}_out_NP_{footprint_size}"
+            output_root = output_root / f"{satellite}_out_SP_{footprint_size}"
         else:
             raise ValueError(f"pole {pole} not valid")
     else:
         raise ValueError(f"region {region} not valid")
 
-    for year in range(2012, 2023):
+    for year in range(2012, 2022):
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 
