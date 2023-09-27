@@ -62,7 +62,7 @@ if __name__ == "__main__":
     if os.name == "nt":
         dataroot = Path("L:/access/amsr2_out")
     elif os.name == "posix":
-        dataroot = Path("/mnt/ops1p-ren/l/access/amsr2_out")
+        dataroot = Path("/mnt/l/access/amsr2_out")
 
     for year in range(2012, 2022):
         for month in range(1, 13):

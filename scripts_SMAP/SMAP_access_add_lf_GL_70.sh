@@ -1,4 +1,4 @@
-satellite=amsr2
+satellite=smap
 target_size=70
 
 access_root="/mnt/l/access/"$satellite"_out_NP_"$target_size
@@ -8,13 +8,12 @@ echo $access_root
 
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date=2012-08-01
-end_date=2021-12-31
 
-region=north
+start_date=2015-04-02
+end_date=2015-04-30
+
+region=global
 land_mask_source=modis
-era5_vars_to_include="-v skt tcwv tclw u10n v10n"
-wind_source=era5
 version=test_01
 
 python add_land_fraction_to_ACCESS_output.py \
@@ -24,6 +23,19 @@ python add_land_fraction_to_ACCESS_output.py \
                        --end_date $end_date \
                        --sensor $satellite \
                        --target_size $target_size \
+                       --look 0 \
+                       --version $version \
+                       --region $region \
+                       --lf_version $land_mask_source
+
+python add_land_fraction_to_ACCESS_output.py \
+                       --output_root $output_root \
+                       --temp_root $temp_root \
+                       --start_date $start_date \
+                       --end_date $end_date \
+                       --sensor $satellite \
+                       --target_size $target_size \
+                       --look 1 \
                        --version $version \
                        --region $region \
                        --lf_version $land_mask_source

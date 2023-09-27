@@ -1,8 +1,0 @@
-{
-    "long_name": "x coordinate of projection",
-    "units": "m",
-    "valid_min": -9000000.0,
-    "valid_max": 9000000.0,
-    "missing_value": -9999999.0,
-	"_FillValue": -9999999.0
-}

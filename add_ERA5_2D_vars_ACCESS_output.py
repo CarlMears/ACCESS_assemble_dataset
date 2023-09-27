@@ -41,6 +41,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     satellite: str,
     ksat: str,
     target_size: int,
+    look: int,
     region: str,
     dataroot: Path,
     outputroot: Path,
@@ -56,11 +57,11 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
     if region == "global":
         base_filename = get_access_output_filename_daily_folder(
-            current_day, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat
+            current_day, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat,look=look,
         )
         anc_name = f"{variable[0]}_era5"
         var_filename_final = get_access_output_filename_daily_folder(
-            current_day, satellite, target_size, dataroot, anc_name,ksat=ksat
+            current_day, satellite, target_size, dataroot, anc_name,ksat=ksat,look=look,
         )
         grid_type = "equirectangular"
         pole = "None"
@@ -74,7 +75,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             "resamp_tbs",
             grid_type="ease2",
             pole=pole,
-            ksat=ksat
+            ksat=ksat,
+            look=look
         )
         anc_name = f"{variable[0]}_era5"
         var_filename_final = get_access_output_filename_daily_folder(
@@ -85,7 +87,8 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             anc_name,
             grid_type="ease2",
             pole=pole,
-            ksat=ksat
+            ksat=ksat,
+            look=look
         )
         grid_type = "ease2"
         pole = region
@@ -106,6 +109,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
     if need_to_process(
         date=current_day,
         satellite=satellite,
+        ksat=ksat,
         target_size=target_size,
         dataroot=dataroot,
         outputroot=outputroot,
@@ -114,6 +118,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         update=update,
         grid_type=grid_type,
         pole=pole,
+        look=look,
     ):
         if not base_filename.is_file():
             print(f"base file for {current_day} does not exist, skipping")
@@ -242,6 +247,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 date=current_day,
                 satellite=satellite,
                 target_size=target_size,
+                ksat=ksat,
                 anc_data=var_by_hour,
                 anc_name=anc_name,
                 anc_attrs=var_attrs,
@@ -252,6 +258,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             write_daily_ancillary_var_netcdf_polar(
                 date=current_day,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=target_size,
                 grid_type=grid_type,
                 pole=pole,
@@ -299,11 +306,12 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
-    parser.add_argument("--ksat", choices=["13"],help="SSMI Satellite Number")
+    parser.add_argument("--sensor", choices=["amsr2","ssmi", "smap"], help="Microwave sensor to use")
+    parser.add_argument("--ksat", choices=["13", "15"],help="SSMI Satellite Number")
     parser.add_argument(
         "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
+    parser.add_argument("--look", choices=["0", "1"], default="0", help="Look direction")
     parser.add_argument(
         "--region", help="region to process", choices=["global", "north", "south"]
     )
@@ -334,6 +342,7 @@ if __name__ == "__main__":
     satellite = args.sensor.upper()
     ksat = args.ksat
     target_size = int(args.target_size)
+    look = int(args.look)
     region = args.region
     version = args.version
     var_list = args.variables
@@ -350,6 +359,7 @@ if __name__ == "__main__":
         print(f"Date Range: {START_DAY} - {END_DAY}")
         print(f"Satellite: {satellite}")
         print(f"Target Size: {target_size}")
+        print(f"Look: {look}")
         print(f"Version: {version}")
         print(f"Variable: {var}")
         print()
@@ -401,6 +411,7 @@ if __name__ == "__main__":
                 satellite=satellite,
                 ksat=ksat,
                 target_size=target_size,
+                look=look,
                 region=region,
                 dataroot=access_root,
                 outputroot=output_root,

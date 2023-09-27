@@ -1,32 +1,30 @@
-satellite=amsr2
-target_size=70
-
-access_root="/mnt/l/access/"$satellite"_out_NP_"$target_size
-output_root="/mnt/l/access/"$satellite"_out_NP_"$target_size
-
-echo $access_root
-
+access_root=/mnt/l/access/ssmi_out_GL_70
+output_root=/mnt/l/access/ssmi_out_GL_70
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date=2012-08-01
-end_date=2021-12-31
-
-region=north
+start_date=$1-01-01
+end_date=$1-12-31
+satellite=ssmi
+ksat=15
+target_size=70
+region=global
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
 version=test_01
 
-python add_land_fraction_to_ACCESS_output.py \
-                       --output_root $output_root \
-                       --temp_root $temp_root \
-                       --start_date $start_date \
-                       --end_date $end_date \
-                       --sensor $satellite \
-                       --target_size $target_size \
-                       --version $version \
-                       --region $region \
-                       --lf_version $land_mask_source
+cd /mnt/m/job_access/python/dataset_assembly
+
+# python add_land_fraction_to_ACCESS_output.py \
+#                        --output_root $output_root \
+#                        --temp_root $temp_root \
+#                        --start_date $start_date \
+#                        --end_date $end_date \
+#                        --sensor $satellite \
+#                        --target_size $target_size \
+#                        --version $version \
+#                        --region $region \
+#                        --lf_version $land_mask_source
 
 # python make_daily_ACCESS_files.py \
 #                     $output_root \
@@ -61,18 +59,19 @@ python add_land_fraction_to_ACCESS_output.py \
 #                     --region $region \
 #                     --overwrite
                     
-# python add_ERA5_2D_vars_ACCESS_output.py \
-#                        --access_root $output_root \
-#                        --output_root $output_root \
-#                        --temp_root $temp_root \
-#                        --start_date $start_date \
-#                        --end_date $end_date \
-#                        --sensor $satellite \
-#                        --target_size $target_size \
-#                        --version $version \
-#                        --region $region \
-#                        --update \
-#                        -v $era5_vars_to_include \
+python add_ERA5_2D_vars_ACCESS_output.py \
+                       --access_root $output_root \
+                       --output_root $output_root \
+                       --temp_root $temp_root \
+                       --start_date $start_date \
+                       --end_date $end_date \
+                       --sensor $satellite \
+                       --ksat $ksat \
+                       --target_size $target_size \
+                       --version $version \
+                       --region $region \
+                       --update \
+                       -v $era5_vars_to_include \
 
              
 

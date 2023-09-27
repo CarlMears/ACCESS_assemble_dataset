@@ -1,9 +1,0 @@
-{
-   "standard_name": "frequency",
-   "long_name": "satellite observation frequency",
-   "units": "GHz",
-   "valid_min": 1.0,
-   "valid_max": 300.0,
-   "_FillValue": -999.0,
-   "missing_value":  -999.0
-}

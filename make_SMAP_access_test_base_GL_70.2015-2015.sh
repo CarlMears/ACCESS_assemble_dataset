@@ -1,5 +1,5 @@
-access_root=/mnt/ops1p-ren/l/access/smap_out_GL_70
-output_root=/mnt/ops1p-ren/l/access/smap_out_GL_70
+access_root=/mnt/l/access/smap_out_GL_70
+output_root=/mnt/l/access/smap_out_GL_70
 temp_root=/mnt/b/data/_access_temp
 rmt_data_root=/mnt/a/data/_access_temp
 start_date=2015-04-01

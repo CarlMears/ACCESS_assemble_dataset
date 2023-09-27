@@ -13,3 +13,5 @@ REF_EIA = np.array([53.1, 53.1, 53.1, 53.1, 53.1, 53.1], np.float32)
 
 CHANNEL_TO_FREQ_MAP = np.array([0, 0, 1, 1, 2, 2],np.int32)
 CHANNEL_TO_POL_MAP =  np.array([0, 1, 0, 1, 0, 1],np.int32) # 0 = V, 1 = H
+
+NUM_LOOKS = 1

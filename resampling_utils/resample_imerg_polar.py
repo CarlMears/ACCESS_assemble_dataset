@@ -32,7 +32,7 @@ class ResampleIMERG:
         if os.name == "nt":
             resample_wt_path = Path("L:/access/era5/resample_weights")
         elif os.name == "posix":
-            resample_wt_path = Path("/mnt/ops1p-ren/l/access/imerg/resample_weights/")
+            resample_wt_path = Path("/mnt/l/access/imerg/resample_weights/")
         target_size = int(target_size)
         if region in ["north", "south"]:
             grid_type = "ease2"

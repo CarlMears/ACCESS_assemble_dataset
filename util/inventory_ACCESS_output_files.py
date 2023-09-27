@@ -43,7 +43,7 @@ def look_for_missing_files(
 if __name__ == "__main__":
     start_date = datetime.date(2013, 1, 1)
     end_date = datetime.date(2020, 12, 31)
-    access_output_root = Path("/mnt/ops1p-ren/l/access/amsr2_out_test3")
+    access_output_root = Path("/mnt/l/access/amsr2_out_test3")
     list_of_files = [
         "amsr2_atm_par_era5_",
         "amsr2_land_frac_modis_",

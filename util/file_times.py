@@ -23,6 +23,7 @@ def need_to_process(
     satellite: str,
     ksat: str = "13",
     target_size: int,
+    look: int,
     grid_type: str = "equirectangular",
     pole: str = "",
     dataroot: Path,
@@ -39,11 +40,20 @@ def need_to_process(
         "resamp_tbs",
         grid_type=grid_type,
         pole=pole,
-        ksat=ksat
+        ksat=ksat,
+        look=look,
     )
 
     var_filename = get_access_output_filename_daily_folder(
-        date, satellite, target_size, outputroot, var, grid_type=grid_type, pole=pole,ksat=ksat
+        date,
+        satellite,
+        target_size,
+        outputroot,
+        var,
+        grid_type=grid_type,
+        pole=pole,
+        ksat=ksat,
+        look=look
     )
 
     if base_filename.is_file():
@@ -77,6 +87,7 @@ def need_to_process_base_file(
     orbits_to_do: list[int],
     channels_to_do: list[int],
     dataroot: Path,
+    tb_orbit_root: Path,
     outputroot: Path,
     var: str,
     overwrite: bool,
@@ -115,6 +126,7 @@ def need_to_process_base_file(
                 orbit=orbit,
                 grid_type=grid_type,
                 pole=pole,
+                dataroot=tb_orbit_root,
             )
             if tb_orbit_file.is_file():
                 found_tb_orbit_file = True

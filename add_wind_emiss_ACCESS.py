@@ -149,8 +149,9 @@ if __name__ == "__main__":
         help="Last Day to process, as YYYY-MM-DD",
     )
     parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
-    parser.add_argument("--ksat", choices=["13"], help="Satellite Number for SSMI")
+    parser.add_argument("--ksat", choices=["13","15"], help="Satellite Number for SSMI")
     parser.add_argument("--target_size", choices=["30", "70"], help="Target size in km")
+    parser.add_argument("--look", default=0, help="Look direction")
     parser.add_argument(
         "--region", help="region to process", choices=["global", "north", "south"]
     )
@@ -175,6 +176,7 @@ if __name__ == "__main__":
     version = args.version
     satellite = args.sensor
     ksat = args.ksat
+    look = int(args.look)
     target_size = int(args.target_size)
     region = args.region
     overwrite = args.overwrite
@@ -260,6 +262,7 @@ while date <= END_DAY:
             date=date,
             satellite=satellite,
             ksat=ksat,
+            look=look,
             target_size=target_size,
             grid_type=grid_type,
             pole=pole,

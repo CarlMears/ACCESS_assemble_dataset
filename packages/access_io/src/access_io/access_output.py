@@ -24,7 +24,7 @@ ease2_grid_25km_south = NSIDC_ease2_grids(pole="south", resolution="25km")
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
 elif os.name == "posix":
-    ACCESS_ROOT = Path("/mnt/ops1p-ren/l/access")
+    ACCESS_ROOT = Path("/mnt/l/access")
 
 IMPLEMENTED_SATELLITES = ["amsr2"]
 
@@ -247,6 +247,7 @@ def write_daily_lf_netcdf(
     satellite: str,
     ksat: str,
     target_size: int,
+    look: int,
     pole: str = None,
     version: str,
     lf_version: str,
@@ -288,7 +289,7 @@ def write_daily_lf_netcdf(
 
     if pole is None:
         filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, lf_string, ksat=ksat
+            date, satellite, target_size, dataroot, lf_string, ksat=ksat, look=look
         )
         lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
         lons = np.arange(0, NUM_LONS) * 0.25
@@ -301,7 +302,8 @@ def write_daily_lf_netcdf(
             lf_string,
             grid_type="ease2",
             pole=pole,
-            ksat=ksat
+            ksat=ksat,
+            look=look,
         )
         if pole == "north":
             lats = ease2_grid_25km_north.latitude
@@ -377,6 +379,8 @@ def write_daily_lf_netcdf(
 
         lf[:, :] = lf_to_put
 
+        print(f"wrote: {filename}")
+
 
 def write_daily_tb_netcdf(
     *,
@@ -388,6 +392,8 @@ def write_daily_tb_netcdf(
     version: str,
     tb_array_by_hour: NDArray[Any],
     time_array_by_hour: NDArray[Any],
+    azim_array_by_hour: NDArray[Any],
+    inc_array_by_hour: NDArray[Any],
     dataroot: Path = ACCESS_ROOT,
     freq_list: NDArray[Any],
     file_list: Optional[Sequence[Path]],
@@ -526,6 +532,32 @@ def write_daily_tb_netcdf(
             fill_value=tb_attrs["_FillValue"],
             least_significant_digit=2,
         )
+        if azim_array_by_hour is not None:
+           azim = nc_out.createVariable(
+            "azimuth_angle",
+            "f4",
+            (
+                "latitude",
+                "longitude",
+                "hours",
+            ),
+            zlib=True,
+            fill_value=tb_attrs["_FillValue"],
+            least_significant_digit=2,
+            ) 
+        if inc_array_by_hour is not None:
+              inc = nc_out.createVariable(
+                "incidence_angle",
+                "f4",
+                (
+                 "latitude",
+                 "longitude",
+                 "hours",
+                ),
+                zlib=True,
+                fill_value=tb_attrs["_FillValue"],
+                least_significant_digit=2,
+                )
 
         # set coordinate attributes from .json files
 
@@ -535,6 +567,7 @@ def write_daily_tb_netcdf(
         freq_attrs = coord_attributes_access("frequency", dtype=np.float32)
         pol_attrs = coord_attributes_access("polarization", dtype=np.int32)
         time_attrs = coord_attributes_access("time", dtype=np.int64)
+        # need to do attributes for azimuth and incidence angles
 
         set_all_attrs(latitude, lat_attrs)
         set_all_attrs(longitude, lon_attrs)
@@ -571,6 +604,24 @@ def write_daily_tb_netcdf(
             neginf=fill_val,
         ).astype(np.float32)
         tbs[:, :, :, :, :] = tbs_to_put
+
+        if azim_array_by_hour is not None:
+            azim_to_put = np.nan_to_num(  # type: ignore
+                azim_array_by_hour,
+                nan=fill_val,
+                posinf=fill_val,
+                neginf=fill_val,
+            ).astype(np.float32)
+            azim[:, :, :] = azim_to_put
+
+        if inc_array_by_hour is not None:
+            inc_to_put = np.nan_to_num(  # type: ignore
+                inc_array_by_hour,
+                nan=fill_val,
+                posinf=fill_val,
+                neginf=fill_val,
+            ).astype(np.float32)
+            inc[:, :, :] = inc_to_put
 
 
 def edit_attrs_daily_tb_netcdf(
@@ -639,6 +690,7 @@ def write_daily_ancillary_var_netcdf(
     anc_attrs: dict[str, Any],
     global_attrs: Union[dict[str, Any], Literal["copy"]],
     dataroot: Path = ACCESS_ROOT,
+    ksat:str="13"
 ) -> None:
     """
     Writes a daily NetCDF file for an ancillary variable.
@@ -662,13 +714,13 @@ def write_daily_ancillary_var_netcdf(
     """
 
     base_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, "resamp_tbs"
+        date, satellite.lower(), target_size, dataroot, "resamp_tbs",ksat=ksat
     )
     var_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, f"{anc_name}_temp"
+        date, satellite.lower(), target_size, dataroot, f"{anc_name}_temp",ksat=ksat
     )
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, anc_name
+        date, satellite.lower(), target_size, dataroot, anc_name, ksat=ksat
     )
     with suppress(FileNotFoundError):
         var_filename.unlink()

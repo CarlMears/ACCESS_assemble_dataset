@@ -13,6 +13,7 @@ def inventory_access_output_files(
     date_to_do: datetime.date,
     footprint_size: int,
     satellite="AMSR2",
+    ksat="15",
     grid_type="equirectangular",
     pole="",
     base_template: str,
@@ -30,6 +31,7 @@ def inventory_access_output_files(
         base_template,
         grid_type=grid_type,
         pole=pole,
+        ksat=ksat,
     )
 
     if not base_filename.is_file():
@@ -51,6 +53,7 @@ def inventory_access_output_files(
                 file_template,
                 grid_type=grid_type,
                 pole=pole,
+                ksat=ksat,
             )
 
             if not var_filename.is_file():
@@ -105,13 +108,14 @@ if __name__ == "__main__":
     if os.name == "nt":
         output_root = Path("L:/access")
     elif os.name == "posix":
-        output_root = Path("/mnt/ops1p-ren/l/access/")
+        output_root = Path("/mnt/l/access/")
     else:
         raise ValueError
 
-    satellite = "amsr2"
+    satellite = "ssmi"
+    ksat="15"
     footprint_size = 70
-    region = "south"
+    region = "global"
 
     if region == "global":
         grid_type = "equirectangular"
@@ -129,7 +133,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"region {region} not valid")
 
-    for year in range(2012, 2022):
+    for year in range(2000, 2012):
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 
@@ -158,6 +162,7 @@ if __name__ == "__main__":
                 output_root=output_root,
                 date_to_do=date_to_do,
                 satellite=satellite,
+                ksat=ksat,
                 footprint_size=footprint_size,
                 grid_type=grid_type,
                 pole=pole,
@@ -177,7 +182,10 @@ if __name__ == "__main__":
         fig, ax = plot_summary(
             start_date, end_date, file_exist_all, base_template, template_list
         )
-        summary_path = output_root / "summaries"
+        if satellite=='ssmi':
+            summary_path = output_root / f'f{int(ksat):02d}'/ "summaries"
+        else:
+            summary_path = output_root / "summaries"
         png_file = summary_path / f"dataset_summary_{year:04d}.png"
         os.makedirs(png_file.parent, exist_ok=True)
         print(png_file)

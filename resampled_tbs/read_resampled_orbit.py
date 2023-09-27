@@ -7,7 +7,7 @@ import xarray as xr
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
 elif os.name == "posix":
-    ACCESS_ROOT = Path("/mnt/ops1p-ren/l/access")
+    ACCESS_ROOT = Path("/mnt/l/access")
 
 IMPLEMENTED_SATELLITES = ["amsr2","ssmi","smap"]
 
@@ -62,7 +62,10 @@ def get_resampled_file_name(
             / f"r{orbit_lower:06d}_{orbit_upper:06d}"
         )
         orbit_dir_time = (
-            dataroot / f"{satellite}_tb_orbits" / f"r{orbit_lower:06d}_{orbit_upper:06d}"
+            dataroot 
+            / f"{satellite}_tb_orbits" 
+            / folder 
+            / f"r{orbit_lower:06d}_{orbit_upper:06d}"
         )
     elif satellite.lower() == "smap":
         raise ValueError("SMAP not implemented")
@@ -75,7 +78,9 @@ def get_resampled_file_name(
             / f"r{orbit_lower:05d}_{orbit_upper:05d}"
         )
         orbit_dir_time = (
-            dataroot / f"{satellite}_tb_orbits" / f"r{orbit_lower:05d}_{orbit_upper:05d}"
+            dataroot 
+            / f"{satellite}_tb_orbits" 
+            / f"r{orbit_lower:05d}_{orbit_upper:05d}"
         )
 
     if isinstance(channel, int):
@@ -156,7 +161,7 @@ def read_resampled_tbs(
     orbit: int,
     grid_type: str = "equirectangular",
     pole: str = "north",
-    dataroot: Path = ACCESS_ROOT,
+    dataroot: Path,
     verbose: bool = False,
     file_name_dict: dict = None,
 ) -> Tuple[Any, Path]:
@@ -170,6 +175,8 @@ def read_resampled_tbs(
 
         smap_var_dict = {
             'time': 'resamp_times',
+            'azim': 'resamp_azimuth',
+            'inc': 'resamp_incidence',
             1: 'resamp_tbs',
             2: 'resamp_tbs',
             3: 'resamp_tbs',

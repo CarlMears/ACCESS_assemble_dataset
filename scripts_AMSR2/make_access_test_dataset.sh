@@ -1,6 +1,6 @@
-access_root=/mnt/ops1p-ren/l/access/amsr2_out_70km
-output_root=/mnt/ops1p-ren/l/access/amsr2_out_70km
-temp_root=/mnt/ops1p-ren/l/access/_temp
+access_root=/mnt/l/access/amsr2_out_70km
+output_root=/mnt/l/access/amsr2_out_70km
+temp_root=/mnt/l/access/_temp
 rmt_data_root=/mnt/a/data/_access_temp
 start_date=2017-01-01
 end_date=2017-12-31

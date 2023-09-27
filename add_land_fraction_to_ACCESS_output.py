@@ -17,7 +17,8 @@ def add_land_fraction_to_ACCESS_output(
     satellite: str,
     ksat: str,
     target_size: int,
-    region: str = "global",
+    region: str,
+    look: int,
     version: str,
     dataroot: Path,
     script_name: str,
@@ -28,7 +29,7 @@ def add_land_fraction_to_ACCESS_output(
     if os.name == "nt":
         land_path = Path("L:/access/land_water")
     elif os.name == "posix":
-        land_path = Path("/mnt/ops1p-ren/l/access/land_water")
+        land_path = Path("/mnt/l/access/land_water")
 
     if region == "global":
         grid_type = "equirectangular"
@@ -36,18 +37,16 @@ def add_land_fraction_to_ACCESS_output(
     elif region in ["north", "south"]:
         grid_type = "ease2"
         pole = region
-        if region == 'north':
-            assert('NP' in str(dataroot))
-            
-        if region == 'south':
-            assert('SP' in str(dataroot))
-      
+        if region == "north":
+            assert "NP" in str(dataroot)
+
+        if region == "south":
+            assert "SP" in str(dataroot)
 
     else:
         raise ValueError(f"region {region} not valid")
 
     if region in ["north", "south"]:
-        
         land_file = land_path / (
             f"land_fraction_1440_721_{target_size}km."
             f"from_nsidc_3km_mask.{region}.ease25.v5.nc"
@@ -77,7 +76,8 @@ def add_land_fraction_to_ACCESS_output(
             # the modis dataset
 
             land_file = (
-                land_path / f"land_fraction_1440_721_{target_size}km.combined_hansen_nsidc.nc"
+                land_path
+                / f"land_fraction_1440_721_{target_size}km.combined_hansen_nsidc.nc"
             )
             land_fraction_xr = xr.open_dataset(land_file)
             land_fraction_np_hansen = land_fraction_xr["land_fraction"].values
@@ -89,7 +89,7 @@ def add_land_fraction_to_ACCESS_output(
             # also use for lats southward of -75.0, where there is a lot of missing modis data
             # and the modis data is a little suspect because of sea ice.  We assume the NSIDC knows
             # what it is doing in these areas.
-            
+
             land_fraction_np[0:60, :] = land_fraction_np_hansen[0:60, :]
 
         else:
@@ -104,6 +104,7 @@ def add_land_fraction_to_ACCESS_output(
                 satellite=satellite,
                 ksat=ksat,
                 target_size=target_size,
+                look=look,
                 pole=pole,
                 grid_type=grid_type,
                 version=version,
@@ -122,6 +123,7 @@ def add_land_fraction_to_ACCESS_output(
                 date=date,
                 satellite=satellite,
                 target_size=target_size,
+                look=look,
                 ksat=ksat,
                 version=version,
                 lf_version=lf_version,
@@ -159,14 +161,20 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
-    parser.add_argument("--ksat", choices=["13"], help="Satellite Number for SSMI")
+    parser.add_argument(
+        "--sensor", choices=["amsr2", "ssmi", "smap"], help="Microwave sensor to use"
+    )
+    parser.add_argument("--ksat", choices=["13","15"], help="Satellite Number for SSMI")
     parser.add_argument("--target_size")
+    parser.add_argument(
+        "--look", choices=["0", "1"], default="0", help="Look direction"
+    )
     parser.add_argument("--version")
     parser.add_argument("--region", help="region to process")
     parser.add_argument(
         "--lf_version",
         choices=["modis", "combined_hansen", "NSIDC"],
+        default="modis",
         help="Microwave sensor to use",
     )
     parser.add_argument(
@@ -188,6 +196,7 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     target_size = int(args.target_size)
+    look = int(args.look)
 
     day_to_do = START_DAY
     while day_to_do <= END_DAY:
@@ -197,6 +206,7 @@ if __name__ == "__main__":
             satellite=satellite,
             ksat=args.ksat,
             target_size=target_size,
+            look=look,
             region=args.region,
             version=args.version,
             lf_version=args.lf_version,

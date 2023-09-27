@@ -61,7 +61,7 @@ size if minimized by writing using slightly lossy built-in netCDF4 compression.
 ```
 linux:
 
-python make_daily_ACCESS_files.py /mnt/ops1p-ren/l/access/amsr2_out_test /mnt/ops1p-ren/l/access/_temp 2012-07-02 2012-07-31 amsr2 30 v01r00--overwrite 
+python make_daily_ACCESS_files.py /mnt/l/access/amsr2_out_test /mnt/l/access/_temp 2012-07-02 2012-07-31 amsr2 30 v01r00--overwrite 
 
 ```
 
@@ -100,7 +100,7 @@ variables or as arguments.
 
 on linux:
 
-python add_ERA5_surface_temperature_to_ACCESS_output.py /mnt/ops1p-ren/l/access/amsr2_out_test /mnt/ops1p-ren/l/access/_temp 2012-07-02 2012-07-31 amsr2 30 v10r00 "skt tclw u10n v10n tcwv"
+python add_ERA5_surface_temperature_to_ACCESS_output.py /mnt/l/access/amsr2_out_test /mnt/l/access/_temp 2012-07-02 2012-07-31 amsr2 30 v10r00 "skt tclw u10n v10n tcwv"
 
 ```
 ### Ocean Emissivity
@@ -121,7 +121,7 @@ The `add_wind_emiss_ACCESS.py` script adds ocean emissivity layer to the daily n
 ```
 linux:
 
-python add_wind_emiss_to_ACCESS.py /mnt/ops1p-ren/l/access/amsr2_out_test /mnt/ops1p-ren/l//access/amsr2_out_test era5 era5 2012-07-02 2012-07-31 amsr2 30 v01r00 --verbose
+python add_wind_emiss_to_ACCESS.py /mnt/l/access/amsr2_out_test /mnt/l//access/amsr2_out_test era5 era5 2012-07-02 2012-07-31 amsr2 30 v01r00 --verbose
 ```
 
 

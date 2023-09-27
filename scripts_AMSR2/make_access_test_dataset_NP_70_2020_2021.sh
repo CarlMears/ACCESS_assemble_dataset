@@ -1,5 +1,5 @@
-access_root=/mnt/ops1p-ren/l/access/amsr2_out_NP_70
-output_root=/mnt/ops1p-ren/l/access/amsr2_out_NP_70
+access_root=/mnt/l/access/amsr2_out_NP_70
+output_root=/mnt/l/access/amsr2_out_NP_70
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
 start_date=2020-01-01

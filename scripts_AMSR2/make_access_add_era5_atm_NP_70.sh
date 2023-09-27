@@ -1,8 +1,8 @@
 satellite=amsr2
 target_size=70
 
-access_root="/mnt/ops1p-ren/l/access/"$satellite"_out_GL_"$target_size
-output_root="/mnt/ops1p-ren/l/access/"$satellite"_out_GL_"$target_size
+access_root="/mnt/l/access/"$satellite"_out_GL_"$target_size
+output_root="/mnt/l/access/"$satellite"_out_GL_"$target_size
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
 start_date="2012-08-01"

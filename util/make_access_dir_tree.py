@@ -16,12 +16,12 @@ if __name__ == "__main__":
     if os.name == 'nt':
         base_dir = Path("L:/access/amsr2_out_SP_30")
     else:
-        base_dir = Path("/mnt/ops1p-ren/l/access/amsr2_out_SP_30")
+        base_dir = Path("/mnt/l/access/amsr2_out_SP_30")
 
     make_access_dir_tree(base_dir, start_date, end_date)
 
     if os.name == 'nt':
         base_dir = Path("L:/access/amsr2_out_SP_70")
     else:
-        base_dir = Path("/mnt/ops1p-ren/l/access/amsr2_out_SP_70")
+        base_dir = Path("/mnt/l/access/amsr2_out_SP_70")
     make_access_dir_tree(base_dir, start_date, end_date)

@@ -10,9 +10,9 @@ for orbit_set in range(0, 12):
     end_orbit = start_orbit + 4999
 
     if os.name=="posix":
-        source_dir = Path(f"/mnt/ops1p-ren/l/access/amsr2_tb_orbits/r{start_orbit:05d}_{end_orbit:05d}/")
+        source_dir = Path(f"/mnt/l/access/amsr2_tb_orbits/r{start_orbit:05d}_{end_orbit:05d}/")
         dest_dir = Path(
-            f"/mnt/ops1p-ren/l/access/amsr2_tb_orbits/SP_70/r{start_orbit:05d}_{end_orbit:05d}/"
+            f"/mnt/l/access/amsr2_tb_orbits/SP_70/r{start_orbit:05d}_{end_orbit:05d}/"
         )
     elif os.name == 'nt':
         source_dir = Path(f"L:/access/amsr2_tb_orbits/r{start_orbit:05d}_{end_orbit:05d}/")

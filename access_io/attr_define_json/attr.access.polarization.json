@@ -1,9 +1,0 @@
-{
-    "standard_name":  "polarization",
-    "long_name":  "polarization index",
-    "pol_mapping":"0 = V-pol, 1 = H-Pol",
-    "valid_min": 0,
-    "valid_max": 1,
-    "_FillValue": -99,
-    "missing_value":  -99
-}

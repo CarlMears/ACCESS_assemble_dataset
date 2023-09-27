@@ -1,3 +1,8 @@
+import os
+
+if os.name != "posix":
+    raise ImportError("This script is only supported on Linux")
+
 from contextlib import suppress
 from datetime import date
 from pathlib import Path
@@ -54,7 +59,7 @@ AVAILABLE_CHANNELS_AMSR2 = [
     "89H",
 ]
 AVAILABLE_CHANNELS_SSMI = ["time","19V", "19H", "22V", "22H", "37V", "37H", "85V", "85H"]
-AVAILABLE_CHANNELS_SMAP = ["time","1.4V", "1.4H", "1.4THIRD", "1.4FOURTH"]
+AVAILABLE_CHANNELS_SMAP = ["time","azim","inc","1.4V", "1.4H", "1.4THIRD", "1.4FOURTH"]
 
 def set_satellite_constants(satellite: str):
     if satellite.lower() == "amsr2":
@@ -128,7 +133,8 @@ def decide_not_to_process(
                             channel=channel,
                             target_size=target_size,
                             orbit=orbit,
-                            ksat=ksat
+                            ksat=ksat,
+                            dataroot=tb_orbit_root
                         )
                         if tb_orbit_file.is_file():
                             tb_file_time = tb_orbit_file.stat().st_mtime
@@ -193,6 +199,7 @@ def make_daily_ACCESS_tb_file(
     region: str = "global",
     version: str,
     dataroot: Path,
+    tb_orbit_root: Path,
     channels: Collection[int],
     look: int,
     verbose: bool = False,
@@ -270,6 +277,7 @@ def make_daily_ACCESS_tb_file(
         orbits_to_do,file_name_dict = orbit_numbers_from_filenames(files)
     else:
         orbits_to_do = find_orbits_in_day(times_np64=orbit_times, date=current_day)
+        file_name_dict = {}
     # TODO: what is the actual exception expected? AssertionError?
 
     if len(orbits_to_do) == 0:
@@ -289,6 +297,7 @@ def make_daily_ACCESS_tb_file(
             orbits_to_do=list(orbits_to_do),
             channels_to_do=list(channels),
             dataroot=dataroot,
+            tb_orbit_root=tb_orbit_root,
             outputroot=dataroot,
             var="resamp_tbs",
             overwrite=overwrite,
@@ -309,6 +318,9 @@ def make_daily_ACCESS_tb_file(
             dtype=np.float32,
         )
         time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
+        if satellite.lower() == "smap":
+            azim_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
+            inc_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
 
     elif region in ["north", "south"]:
         tb_array_by_hour = np.full(
@@ -335,7 +347,8 @@ def make_daily_ACCESS_tb_file(
                 grid_type=grid_type,
                 pole=pole,
                 verbose=verbose,
-                file_name_dict=file_name_dict
+                file_name_dict=file_name_dict,
+                dataroot=tb_orbit_root
             )
         except FileNotFoundError:
             print(f"Time file corrupt or missing for orbit: {orbit}, - skipping orbit")
@@ -359,8 +372,63 @@ def make_daily_ACCESS_tb_file(
         if verbose:
             print("reading resampled tb files")
 
+        #for smap, we include the azimuth and incidence angle
+        if satellite.lower() == "smap":
+            azim, filename = read_resampled_tbs(
+                satellite=satellite,
+                ksat=ksat,
+                channel='azim',
+                look=look,
+                target_size=target_size,
+                orbit=orbit,
+                grid_type=grid_type,
+                pole=pole,
+                verbose=verbose,
+                file_name_dict=file_name_dict
+            )
+            #print(azim.shape)
+            for hour in range(0, 24):
+                azim_slice = azim_array_by_hour[:, :, hour]
+                start_time_sec = hour * 3600.0
+                end_time_sec = start_time_sec + 3600.0
+                ok = np.all(
+                    [(obtime_in_day > start_time_sec), (obtime_in_day <= end_time_sec)],
+                    axis=0,
+                )
+                if np.any(ok):
+                    azim_slice[ok] = azim[ok]
+
+            inc, filename = read_resampled_tbs(
+                satellite=satellite,
+                ksat=ksat,
+                channel='inc',
+                look=look,
+                target_size=target_size,
+                orbit=orbit,
+                grid_type=grid_type,
+                pole=pole,
+                verbose=verbose,
+                file_name_dict=file_name_dict
+            )
+            #print(azim.shape)
+            for hour in range(0, 24):
+                inc_slice = inc_array_by_hour[:, :, hour]
+                start_time_sec = hour * 3600.0
+                end_time_sec = start_time_sec + 3600.0
+                ok = np.all(
+                    [(obtime_in_day > start_time_sec), (obtime_in_day <= end_time_sec)],
+                    axis=0,
+                )
+                if np.any(ok):
+                    inc_slice[ok] = inc[ok]
+        else:
+            azim_array_by_hour=None
+            inc_array_by_hour=None
+
+
         for channel in channels:
             try:
+                #verbose = True
                 tbs, filename = read_resampled_tbs(
                     satellite=satellite,
                     ksat=ksat,
@@ -371,7 +439,8 @@ def make_daily_ACCESS_tb_file(
                     grid_type=grid_type,
                     pole=pole,
                     verbose=verbose,
-                    file_name_dict=file_name_dict
+                    file_name_dict=file_name_dict,
+                    dataroot=tb_orbit_root
                 )
             # There are a lot of possible errors for corrupted files
             except Exception:
@@ -426,6 +495,8 @@ def make_daily_ACCESS_tb_file(
                 version=version,
                 tb_array_by_hour=tb_array_by_hour,
                 time_array_by_hour=time_array_by_hour,
+                azim_array_by_hour=azim_array_by_hour,
+                inc_array_by_hour=inc_array_by_hour,
                 freq_list=REF_FREQ,
                 look=look,
                 file_list=file_list,
@@ -465,6 +536,9 @@ if __name__ == "__main__":
         "--access_root", type=Path, help="Root directory to ACCESS project"
     )
     parser.add_argument(
+        "--tb_orbit_root", type=Path, help="Root directory for resampled Tb orbit files"
+    )
+    parser.add_argument(
         "--temp_root", type=Path, help="Root directory store temporary files"
     )
     parser.add_argument(
@@ -482,6 +556,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--target_size", choices=["30", "70"], help="Size of target footprint in km"
     )
+    parser.add_argument("--look", choices=["0", "1"], default="0",help="Fore or Aft for SMAP")
     parser.add_argument(
         "--region", choices=["global", "north", "south"], default="global"
     )
@@ -507,6 +582,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     access_root: Path = args.access_root
+    tb_orbit_root: Path = args.tb_orbit_root
     temp_root: Path = args.temp_root
 
     START_DAY = args.start_date
@@ -514,6 +590,7 @@ if __name__ == "__main__":
     satellite = args.sensor.upper()
     ksat = args.ksat
     target_size = int(args.target_size)
+    look = int(args.look)
 
     if satellite == "AMSR2":
         if target_size == 30:
@@ -524,6 +601,7 @@ if __name__ == "__main__":
         channels = list(range(1, 7))
     elif satellite == "SMAP":
         channels = list(range(1, 5))
+        # 1 freq, but 4 polarizations
     else:
         raise ValueError(f"Sensor {satellite} is not valid")
 
@@ -561,8 +639,9 @@ if __name__ == "__main__":
                 region=args.region,
                 version=args.version,
                 dataroot=access_root,
+                tb_orbit_root=tb_orbit_root,
                 channels=channels,
-                look=0,
+                look=look,
                 verbose=args.verbose,
                 plot_example_map=args.plot_map,
                 overwrite=args.overwrite,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download one day for ERA5 data (including the first hour of the next day).
+"""Download one day or one month for ERA5 data (including the first hour of the next day).
 
 In order to use it, the Copernicus Data Server (cdsapi) needs to be installed in
 your version of python.
@@ -31,6 +31,9 @@ def era5_hourly_single_level_request(
     verbose: bool = False,
     simpler_path: bool = False,
 ) -> Path:
+    
+    #returns the path to the downloaded file
+    
     c = cdsapi.Client()
 
     # target = target_path / f"ERA5_Skin_Temperature_{date:%Y_%m}.nc"
@@ -142,7 +145,7 @@ if __name__ == "__main__":
     if os.name == "nt":
         target_path = Path("L:/access/_temp")
     elif os.name == "posix":
-        target_path = Path("/mnt/ops1p-ren/l/access/_temp")
+        target_path = Path("/mnt/l/access/_temp")
 
     levels = [
         "1",

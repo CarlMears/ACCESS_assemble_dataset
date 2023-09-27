@@ -92,7 +92,7 @@ if __name__ == "__main__":
     if os.name == "nt":
         tb_orbit_root = Path("L:/access/amsr2_tb_orbits")
     elif os.name == "posix":
-        tb_orbit_root = Path("/mnt/ops1p-ren/l/access/amsr2_tb_orbits")
+        tb_orbit_root = Path("/mnt/l/access/amsr2_tb_orbits")
     else:
         raise ValueError
 

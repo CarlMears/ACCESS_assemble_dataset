@@ -12,7 +12,7 @@ end_date = datetime.datetime(2021, 12, 31)
 if os.name == "nt":
     access_root = Path("L:/access/")
 elif os.name == "posix":
-    access_root = Path("/mnt/ops1p-ren/l/access")
+    access_root = Path("/mnt/l/access")
 
 
 satellite = "amsr2"

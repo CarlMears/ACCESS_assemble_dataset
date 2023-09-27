@@ -28,7 +28,7 @@ ease2_grid_25km_south = NSIDC_ease2_grids(pole="south", resolution="25km")
 if os.name == "nt":
     ACCESS_ROOT = Path("L:/access")
 elif os.name == "posix":
-    ACCESS_ROOT = Path("/mnt/ops1p-ren/l/access")
+    ACCESS_ROOT = Path("/mnt/l/access")
 
 IMPLEMENTED_SATELLITES = ["amsr2"]
 
@@ -492,6 +492,7 @@ def write_daily_ancillary_var_netcdf_polar(
     *,
     date: datetime.date,
     satellite: str,
+    ksat: str = "13",
     target_size: int,
     pole: str,
     grid_type: str,
@@ -524,6 +525,7 @@ def write_daily_ancillary_var_netcdf_polar(
             "resamp_tbs",
             grid_type="ease2",
             pole=pole,
+            ksat=ksat,
         )
         var_filename = get_access_output_filename_daily_folder(
             date,
@@ -533,6 +535,7 @@ def write_daily_ancillary_var_netcdf_polar(
             f"{anc_name}_temp",
             grid_type="ease2",
             pole=pole,
+            ksat=ksat,
         )
         var_filename_final = get_access_output_filename_daily_folder(
             date,
@@ -542,6 +545,7 @@ def write_daily_ancillary_var_netcdf_polar(
             anc_name,
             grid_type="ease2",
             pole=pole,
+            ksat=ksat,
         )
 
         # if pole == "north":
