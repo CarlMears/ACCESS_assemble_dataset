@@ -8,7 +8,7 @@ if os.name == "nt":
     LAND_FRACTION_PATH = Path("//ops1p-to-be-renamed/M/Module_Data/Land_Fraction/")
     SEA_ICE_LAND_FRACTION_DIR = Path("l:/sea_ice/land_fraction/")
 elif os.name == "posix":
-    LAND_FRACTION_PATH = Path("/mnt/ops1p-ren/m/Module_Data/Land_Fraction/")
+    LAND_FRACTION_PATH = Path("/mnt/m/Module_Data/Land_Fraction/")
     SEA_ICE_LAND_FRACTION_DIR = Path("/mnt/l/sea_ice/land_fraction/")
 
 

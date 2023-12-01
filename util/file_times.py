@@ -31,6 +31,7 @@ def need_to_process(
     var: str,
     overwrite: bool,
     update: bool,
+    verbose: bool = False,
 ):
     base_filename = get_access_output_filename_daily_folder(
         date,
@@ -44,6 +45,7 @@ def need_to_process(
         look=look,
     )
 
+
     var_filename = get_access_output_filename_daily_folder(
         date,
         satellite,
@@ -55,9 +57,16 @@ def need_to_process(
         ksat=ksat,
         look=look
     )
+    if verbose:
+        print(f"base_filename: {base_filename}")
+        print(f"var_filename: {var_filename}")
 
     if base_filename.is_file():
+        if verbose:
+            print(f"base_filename is file")
         if var_filename.is_file():
+            if verbose:
+                print(f"var_filename is file")
             if overwrite:
                 return True
             else:

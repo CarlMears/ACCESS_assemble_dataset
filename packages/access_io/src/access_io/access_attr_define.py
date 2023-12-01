@@ -11,11 +11,11 @@ Constant attributes are read in from the .json files in attr_define_root
 """
 if os.name == "nt":
     _attr_define_root = Path(
-        "M:/job_access/python/dataset_assembly/access_io/attr_define_json"
+        "M:/job_access/python/dataset_assembly/packages/access_io/src/access_io/attr_define_json"
     )
 elif os.name == "posix":
     _attr_define_root = Path(
-        "/mnt/ops1p-ren/m/job_access/python/dataset_assembly/packages/access_io/src/access_io/attr_define_json"
+        "/mnt/m/job_access/python/dataset_assembly/packages/access_io/src/access_io/attr_define_json"
     )
 
 _allowed_numeric_types = ["np.float32", "np.float64", "np.int32", "np.int64"]

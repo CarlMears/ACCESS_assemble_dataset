@@ -1,3 +1,6 @@
+
+
+
 satellite=smap
 target_size=70
 
@@ -9,12 +12,45 @@ echo $access_root
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
 
+args=$(getopt --name "$0" --options s:e:l:v:r:h -- "$@")
+eval set -- "$args"
+
+
+
 start_date=2015-04-02
 end_date=2015-04-30
-
-region=global
-land_mask_source=modis
+look=0
 version=test_01
+region=global
+
+
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -s) start_date=$2; shift 2;;
+        -e) end_date=$2; shift 2;;
+        -l) look=$2; shift 2;;
+        -v) version=$2; shift 2;;
+        -r) region=$2; shift 2;;
+        -h) echo "Usage: $0 -s <start_date> -e <end_date> -l <look> -v <version> -r <region>"
+            exit 0;;
+        --) shift; break;;
+        *)
+            echo "Invalid option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+land_mask_source=modis
+
+echo start_date: $start_date
+echo end_date: $end_date
+echo look: $look
+echo version: $version
+echo region: $region
+
+cd /mnt/m/job_access/python/dataset_assembly
 
 python add_land_fraction_to_ACCESS_output.py \
                        --output_root $output_root \
@@ -23,19 +59,7 @@ python add_land_fraction_to_ACCESS_output.py \
                        --end_date $end_date \
                        --sensor $satellite \
                        --target_size $target_size \
-                       --look 0 \
-                       --version $version \
-                       --region $region \
-                       --lf_version $land_mask_source
-
-python add_land_fraction_to_ACCESS_output.py \
-                       --output_root $output_root \
-                       --temp_root $temp_root \
-                       --start_date $start_date \
-                       --end_date $end_date \
-                       --sensor $satellite \
-                       --target_size $target_size \
-                       --look 1 \
+                       --look $look \
                        --version $version \
                        --region $region \
                        --lf_version $land_mask_source

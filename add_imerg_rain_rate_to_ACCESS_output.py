@@ -72,6 +72,7 @@ def write_imerg_rain_rate_for_ACCESS(
     *,
     current_day: datetime.date,
     satellite: str,
+    ksat: str = "13",
     dataroot: Path,
     outputroot: Path,
     temproot: Path,
@@ -82,14 +83,17 @@ def write_imerg_rain_rate_for_ACCESS(
     script_name: str,
     commit: str,
     resampler: Optional[ResampleIMERG],
+    look: int = "0",
 ) -> None:
+    
+
     if region == "global":
         base_filename = get_access_output_filename_daily_folder(
-            current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs"
+            current_day, satellite, footprint_diameter_km, dataroot, "resamp_tbs", ksat=ksat, look=look,
         )
         var = "rainfall_rate"
         imerge_filename_final = get_access_output_filename_daily_folder(
-            current_day, satellite, footprint_diameter_km, outputroot, var
+            current_day, satellite, footprint_diameter_km, outputroot, var, ksat=ksat, look=look,
         )
         grid_type = "equirectangular"
         pole = None
@@ -103,6 +107,8 @@ def write_imerg_rain_rate_for_ACCESS(
             "resamp_tbs",
             grid_type="ease2",
             pole=pole,
+            ksat=ksat,
+            look=look,
         )
         var = "rainfall_rate"
         imerge_filename_final = get_access_output_filename_daily_folder(
@@ -113,6 +119,8 @@ def write_imerg_rain_rate_for_ACCESS(
             var,
             grid_type="ease2",
             pole=pole,
+            ksat=ksat,
+            look=look,
         )
         grid_type = "ease2"
         pole = region
@@ -130,6 +138,8 @@ def write_imerg_rain_rate_for_ACCESS(
         update=update,
         grid_type=grid_type,
         pole=pole,
+        ksat=ksat,
+        look=look,
     ):
         with suppress(FileNotFoundError):
             imerge_filename_final.unlink()
@@ -207,6 +217,7 @@ def write_imerg_rain_rate_for_ACCESS(
                 anc_attrs=var_attrs,
                 global_attrs=global_attrs,
                 dataroot=dataroot,
+                look=look,
             )
         elif grid_type == "ease2":
             write_daily_ancillary_var_netcdf_polar(
@@ -220,6 +231,7 @@ def write_imerg_rain_rate_for_ACCESS(
                 anc_attrs=var_attrs,
                 global_attrs=global_attrs,
                 dataroot=dataroot,
+                look=look,
             )
     else:
         print(f"No processing needed for  {var} on {date}")
@@ -249,13 +261,24 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", 
+                        choices=["amsr2","ssmi","smap"], 
+                        help="Microwave sensor to use")
+    
+    parser.add_argument("--ksat",
+                        choices=["13","15"],
+                        help="Satellite ksat to use")
     parser.add_argument(
         "--footprint_diameter",
         type=int,
         help="Diameter of resampling footprint (in km). Default=30km",
         nargs="?",
         default=30,
+    )
+    parser.add_argument(
+        "--look",
+        choices=["0","1"],
+        help="Look direction to use",
     )
 
     parser.add_argument(
@@ -292,6 +315,7 @@ if __name__ == "__main__":
     END_DAY = args.end_date
     satellite = args.sensor.upper()
     footprint_diameter_km = args.footprint_diameter
+    look = int(args.look)
     region = args.region
 
     overwrite = args.overwrite
@@ -333,5 +357,6 @@ if __name__ == "__main__":
                 script_name=script_name,
                 commit=commit,
                 resampler=resampler,
+                look=look,
             )
         date += datetime.timedelta(days=1)

@@ -161,7 +161,7 @@ def read_resampled_tbs(
     orbit: int,
     grid_type: str = "equirectangular",
     pole: str = "north",
-    dataroot: Path,
+    dataroot: Path = Path("null"),
     verbose: bool = False,
     file_name_dict: dict = None,
 ) -> Tuple[Any, Path]:

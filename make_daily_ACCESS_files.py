@@ -281,7 +281,7 @@ def make_daily_ACCESS_tb_file(
     # TODO: what is the actual exception expected? AssertionError?
 
     if len(orbits_to_do) == 0:
-        print(f"No orbits found for {current_day}")
+        print(f"No orbits found for {current_day} in {temp_root}")
         return []
 
     if satellite.lower() == "smap":

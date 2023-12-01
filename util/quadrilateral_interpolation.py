@@ -1,3 +1,4 @@
+'''
 import numpy as np
 import scipy.interpolate
 
@@ -480,3 +481,4 @@ if __name__ == "__main__":
         print("Pass - Error should have happened")
 
     print("All tests passed")
+'''

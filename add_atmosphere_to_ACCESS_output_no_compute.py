@@ -30,7 +30,7 @@ from access_io.access_output import (
     get_access_output_filename_daily_folder,
     set_all_attrs,
 )
-from satellite_definitions.amsr2 import REF_FREQ_mapping
+
 
 # from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 
@@ -58,6 +58,7 @@ class DailyRtm:
             + f"{date_to_load.day:02d}.nc"
         )
         path_to_data = data_root / filename
+        print(f"Reading ERA5 computed RTM data {path_to_data}")
         with Dataset(path_to_data, "r") as f:
             tb_down = f["tb_down"][:, :, :, :]
             tb_up = f["tb_up"][:, :, :, :]
@@ -89,6 +90,7 @@ class DailyRtm:
         )
         path_to_data_plus_one = data_root / filename
 
+        print(f"Reading ERA5 computed RTM data {path_to_data_plus_one}")
         with Dataset(path_to_data_plus_one, "r") as f:
             tb_down = f["tb_down"][:, :, :, :]
             tb_up = f["tb_up"][:, :, :, :]
@@ -114,12 +116,23 @@ def write_atmosphere_to_daily_ACCESS(
     version: str,
     script_name: str,
     commit: str,
+    look: int = 0,
     verbose: bool = False,
     overwrite: bool = False,
     update: bool = False,
 ) -> None:
+    
     if satellite.lower() == "amsr2":
         from satellite_definitions.amsr2 import REF_FREQ
+        from satellite_definitions.amsr2 import REF_FREQ_mapping
+    elif satellite.lower() == "smap":
+        from satellite_definitions.smap import REF_FREQ
+        from satellite_definitions.smap import REF_FREQ_mapping
+    elif satellite.lower() == "ssmi":
+        from satellite_definitions.ssmi import REF_FREQ
+        from satellite_definitions.ssmi import REF_FREQ_mapping
+    else:
+        raise ValueError(f"Satellite {satellite} not valid")
 
         # Do some logic about the region and file names
 
@@ -132,12 +145,13 @@ def write_atmosphere_to_daily_ACCESS(
             dataroot,
             "resamp_tbs",
             grid_type=grid_type,
+            look=look,
         )
         if verbose:
             print(f"Opening data for {satellite} on {current_day} in {dataroot}")
 
         try:
-            with LockedDataset(base_filename, "r") as root_grp:
+            with LockedDataset(base_filename, "r", lock_stale_time=0.1) as root_grp:
                 # if verbose:
                 #     print(
                 #         f"Reading ERA5 computed RTM data {satellite} "
@@ -173,6 +187,7 @@ def write_atmosphere_to_daily_ACCESS(
                     outputroot,
                     "atm_par_era5_temp",
                     grid_type=grid_type,
+                    look=look,
                 )
                 atm_filename_final = get_access_output_filename_daily_folder(
                     current_day,
@@ -181,11 +196,13 @@ def write_atmosphere_to_daily_ACCESS(
                     outputroot,
                     "atm_par_era5",
                     grid_type=grid_type,
+                    look=look,
                 )
-                grid_type = "equirectangular"
+                
                 pole = "None"
         except FileNotFoundError:
-            raise
+            raise OkToSkipDay 
+        
     elif region in ["north", "south"]:
         pole = region
         grid_type = "ease2"
@@ -230,6 +247,7 @@ def write_atmosphere_to_daily_ACCESS(
         update=update,
         grid_type=grid_type,
         pole=pole,
+        look=look,
     ):
         if atm_filename_final.is_file():
             if overwrite or update:
@@ -479,7 +497,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--end_date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
     )
-    parser.add_argument("--sensor", choices=["amsr2"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2","smap","ssmi"], help="Microwave sensor to use")
     parser.add_argument(
         "--target_size", choices=["30", "70"], help="target footprint size in km"
     )
@@ -487,6 +505,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--region", help="region to process", choices=["global", "north", "south"]
     )
+
+    parser.add_argument(
+        "--look", help="look direction, 0==fore, 1==aft", default=1, type=int
+    )
+
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
     )
@@ -501,6 +524,7 @@ if __name__ == "__main__":
     output_root: Path = args.output_root
     target_size: int = int(args.target_size)
     region: str = args.region
+    look: int = args.look
     version: str = args.version
     rtm_dir = temp_root / "rtm" / "tbs"
     START_DAY = args.start_date
@@ -522,6 +546,7 @@ if __name__ == "__main__":
     print(f"Satellite:   {satellite}")
     print(f"Target Size: {target_size}")
     print(f"Region: {region}")
+    print(f"Look: {look}")
     print(f"Version:     {version}")
     if overwrite:
         print("Overwriting old files")
@@ -544,6 +569,7 @@ if __name__ == "__main__":
                 output_root,
                 rtm_dir,
                 version=version,
+                look=look,  
                 verbose=True,
                 overwrite=overwrite,
                 update=update,
@@ -551,5 +577,5 @@ if __name__ == "__main__":
                 commit=commit,
             )
         except OkToSkipDay:
-            print(f"Problem finding file...skipping {date_to_do}")
+             print(f"Problem finding file...skipping {date_to_do}")
         date_to_do = date_to_do + datetime.timedelta(days=1)

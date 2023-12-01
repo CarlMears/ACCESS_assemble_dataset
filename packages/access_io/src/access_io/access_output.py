@@ -690,7 +690,8 @@ def write_daily_ancillary_var_netcdf(
     anc_attrs: dict[str, Any],
     global_attrs: Union[dict[str, Any], Literal["copy"]],
     dataroot: Path = ACCESS_ROOT,
-    ksat:str="13"
+    ksat:str="13",
+    look: int=0,  
 ) -> None:
     """
     Writes a daily NetCDF file for an ancillary variable.
@@ -714,13 +715,13 @@ def write_daily_ancillary_var_netcdf(
     """
 
     base_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, "resamp_tbs",ksat=ksat
+        date, satellite.lower(), target_size, dataroot, "resamp_tbs",ksat=ksat,look=look,
     )
     var_filename = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, f"{anc_name}_temp",ksat=ksat
+        date, satellite.lower(), target_size, dataroot, f"{anc_name}_temp",ksat=ksat,look=look,
     )
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, dataroot, anc_name, ksat=ksat
+        date, satellite.lower(), target_size, dataroot, anc_name, ksat=ksat, look=look,
     )
     with suppress(FileNotFoundError):
         var_filename.unlink()
@@ -818,6 +819,7 @@ def write_ocean_emiss_to_daily_ACCESS(
     dataroot: Path,
     outputroot: Path,
     verbose: bool = False,
+    look: int = 0,
 ) -> None:
     """
     Writes the ocean emissivity data to a daily ACCESS NetCDF file.
@@ -847,10 +849,10 @@ def write_ocean_emiss_to_daily_ACCESS(
         from satellite_definitions.amsr2 import REF_FREQ
 
     base_filename = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat
+        current_day, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat,look=look
     )
     emiss_filename_final = get_access_output_filename_daily_folder(
-        current_day, satellite, target_size, outputroot, "ocean_emiss_era5",ksat=ksat
+        current_day, satellite, target_size, outputroot, "ocean_emiss_era5",ksat=ksat, look=look
     )
 
     try:
@@ -861,8 +863,8 @@ def write_ocean_emiss_to_daily_ACCESS(
                 for name, dim in root_grp.dimensions.items():
                     if name in ["hours", "latitude", "longitude","freq","pol"]:
                         trg.createDimension(
-                            name, len(dim) if not dim.isunlimited() else None
-                        )
+                                name, len(dim) if not dim.isunlimited() else None
+                            )
 
                 # create the new dimensions needed for the emissivity data
                 #trg.createDimension("freq", len(REF_FREQ))

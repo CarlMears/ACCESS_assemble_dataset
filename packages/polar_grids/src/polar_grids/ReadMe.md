@@ -43,7 +43,7 @@ polarstereo_fwd_SP(lats, lons, r_e=6378.2730, e=0.081816153, std_parallel=70.0, 
 Similar to polarstereo_fwd, this function performs the forward transformation for a different polar stereographic projection. It converts latitude and longitude coordinates to Cartesian coordinates on a polar stereographic map. The parameters have the same meaning as in polarstereo_fwd.
 File Paths
 
-The module uses the os library to determine the operating system and sets the appropriate file paths for the polar grids. If the operating system is "nt" (Windows), the module assumes the polar grids are located in "M:/job_access/polar_grids/". If the operating system is "posix" (Unix-like systems), the module assumes the polar grids are located in "/mnt/ops1p-ren/m/job_access/polar_grids/". If the operating system is neither "nt" nor "posix", a ValueError is raised.
+The module uses the os library to determine the operating system and sets the appropriate file paths for the polar grids. If the operating system is "nt" (Windows), the module assumes the polar grids are located in "M:/job_access/polar_grids/". If the operating system is "posix" (Unix-like systems), the module assumes the polar grids are located in "/mnt/m/job_access/polar_grids/". If the operating system is neither "nt" nor "posix", a ValueError is raised.
 
 Make sure to adjust the file paths in the module based on your system configuration.
 Dependencies

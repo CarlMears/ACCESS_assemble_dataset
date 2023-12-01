@@ -4,7 +4,7 @@ from pathlib import Path
 if os.name == "nt":
     polar_grid_root = Path("M:/job_access/polar_grids/")
 elif os.name == "posix":
-    polar_grid_root = Path("/mnt/ops1p-ren/m/job_access/polar_grids/")
+    polar_grid_root = Path("/mnt/m/job_access/polar_grids/")
 else:
     raise ValueError(f"os.name = {os.name} not valid for polar_grid.py")
 

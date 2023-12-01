@@ -6,20 +6,17 @@ tb_orbit_root=/mnt/b/data/_access_temp
 start_date=$1-01-01
 end_date=$1-12-31
 satellite=ssmi
-ksat=15
+ksat=13
 target_size=70
 region=global
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
 version=test_01
-
 echo $ksat
 echo $start_date
 echo $end_date
-
-cd /mnt/ops1p-ren/m/job_access/python/dataset_assembly
-
+cd /mnt/m/job_access/python/dataset_assembly
 python make_daily_ACCESS_files.py \
                         --access_root $output_root \
                         --temp_root $temp_root \

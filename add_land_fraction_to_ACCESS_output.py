@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
-from access_io.access_output import write_daily_lf_netcdf
-from access_io.access_output_polar import write_daily_lf_netcdf_polar
+from ..access_io.access_output import write_daily_lf_netcdf
+from ..access_io.access_output_polar import write_daily_lf_netcdf_polar
 
 
 def add_land_fraction_to_ACCESS_output(

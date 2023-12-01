@@ -1,7 +1,42 @@
-__pycache__/
-*.pyc
-*.deprecated
-.venv/
-old_code/
+# Compiled source #
+###################
+#*.com
+#*.class
+#*.dll
+*.exe
+*.o
+*.so
+*.P
+*.mod
+mwsdps
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+#*.7z
+#*.dmg
+#*.gz
+#*.iso
+#*.jar
+#*.rar
+#*.tar
+#*.zip
+
+*/__pycache__/
+/old_code/
+
+
+New Text Document.txt
 .netrc
-.old
+*.png
+*.pyc
+
+
+*.nc
+*.docx
+*.tmp
+*.log
+
+
+

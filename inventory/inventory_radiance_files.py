@@ -55,7 +55,7 @@ if __name__ == "__main__":
     if os.name == "nt":
         output_root = Path("A:/_access_temp/rtm/tbs")
     elif os.name == "posix":
-        output_root = Path("/mnt/A/_access_temp/rtm/tbs)")
+        output_root = Path("/mnt/a/_access_temp/rtm/tbs)")
     else:
         raise ValueError
 

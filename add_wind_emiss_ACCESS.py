@@ -2,11 +2,15 @@ import argparse
 import datetime
 from contextlib import suppress
 from pathlib import Path
-
-import git
+#import git
 import numpy as np
 from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
 from rss_lock.locked_dataset import LockedDataset
+
+from access_io.access_attr_define import (
+    anc_var_attributes_access,
+    common_global_attributes_access,
+)
 
 from access_io.access_output import write_ocean_emiss_to_daily_ACCESS
 from access_io.access_output_polar import write_ocean_emiss_to_daily_ACCESS_polar
@@ -31,14 +35,14 @@ class OkToSkipDay(Exception):
 
 
 def calc_emissivity_maps(
-    *, date, wind_source, sst_source, target_size, grid_type, pole,
+    *, date, wind_source, sst_source, target_size, grid_type, pole, look,
 ):
     print(f"{date}")
 
     # Get u wind info from data repository
     anc_name = f"u10n_{wind_source}"
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole
+        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look
     )
     # ds = xr.open_dataset(var_filename_final)
     with LockedDataset(var_filename_final, "r", 60) as root_grp:
@@ -53,7 +57,7 @@ def calc_emissivity_maps(
     # Get v wind info from data repository
     anc_name = f"v10n_{wind_source}"
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole
+        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look
     )
 
     with LockedDataset(var_filename_final, "r", 60) as root_grp:
@@ -69,7 +73,7 @@ def calc_emissivity_maps(
 
     anc_name = f"skt_{sst_source}"
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole
+        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look
     )
     with LockedDataset(var_filename_final, "r", 60) as root_grp:
         try:
@@ -148,7 +152,7 @@ if __name__ == "__main__":
         type=datetime.date.fromisoformat,
         help="Last Day to process, as YYYY-MM-DD",
     )
-    parser.add_argument("--sensor", choices=["amsr2","ssmi"], help="Microwave sensor to use")
+    parser.add_argument("--sensor", choices=["amsr2","ssmi","smap"], help="Microwave sensor to use")
     parser.add_argument("--ksat", choices=["13","15"], help="Satellite Number for SSMI")
     parser.add_argument("--target_size", choices=["30", "70"], help="Target size in km")
     parser.add_argument("--look", default=0, help="Look direction")
@@ -183,8 +187,8 @@ if __name__ == "__main__":
     update = args.update
 
     script_name = parser.prog
-    repo = git.Repo(search_parent_directories=True)
-    commit = repo.head.object.hexsha
+    #repo = git.Repo(search_parent_directories=True)
+    #commit = repo.head.object.hexsha
 
     START_DAY = args.start_date
     END_DAY = args.end_date
@@ -206,6 +210,19 @@ if __name__ == "__main__":
     elif satellite.lower() == "ssmi":
         #orbit_times = read_ssmi_orbit_times(ksat=ksat)
         from satellite_definitions.ssmi import (
+            CHANNEL_TO_FREQ_MAP,
+            CHANNEL_TO_POL_MAP,
+            REF_FREQ,
+            REF_EIA,
+            SAT_NAME,
+        )
+
+        assert SAT_NAME.lower() == satellite.lower()
+        NUM_FREQS = len(REF_FREQ)
+        NUM_POLS = 2
+    elif satellite.lower() == "smap":
+        #orbit_times = read_smap_orbit_times()
+        from satellite_definitions.smap import (
             CHANNEL_TO_FREQ_MAP,
             CHANNEL_TO_POL_MAP,
             REF_FREQ,
@@ -245,6 +262,7 @@ while date <= END_DAY:
             grid_type=grid_type,
             pole=pole,
             ksat=ksat,
+            look=look
         )
 
         base_filename = get_access_output_filename_daily_folder(
@@ -255,7 +273,8 @@ while date <= END_DAY:
             "resamp_tbs",
             grid_type=grid_type,
             pole=pole,
-            ksat=ksat
+            ksat=ksat,
+            look=look
         )
         var = "ocean_emiss_era5"
         if need_to_process(
@@ -270,7 +289,7 @@ while date <= END_DAY:
             outputroot=output_root,
             var=var,
             overwrite=overwrite,
-            update=update,
+            update=update
         ):
             with suppress(FileNotFoundError):
                 emiss_filename_final.unlink()
@@ -282,7 +301,18 @@ while date <= END_DAY:
                 target_size=target_size,
                 grid_type=grid_type,
                 pole=pole,
+                look=look,
             )
+
+            if satellite.lower() == "smap":
+                # need to add two extra pol values
+                # because the code only calculate V and H
+                shp = np.array(ocean_emiss.shape)
+                shp[-1] += 2
+                emiss_maps = np.full(shp, np.nan, dtype=np.float32)
+                emiss_maps[:, :, :, :, 0:2] = ocean_emiss
+                ocean_emiss = emiss_maps
+
 
             # common global_attributes for the project
             glb_attrs = common_global_attributes_access(
@@ -297,7 +327,7 @@ while date <= END_DAY:
             glb_attrs.update(var_attrs["global"])
             glb_attrs["corresponding_resampled_tb_file"] = base_filename.name
             glb_attrs["script_name"] = script_name
-            glb_attrs["commit"] = commit
+            #glb_attrs["commit"] = commit
 
             # keep the variable decription parts in var_attrs
 
@@ -314,6 +344,7 @@ while date <= END_DAY:
                     dataroot=access_root,
                     outputroot=output_root,
                     verbose=True,
+                    look=look
                 )
             elif grid_type == "ease2":
                 write_ocean_emiss_to_daily_ACCESS_polar(
@@ -328,6 +359,7 @@ while date <= END_DAY:
                     dataroot=access_root,
                     outputroot=output_root,
                     verbose=True,
+                    look=look
                 )
             else:
                 raise ValueError(f"grid_type: {grid_type} is not valid")

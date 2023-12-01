@@ -119,6 +119,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
         grid_type=grid_type,
         pole=pole,
         look=look,
+        verbose=True,
     ):
         if not base_filename.is_file():
             print(f"base file for {current_day} does not exist, skipping")
@@ -247,6 +248,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 date=current_day,
                 satellite=satellite,
                 target_size=target_size,
+                look=look,
                 ksat=ksat,
                 anc_data=var_by_hour,
                 anc_name=anc_name,
@@ -260,6 +262,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 satellite=satellite,
                 ksat=ksat,
                 target_size=target_size,
+                look=look,
                 grid_type=grid_type,
                 pole=pole,
                 anc_data=var_by_hour,

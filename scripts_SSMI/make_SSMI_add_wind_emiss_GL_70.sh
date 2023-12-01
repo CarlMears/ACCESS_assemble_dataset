@@ -13,7 +13,7 @@ era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
 version=test_01
 
-cd /mnt/ops1p-ren/m/job_access/python/dataset_assembly
+cd /mnt/m/job_access/python/dataset_assembly
 
 python add_wind_emiss_ACCESS.py \
                     --access_root $access_root \

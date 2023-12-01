@@ -5,6 +5,7 @@ src/access_io/access_attr_define.py
 src/access_io/access_output.py
 src/access_io/access_output_polar.py
 src/access_io/cc_by_4_license_string.py
+src/access_io/licenses.py
 src/access_io.egg-info/PKG-INFO
 src/access_io.egg-info/SOURCES.txt
 src/access_io.egg-info/dependency_links.txt
