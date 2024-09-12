@@ -51,13 +51,22 @@ class OkToSkipDay(Exception):
 class DailyRtm:
     """RTM results for the entire day."""
 
-    def __init__(self, date_to_load: date, data_root: Path):
-        filename = (
-            f"era5_tbs_{date_to_load.year}-"
-            + f"{date_to_load.month:02d}-"
-            + f"{date_to_load.day:02d}.nc"
-        )
-        path_to_data = data_root / filename
+    def __init__(self, date_to_load: date, data_root: Path, use_ssmi: bool = False):
+
+        if use_ssmi:
+            filename = (
+                f"era5_tbs_{date_to_load.year}-"
+                + f"{date_to_load.month:02d}-"
+                + f"{date_to_load.day:02d}.ssmi.nc"
+            )
+            path_to_data = data_root / f'y{date_to_load.year:04d}' / f'm{date_to_load.month:02d}' / filename
+        else:
+            filename = (
+                f"era5_tbs_{date_to_load.year}-"
+                + f"{date_to_load.month:02d}-"
+                + f"{date_to_load.day:02d}.nc"
+            )
+            path_to_data = data_root / filename
         print(f"Reading ERA5 computed RTM data {path_to_data}")
         with Dataset(path_to_data, "r") as f:
             tb_down = f["tb_down"][:, :, :, :]
@@ -86,10 +95,10 @@ class DailyRtm:
         filename = (
             f"era5_tbs_{date_to_load_plus_one.year}-"
             + f"{date_to_load_plus_one.month:02d}-"
-            + f"{date_to_load_plus_one.day:02d}.nc"
+            + f"{date_to_load_plus_one.day:02d}.ssmi.nc"
         )
-        path_to_data_plus_one = data_root / filename
-
+        path_to_data_plus_one = data_root / f'y{date_to_load_plus_one.year:04d}' / f'm{date_to_load_plus_one.month:02d}' / filename
+        
         print(f"Reading ERA5 computed RTM data {path_to_data_plus_one}")
         with Dataset(path_to_data_plus_one, "r") as f:
             tb_down = f["tb_down"][:, :, :, :]
@@ -108,6 +117,7 @@ class DailyRtm:
 def write_atmosphere_to_daily_ACCESS(
     current_day: date,
     satellite: str,
+    ksat: str,
     target_size: int,
     region: str,
     dataroot: Path,
@@ -144,6 +154,7 @@ def write_atmosphere_to_daily_ACCESS(
             target_size,
             dataroot,
             "resamp_tbs",
+            ksat=ksat,
             grid_type=grid_type,
             look=look,
         )
@@ -152,19 +163,7 @@ def write_atmosphere_to_daily_ACCESS(
 
         try:
             with LockedDataset(base_filename, "r", lock_stale_time=0.1) as root_grp:
-                # if verbose:
-                #     print(
-                #         f"Reading ERA5 computed RTM data {satellite} "
-                #         + f"on {current_day} in {temproot}"
-                #     )
-
-                # num_lats = root_grp["latitude"].shape[0]
-                # num_lons = root_grp["longitude"].shape[0]
-                # num_hours = root_grp["hours"].shape[0]
-                # num_chan = len(REF_FREQ)
-
-                # rtm_data = DailyRtm(current_day, temproot)
-
+                
                 glb_attrs = common_global_attributes_access(
                     current_day,
                     satellite,
@@ -186,6 +185,7 @@ def write_atmosphere_to_daily_ACCESS(
                     target_size,
                     outputroot,
                     "atm_par_era5_temp",
+                    ksat=ksat,
                     grid_type=grid_type,
                     look=look,
                 )
@@ -195,6 +195,7 @@ def write_atmosphere_to_daily_ACCESS(
                     target_size,
                     outputroot,
                     "atm_par_era5",
+                    ksat=ksat,
                     grid_type=grid_type,
                     look=look,
                 )
@@ -212,6 +213,7 @@ def write_atmosphere_to_daily_ACCESS(
             target_size,
             dataroot,
             "resamp_tbs",
+            ksat=ksat,
             grid_type=grid_type,
             pole=pole,
         )
@@ -230,6 +232,7 @@ def write_atmosphere_to_daily_ACCESS(
             target_size,
             outputroot,
             "atm_par_era5",
+            ksat=ksat,
             grid_type=grid_type,
             pole=region,
         )
@@ -245,6 +248,7 @@ def write_atmosphere_to_daily_ACCESS(
         var="atm_par_era5",
         overwrite=overwrite,
         update=update,
+        ksat=ksat,
         grid_type=grid_type,
         pole=pole,
         look=look,
@@ -273,8 +277,10 @@ def write_atmosphere_to_daily_ACCESS(
                 # num_lons = root_grp["longitude"].shape[0]
                 # num_hours = root_grp["hours"].shape[0]
                 # num_chan = len(REF_FREQ)
-
-                rtm_data = DailyRtm(current_day, temproot)
+                use_ssmi = False
+                if satellite == 'ssmi':
+                    use_ssmi = True
+                rtm_data = DailyRtm(current_day, temproot, use_ssmi=use_ssmi)
 
                 resample_required = True
                 if (target_size == 30) and (grid_type == "equirectangular"):
@@ -410,7 +416,7 @@ def write_atmosphere_to_daily_ACCESS(
                             var = np.moveaxis(var, -1, 0)
 
                             if resample_required:
-                                print(f"Resamp {varname} polar map for freq = {freq}")
+                                print(f"Resamp {varname} map for freq = {freq}")
                                 # time_begin = datetime.datetime.now()
                                 if resampler is not None:
                                     var = resampler.resample_fortran(var)
@@ -498,6 +504,7 @@ if __name__ == "__main__":
         "--end_date", type=date.fromisoformat, help="Day to process, as YYYY-MM-DD"
     )
     parser.add_argument("--sensor", choices=["amsr2","smap","ssmi"], help="Microwave sensor to use")
+    parser.add_argument("--ksat", choices = ["13","15"], help="Satellite Number", default="13")
     parser.add_argument(
         "--target_size", choices=["30", "70"], help="target footprint size in km"
     )
@@ -526,10 +533,14 @@ if __name__ == "__main__":
     region: str = args.region
     look: int = args.look
     version: str = args.version
-    rtm_dir = temp_root / "rtm" / "tbs"
+    if args.sensor == 'ssmi':
+        rtm_dir = temp_root / "rtm" / "tbs_2022_ssmi"
+    else:
+        rtm_dir = temp_root / "rtm" / "tbs_2022"
     START_DAY = args.start_date
     END_DAY = args.end_date
     satellite = args.sensor
+    ksat=args.ksat
     version = args.version
     overwrite = args.overwrite
     update = args.update
@@ -544,6 +555,8 @@ if __name__ == "__main__":
     print(f"RTM Root: {rtm_dir}")
     print(f"Date Range:  {START_DAY} - {END_DAY}")
     print(f"Satellite:   {satellite}")
+    if satellite.lower() in ['SSMI','SSMIS']:
+        print(f"Satellite Number: {ksat}")
     print(f"Target Size: {target_size}")
     print(f"Region: {region}")
     print(f"Look: {look}")
@@ -563,6 +576,7 @@ if __name__ == "__main__":
             write_atmosphere_to_daily_ACCESS(
                 date_to_do,
                 satellite,
+                ksat,
                 target_size,
                 region,
                 access_root,

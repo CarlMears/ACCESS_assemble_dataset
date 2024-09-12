@@ -72,7 +72,7 @@ def write_imerg_rain_rate_for_ACCESS(
     *,
     current_day: datetime.date,
     satellite: str,
-    ksat: str = "13",
+    ksat: str,
     dataroot: Path,
     outputroot: Path,
     temproot: Path,
@@ -155,15 +155,17 @@ def write_imerg_rain_rate_for_ACCESS(
             except KeyError:
                 raise ValueError(f'Error finding "time" in {base_filename}')
 
-        # Downloding all IMERG files for the day
-        # try:
-        #     imerg_half_hourly_request(
-        #         date=current_day,
-        #         target_path=temproot / "imerg",
-        #     )
+        #Downloading all IMERG files for the day
+        try:
+            target_path = temproot / current_day.strftime("%Y")
+            target_path.mkdir(parents=True, exist_ok=True)
+            imerg_half_hourly_request(
+                date=current_day,
+                target_path=target_path
+            )
 
-        # except Exception as e:
-        #     raise RuntimeError("Problem downloading IMERG data") from e
+        except Exception as e:
+            raise RuntimeError("Problem downloading IMERG data") from e
 
         # An array of hour times in seconds
         hourly_intervals = np.arange(0, 86401, 3600)
@@ -175,7 +177,7 @@ def write_imerg_rain_rate_for_ACCESS(
             date,
             footprint_diameter_km,
             region,
-            target_path=temproot / "imerg",
+            target_path=temproot,
             resampler=resampler,
         )
 
@@ -211,6 +213,7 @@ def write_imerg_rain_rate_for_ACCESS(
             write_daily_ancillary_var_netcdf(
                 date=date,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=footprint_diameter_km,
                 anc_data=rr_for_access,
                 anc_name="rainfall_rate",
@@ -223,6 +226,7 @@ def write_imerg_rain_rate_for_ACCESS(
             write_daily_ancillary_var_netcdf_polar(
                 date=date,
                 satellite=satellite,
+                ksat=ksat,
                 target_size=footprint_diameter_km,
                 grid_type=grid_type,
                 pole=pole,
@@ -278,11 +282,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "--look",
         choices=["0","1"],
+        default="0",
         help="Look direction to use",
     )
 
     parser.add_argument(
         "--region", help="region to process", choices=["global", "north", "south"]
+    )
+    parser.add_argument(
+        "--version", help="version of the data", default="v01r00"
     )
     parser.add_argument(
         "--overwrite", help="force overwrite if file exists", action="store_true"
@@ -314,7 +322,9 @@ if __name__ == "__main__":
     START_DAY = args.start_date
     END_DAY = args.end_date
     satellite = args.sensor.upper()
+    ksat = args.ksat
     footprint_diameter_km = args.footprint_diameter
+
     look = int(args.look)
     region = args.region
 
@@ -336,6 +346,7 @@ if __name__ == "__main__":
             redo_imerg_rain_rate_attrs_ACCESS(
                 current_day=date,
                 satellite=satellite,
+                ksat=ksat,
                 dataroot=access_root,
                 outputroot=output_root,
                 temproot=temp_root,
@@ -347,6 +358,7 @@ if __name__ == "__main__":
             write_imerg_rain_rate_for_ACCESS(
                 current_day=date,
                 satellite=satellite,
+                ksat=ksat,
                 dataroot=access_root,
                 outputroot=output_root,
                 temproot=temp_root,

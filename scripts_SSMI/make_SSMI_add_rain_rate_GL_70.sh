@@ -1,9 +1,8 @@
 access_root=/mnt/l/access/ssmi_out_GL_70
 output_root=/mnt/l/access/ssmi_out_GL_70
-temp_root=/mnt/b/data/_access_temp
-rtm_data_root=/mnt/a/data/_access_temp
-start_date=$1-01-01
-end_date=$1-12-31
+temp_root="/mnt/flux-write/imerg"
+start_date=$1"-01-01"
+end_date=$1"-12-31"
 satellite=ssmi
 ksat=$2
 target_size=70
@@ -11,7 +10,7 @@ region=global
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
-version=test_01
+version=v01r00
 
 cd /mnt/m/job_access/python/dataset_assembly
 
@@ -89,13 +88,13 @@ cd /mnt/m/job_access/python/dataset_assembly
 #                     "--update"
 
 python add_imerg_rain_rate_to_ACCESS_output.py \
-                    $access_root \
-                    $output_root \
-                    $temp_root \
-                    $start_date \
-                    $end_date \
-                    $satellite \
-                    $ksat \
-                    $target_size \
-                    "--update"
+                    --access_root $access_root \
+                    --output_root $output_root \
+                    --temp_root $temp_root \
+                    --start_date $start_date \
+                    --end_date $end_date \
+                    --sensor $satellite \
+                    --region $region \
+                    --ksat $ksat \
+                    --footprint_diameter $target_size 
                     

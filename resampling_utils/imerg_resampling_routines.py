@@ -47,12 +47,15 @@ def read_imerg_half_hourly(
         date_string = date.strftime("%Y%m%d")
         minute_string = "0000"
         print(minute_string, date_string)
-
-        filename = Path(next(target_path.glob(f"*.{date_string}*.{minute_string}*")))
+        target_path_yr = target_path / date.strftime("%Y")
+        target_path_yr.mkdir(exist_ok=True, parents=True)
+        filename = Path(next(target_path_yr.glob(f"*.{date_string}*.{minute_string}*")))
 
     else:
         print(minute_string, date_string)
-        filename = Path(next(target_path.glob(f"*.{date_string}*.{minute_string}*")))
+        target_path_yr = target_path / date.strftime("%Y")
+        target_path_yr.mkdir(exist_ok=True, parents=True)
+        filename = Path(next(target_path_yr.glob(f"*.{date_string}*.{minute_string}*")))
 
     last_modified = filename.stat().st_mtime
     # multiple threads do not play nice opening HDF5 files
@@ -301,11 +304,34 @@ def resample_imerg_day(
 
     # Using process pool for resampling global
 
+    multiprocess = True
     if region == "global":
-        with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
-            results = {
-                executor.submit(
-                    resample_hour,
+        if multiprocess:
+            with concurrent.futures.ProcessPoolExecutor(max_workers=6) as executor:
+                results = {
+                    executor.submit(
+                        resample_hour,
+                        hour,
+                        times,
+                        time_intervals,
+                        date,
+                        footprint_diameter_km,
+                        region,
+                        target_path=target_path,
+                    ): hour
+                    for hour in range(0, NUM_HOURS)
+                }
+                for future in concurrent.futures.as_completed(results):
+                    try:
+                        (map, idx, modtime) = future.result()
+                        total_hour[:, :, idx] = map
+                    except KeyboardInterrupt:
+                        return
+                    except Exception as e:
+                        print(f"Error in run: {e}")
+        else:
+            for hour in range(0, NUM_HOURS):
+                map, idx, modtime = resample_hour(
                     hour,
                     times,
                     time_intervals,
@@ -313,17 +339,9 @@ def resample_imerg_day(
                     footprint_diameter_km,
                     region,
                     target_path=target_path,
-                ): hour
-                for hour in range(0, NUM_HOURS)
-            }
-            for future in concurrent.futures.as_completed(results):
-                try:
-                    (map, idx, modtime) = future.result()
-                    total_hour[:, :, idx] = map
-                except KeyboardInterrupt:
-                    return
-                except Exception as e:
-                    print(f"Error in run: {e}")
+                )
+                total_hour[:, :, idx] = map
+
     elif region in ["north", "south"]:  # no parallel processing if EASE2 resampling
         for hour in range(0, NUM_HOURS):
             map, idx, modtime = resample_hour(

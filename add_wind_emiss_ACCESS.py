@@ -35,14 +35,14 @@ class OkToSkipDay(Exception):
 
 
 def calc_emissivity_maps(
-    *, date, wind_source, sst_source, target_size, grid_type, pole, look,
+    *, date, satellite, ksat, wind_source, sst_source, target_size, grid_type, pole, look,
 ):
     print(f"{date}")
 
     # Get u wind info from data repository
     anc_name = f"u10n_{wind_source}"
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look
+        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look, ksat=ksat
     )
     # ds = xr.open_dataset(var_filename_final)
     with LockedDataset(var_filename_final, "r", 60) as root_grp:
@@ -57,7 +57,7 @@ def calc_emissivity_maps(
     # Get v wind info from data repository
     anc_name = f"v10n_{wind_source}"
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look
+        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look, ksat=ksat
     )
 
     with LockedDataset(var_filename_final, "r", 60) as root_grp:
@@ -73,7 +73,7 @@ def calc_emissivity_maps(
 
     anc_name = f"skt_{sst_source}"
     var_filename_final = get_access_output_filename_daily_folder(
-        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look
+        date, satellite.lower(), target_size, access_root, anc_name, grid_type, pole, look=look,ksat=ksat
     )
     with LockedDataset(var_filename_final, "r", 60) as root_grp:
         try:
@@ -296,6 +296,8 @@ while date <= END_DAY:
 
             ocean_emiss = calc_emissivity_maps(
                 date=date,
+                satellite=satellite,
+                ksat=ksat,
                 wind_source="era5",
                 sst_source="era5",
                 target_size=target_size,
@@ -338,6 +340,7 @@ while date <= END_DAY:
                     ocean_emiss=ocean_emiss,
                     current_day=date,
                     satellite=satellite,
+                    ksat=ksat,
                     target_size=target_size,
                     glb_attrs=glb_attrs,
                     var_attrs=var_attrs,
@@ -351,6 +354,7 @@ while date <= END_DAY:
                     ocean_emiss=ocean_emiss,
                     current_day=date,
                     satellite=satellite,
+                    ksat=ksat,
                     target_size=target_size,
                     grid_type=grid_type,
                     pole=pole,

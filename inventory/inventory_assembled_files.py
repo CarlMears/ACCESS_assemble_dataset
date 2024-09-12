@@ -6,14 +6,13 @@ from rss_plotting.plot_2d_array import plot_2d_array
 
 from access_io.access_output import get_access_output_filename_daily_folder
 
-
 def inventory_access_output_files(
     *,
     output_root: Path,
     date_to_do: datetime.date,
     footprint_size: int,
-    satellite="AMSR2",
-    ksat="15",
+    satellite="SSMI",
+    ksat="13",
     grid_type="equirectangular",
     pole="",
     base_template: str,
@@ -204,8 +203,8 @@ if __name__ == "__main__":
     else:
         raise ValueError
 
-    satellite = "smap"
-    ksat="15"
+    satellite = "ssmi"
+    ksat="13"
     footprint_size = 70
     region = "global"
 
@@ -225,7 +224,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"region {region} not valid")
 
-    for year in range(2015, 2023):
+    for year in range(2000, 2013):
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 

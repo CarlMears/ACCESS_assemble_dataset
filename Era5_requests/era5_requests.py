@@ -71,7 +71,7 @@ def era5_hourly_single_level_request(
     # make sure the location exists
     os.makedirs(target.parent, exist_ok=True)
 
-    temp_file = target_path / "temp.nc"
+    temp_file = target_path / f"temp_{variable}_{date:%Y_%m_%d}.nc"
 
     if target.exists():
         if verbose:

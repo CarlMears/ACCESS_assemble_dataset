@@ -6,12 +6,11 @@ target_size=70
 
 
 temp_root=/mnt/b/data/_access_temp
+temp_root=/mnt/flux-write/
 rtm_data_root=/mnt/a/data/_access_temp
 
 args=$(getopt --name "$0" --options s:e:l:v:r:h -- "$@")
 eval set -- "$args"
-
-
 
 start_date=2015-04-02
 end_date=2015-04-30

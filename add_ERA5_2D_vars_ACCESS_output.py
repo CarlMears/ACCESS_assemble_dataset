@@ -10,7 +10,7 @@ from Era5_requests.era5_requests import era5_hourly_single_level_request
 
 # from access_io.access_output import get_access_output_filename_daily_folder
 # from access_io.access_output import write_daily_ancillary_var_netcdf
-from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
+# from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from typing import Any, Tuple
 
 import git
@@ -162,6 +162,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             target_path=temproot,
             full_day=True,
             full_month=True,
+            verbose=True
         )
 
         # if next day is in the same month, this second request
@@ -172,6 +173,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
             target_path=temproot,
             full_day=True,
             full_month=True,
+            verbose=True
         )
 
         # except Exception:
@@ -369,7 +371,7 @@ if __name__ == "__main__":
 
         var_dict = {
             "skt": "Skin temperature",
-            "tcwv": "Total column water vapour",
+            "tcwv": "Total_column_water_vapour",
             "tclw": "total_column_cloud_liquid_water",
             "u10n": "10m_u_component_of_neutral_wind",
             "v10n": "10m_v_component_of_neutral_wind",

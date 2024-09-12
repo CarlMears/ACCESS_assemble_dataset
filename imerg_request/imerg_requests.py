@@ -25,6 +25,41 @@ import requests
 from contextlib import suppress
 
 
+import requests # get the requsts library from https://github.com/requests/requests
+
+
+
+# overriding requests.Session.rebuild_auth to mantain headers when redirected
+
+class SessionWithHeaderRedirection(requests.Session):
+
+    AUTH_HOST = 'urs.earthdata.nasa.gov'
+
+    def __init__(self, username, password):
+
+        super().__init__()
+        self.auth = (username, password)
+
+   # Overrides from the library to keep headers when redirected to or from
+   # the NASA auth host.
+
+    def rebuild_auth(self, prepared_request, response):
+
+        headers = prepared_request.headers
+        url = prepared_request.url
+
+        if 'Authorization' in headers:
+            original_parsed = requests.utils.urlparse(response.request.url)
+            redirect_parsed = requests.utils.urlparse(url)
+
+            if (original_parsed.hostname != redirect_parsed.hostname) and \
+                    redirect_parsed.hostname != self.AUTH_HOST and \
+                    original_parsed.hostname != self.AUTH_HOST:
+
+                        del headers['Authorization']
+        return
+
+
 @lru_cache
 def get_ids() -> list[str]:
     """Obtain 'concept-ids' for the three half-hourly IMERG products.
@@ -100,6 +135,10 @@ def query_one_day_imerg(date: datetime.date) -> list[str]:
 
     # check availability of all IMERG half-hourly products.  Should only be
     # relevant for NRT ACCESS applications.
+    # username = 'carlmears'
+    # password = 'Swill2730'
+
+    # with SessionWithHeaderRedirection(username,password) as s:
     with requests.Session() as s:
         s.headers.update(
             {"Accept": "application/vnd.nasa.cmr.umm_results+json; version=1.6.4"}
@@ -230,7 +269,12 @@ def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Pa
     urls = query_one_day_imerg(date)
 
     files_in_day = []
-    with requests.Session() as s:
+
+    username = 'carlmears'
+    password = 'Swill2730'
+
+    with SessionWithHeaderRedirection(username,password) as s:
+    #with requests.Session() as s:
         # loop through all files and download
         for url in urls:
             try:
@@ -244,7 +288,7 @@ def imerg_half_hourly_request(date: datetime.date, target_path: Path) -> list[Pa
 
 
 if __name__ == "__main__":
-    date = datetime.date(2021, 12, 15)
+    date = datetime.date(2001,1,1)
 
     target_path = Path.cwd()
 

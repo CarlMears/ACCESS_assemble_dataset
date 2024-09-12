@@ -8,14 +8,17 @@ from rss_plotting.plot_2d_array import plot_2d_array
 def is_file_multiple(path_to_test: Path, max_tries: int = 10):
     num_tries = 0
     is_file_multiple = False
+    mod_time = np.nan
     while num_tries < max_tries:
         try:
             is_file_multiple = path_to_test.is_file()
+            mod_time = path_to_test.stat().st_mtime
             break
         except OSError:
             print(f"{num_tries}: path_to_test")
             pass
-    return is_file_multiple
+        num_tries += 1
+    return is_file_multiple,mod_time
 
 
 def radiance_file_exists(date: datetime.date, output_root: Path):
@@ -55,24 +58,26 @@ if __name__ == "__main__":
     if os.name == "nt":
         output_root = Path("A:/_access_temp/rtm/tbs")
     elif os.name == "posix":
-        output_root = Path("/mnt/a/_access_temp/rtm/tbs)")
+        output_root = Path("/mnt/a/data/_access_temp/rtm/tbs_2022")
     else:
         raise ValueError
 
-    for year in range(2021, 2022):
+    for year in range(2000, 2020):
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 
         num_days = end_date - start_date
         file_exist_all = np.zeros((2, num_days.days + 1), dtype=np.int32)
+        mod_time_all = np.full((num_days.days + 1), np.nan, dtype=np.float64)
 
         date_to_do = start_date
         date_index = 0
         while date_to_do <= end_date:
-            exists = radiance_file_exists(date_to_do, output_root)
+            exists,mod_time = radiance_file_exists(date_to_do, output_root)
             if exists:
                 file_exist_all[0, date_index] = 1
                 file_exist_all[1, date_index] = 1
+                mod_time_all[date_index] = mod_time
             date_to_do += datetime.timedelta(days=1)
             date_index += 1
 
@@ -81,5 +86,11 @@ if __name__ == "__main__":
         png_file = summary_path / f"dataset_summary_{year:04d}.png"
         os.makedirs(png_file.parent, exist_ok=True)
         fig.savefig(png_file)
+
+        dmod_time = np.full_like(mod_time_all, np.nan)
+        dmod_time[1:] = np.diff(mod_time_all)
+        fig,ax = plt.subplots()
+        ax.plot(dmod_time/60)
+        ax.set_ylim(0,45)
         plt.show()
         print()

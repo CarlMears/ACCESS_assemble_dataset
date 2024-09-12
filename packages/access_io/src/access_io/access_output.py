@@ -690,7 +690,7 @@ def write_daily_ancillary_var_netcdf(
     anc_attrs: dict[str, Any],
     global_attrs: Union[dict[str, Any], Literal["copy"]],
     dataroot: Path = ACCESS_ROOT,
-    ksat:str="13",
+    ksat:str,
     look: int=0,  
 ) -> None:
     """
@@ -812,7 +812,7 @@ def write_ocean_emiss_to_daily_ACCESS(
     ocean_emiss: ArrayLike,
     current_day: datetime.date,
     satellite: str,
-    ksat: str = "13",
+    ksat: str,
     target_size: int,
     glb_attrs: dict[str, Any],
     var_attrs: dict[str, Any],

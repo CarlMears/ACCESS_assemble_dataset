@@ -5,7 +5,7 @@ SAT_NAME = "SSMI"
 # SSMI Frequencies
 REF_FREQ = np.array([19.35,22.235,37.0], np.float32)
 
-# Mapping to footprint sizes
+# Mapping to global frequency index in tb_2022_ssmi (newer SSMI Tbs)
 REF_FREQ_mapping = np.array([0, 1, 2], np.int32)
 
 # Reference Earth incidence angle to use for each reference frequency (in degrees)

@@ -12,19 +12,20 @@ import os
 from rss_plotting.global_map.regional_map import plot_regional_subset_map as plt_region
 
 
-day_to_do = datetime.date(2017, 7, 12)
-hour_of_day = 7
-footprint_size = 30
+day_to_do = datetime.date(2017, 7, 14)
+hour_of_day = 8
+footprint_size = 70
 channels = [2, 3, 4, 5]
 freqs = [10.65, 18.7, 23.8, 36.5]
 pols = ["V", "H"]
 
-lat_center = 45.0
-lon_center = 280.0
-lat_range = 5.0
-lon_range = 12.5
+lat_center = 55.0
+lon_center = 265.0
+lat_range = 15.0
+lon_range = 25.0
+fig_size = (9.6, 4.6)
 
-path_to_ACCESS_data = Path("L:/access/amsr2_out_test3")
+path_to_ACCESS_data = Path("L:/access/amsr2_out_GL_70")
 
 path_to_this_day = (
     path_to_ACCESS_data
@@ -65,7 +66,7 @@ for ivar, var in enumerate(vars):
                 f"Calculated AMSR2 (from ERA5 profiles) {varnames[ivar]} {freq:.2f}"
             )
 
-        fig = plt.figure(figsize=(9.6, 3.6))
+        fig = plt.figure(figsize=fig_size)
         fig, ax = plt_region(
             glb_map,
             panel_label_loc=[0.03, 0.90],
@@ -124,7 +125,7 @@ for ivar, var in enumerate(vars):
     glb_var_map[glb_var_map < -50.0] = np.nan
 
     title_str = f"{var_names[ivar]}, {var_units[ivar]}"
-    fig = plt.figure(figsize=(9.6, 3.6))
+    fig = plt.figure(figsize=fig_size)
     fig, ax = plt_region(
         glb_var_map,
         panel_label_loc=[0.03, 0.90],
@@ -173,7 +174,7 @@ for ifreq, freq in enumerate(freqs):
         glb_tb_map[glb_tb_map < 50.0] = np.nan
 
         title_str = f"AMSR2 Radiance {freq:.2f}{pol} (K)"
-        fig = plt.figure(figsize=(9.6, 3.6))
+        fig = plt.figure(figsize=fig_size)
         fig, ax = plt_region(
             glb_tb_map,
             panel_label_loc=[0.03, 0.90],
@@ -181,12 +182,12 @@ for ifreq, freq in enumerate(freqs):
             vmin=100.0,
             vmax=300.0,
             cmap="viridis",
-            title=None,
+            title=title_str,
             central_longitude=lon_center,
             central_latitude=lat_center,
             longitude_size=2.0 * lon_range,
             latitude_size=2.0 * lat_range,
-            units=title_str,
+            units=None,
             return_map=False,
             panel_label=None,
             plt_colorbar=True,
