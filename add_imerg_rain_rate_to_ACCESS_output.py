@@ -235,7 +235,7 @@ def write_imerg_rain_rate_for_ACCESS(
                 anc_attrs=var_attrs,
                 global_attrs=global_attrs,
                 dataroot=dataroot,
-                look=look,
+                #look=look,
             )
     else:
         print(f"No processing needed for  {var} on {date}")

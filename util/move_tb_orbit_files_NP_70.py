@@ -4,7 +4,7 @@ from pathlib import Path
 # move tb_orbit files into subdirectory
 
 
-for orbit_set in range(0, 12):
+for orbit_set in range(0, 15):
     start_orbit = 1 + orbit_set * 5000
     end_orbit = start_orbit + 4999
 

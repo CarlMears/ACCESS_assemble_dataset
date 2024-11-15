@@ -30,7 +30,7 @@ def inventory_access_tb_orbit_files(
     if os.name == "nt":
         AMSR2_L2B_root = Path("J:/AMSR2/L2B_V08.2/")
     elif os.name == "posix":
-        AMSR2_L2B_root = Path("/mnt/ops1p-ren/j/AMSR2/L2B_V08.2")
+        AMSR2_L2B_root = Path("/mnt/j/AMSR2/L2B_V08.2")
 
     num_orbits = end_orbit - start_orbit + 1
     exists = np.zeros((len(channel_list), num_orbits), dtype=np.int32)
@@ -112,8 +112,8 @@ if __name__ == "__main__":
         "37H",
     ]
 
-    footprint_size = 30
-    region = "north"
+    footprint_size = 70
+    region = "global"
 
     if region == "global":
         template = "grid_tb"

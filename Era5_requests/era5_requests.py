@@ -20,6 +20,49 @@ from typing import Sequence
 
 import cdsapi
 
+def era5_hourly_single_level_full_month_filename(
+    *,
+    date: datetime.date,
+    variable: str,
+    target_path: Path):
+    if variable[0] in ['u10n','v10n']:
+        variable_set = "vector_10m_NS_wind"
+    else:
+        variable_set = variable[0]
+    path = target_path / variable_set / f"y{date:%Y}"
+
+    if variable[0] in ['u10n','v10n']:
+        name = path / f"ERA5_10m_UV_NS_{date:%Y_%m}.nc"
+    else:
+        name = path / f"ERA5_{variable[1]}_{date:%Y_%m}.full.nc"
+    return name
+
+def era5_hourly_single_level_one_day_filename(
+    *,
+    date: datetime.date,
+    variable: str,
+    target_path: Path):
+
+    if variable[0] == "skt":
+        variable_set = "skt"
+    elif variable[0] in ['tcwv','tclw']:
+        variable_set = "surface"
+    elif variable[0] in ['u10n','v10n']:
+        variable_set = "vector_10m_NS_wind"
+    else:
+        raise ValueError(f"Variable {variable[0]} not recognized")
+
+    path = target_path / variable_set / f"y{date:%Y}" / f"m{date:%m}"
+    if variable[0] == "skt":
+        name = path / f"ERA5_Skin temperature_{date:%Y_%m_%d}.full.nc" 
+    elif variable[0] in ['tcwv','tclw']:
+        name = path / f"era5_surface_{date:%Y-%m-%d}.nc"
+    elif variable[0] in ['u10n','v10n']:
+        name = path / f"ERA5_10m_UV_NS_{date:%Y-%m-%d}.nc"
+    else:
+        raise ValueError(f"Variable {variable[0]} not recognized")
+    return name
+
 
 def era5_hourly_single_level_request(
     *,

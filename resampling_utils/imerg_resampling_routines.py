@@ -61,7 +61,11 @@ def read_imerg_half_hourly(
     # multiple threads do not play nice opening HDF5 files
     with hdf5_access:
         hr1 = xr.open_dataset(filename, group="Grid")
-        rain = hr1["precipitationCal"].values
+        try:
+            rain = hr1["precipitationCal"].values
+        except(KeyError):
+            rain = hr1["precipitation"].values
+            print('Warning: precipitationCal not available -- using precipitation')
         lat = hr1["lat"].values
         lon = hr1["lon"].values
         hr1.close()

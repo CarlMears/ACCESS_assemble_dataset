@@ -17,7 +17,7 @@ def read_ssmi_orbit_times(
     if os.name == "nt":
         filename_orb = Path(f"s:/ssmi/tables/orbit_times_f{ksat}.dat")
     elif os.name == "posix":
-        filename_orb = Path(f"/mnt/ops1p-ren/s/SSMI/tables/orbit_times_f{ksat}.dat")
+        filename_orb = Path(f"/mnt/s/SSMI/tables/orbit_times_f{ksat}.dat")
     else:
         raise NotImplementedError(f"Unknown OS: {os.name}")
     

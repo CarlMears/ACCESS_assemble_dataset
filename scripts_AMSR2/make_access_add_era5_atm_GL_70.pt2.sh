@@ -1,11 +1,13 @@
-access_root=/mnt/l/access/ssmi_out_GL_70
-output_root=/mnt/l/access/ssmi_out_GL_70
-temp_root="/mnt/flux-write/imerg"
-start_date=$1"-01-01"
-end_date=$1"-12-31"
-satellite=ssmi
-ksat=$2
+satellite=amsr2
 target_size=70
+
+access_root="/mnt/l/access/"$satellite"_out_GL_"$target_size
+output_root="/mnt/l/access/"$satellite"_out_GL_"$target_size
+temp_root=/mnt/b/data/_access_temp
+rtm_data_root=/mnt/a/data/_access_temp
+start_date=2023-06-01
+end_date=2024-07-31
+
 region=global
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
@@ -20,7 +22,6 @@ cd /mnt/m/job_access/python/dataset_assembly
 #                        --start_date $start_date \
 #                        --end_date $end_date \
 #                        --sensor $satellite \
-#                        --ksat $ksat \
 #                        --target_size $target_size \
 #                        --version $version \
 #                        --region $region \
@@ -47,17 +48,17 @@ cd /mnt/m/job_access/python/dataset_assembly
 #                     $version \
 #                     "--update" 
 
-# python add_atmosphere_to_ACCESS_output_no_compute.py \
-#                     --access_root $access_root \
-#                     --output_root $output_root \
-#                     --temp_root $rtm_data_root \
-#                     --start_date $start_date \
-#                     --end_date $end_date \
-#                     --sensor $satellite \
-#                     --target_size $target_size \
-#                     --version $version \
-#                     --region $region \
-#                     --overwrite
+python add_atmosphere_to_ACCESS_output_no_compute.py \
+                    --access_root $access_root \
+                    --output_root $output_root \
+                    --temp_root $rtm_data_root \
+                    --start_date $start_date \
+                    --end_date $end_date \
+                    --sensor $satellite \
+                    --target_size $target_size \
+                    --version $version \
+                    --region $region \
+                    --update
                     
 # python add_ERA5_2D_vars_ACCESS_output.py \
 #                        --access_root $output_root \
@@ -66,7 +67,6 @@ cd /mnt/m/job_access/python/dataset_assembly
 #                        --start_date $start_date \
 #                        --end_date $end_date \
 #                        --sensor $satellite \
-#                        --ksat $ksat \
 #                        --target_size $target_size \
 #                        --version $version \
 #                        --region $region \
@@ -87,14 +87,13 @@ cd /mnt/m/job_access/python/dataset_assembly
 #                     $version \
 #                     "--update"
 
-python add_imerg_rain_rate_to_ACCESS_output.py \
-                    --access_root $access_root \
-                    --output_root $output_root \
-                    --temp_root $temp_root \
-                    --start_date $start_date \
-                    --end_date $end_date \
-                    --sensor $satellite \
-                    --region $region \
-                    --ksat $ksat \
-                    --footprint_diameter $target_size 
+# python add_imerg_rain_rate_to_ACCESS_output.py \
+#                     $access_root \
+#                     $output_root \
+#                     $temp_root \
+#                     $start_date \
+#                     $end_date \
+#                     $satellite \
+#                     $target_size \
+#                     "--update"
                     

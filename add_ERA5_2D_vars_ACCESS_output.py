@@ -7,10 +7,12 @@ from netCDF4 import Dataset as netcdf_dataset
 import numpy as np
 
 from Era5_requests.era5_requests import era5_hourly_single_level_request
+from Era5_requests.era5_requests import era5_hourly_single_level_full_month_filename
+from Era5_requests.era5_requests import era5_hourly_single_level_one_day_filename
 
 # from access_io.access_output import get_access_output_filename_daily_folder
 # from access_io.access_output import write_daily_ancillary_var_netcdf
-# from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
+from access_io.access_output_polar import write_daily_ancillary_var_netcdf_polar
 from typing import Any, Tuple
 
 import git
@@ -30,6 +32,78 @@ from util.access_interpolators import time_interpolate_synoptic_maps_ACCESS
 from util.file_times import need_to_process
 
 from era5.resample_ERA5 import ResampleERA5
+
+def get_ERA5_var_for_day(date: datetime.date, 
+                         variable: Tuple[str, str],
+                         temproot: Path,
+                         verbose: bool) -> np.ndarray:
+
+    # see if there a monthly file
+    next_day = date + datetime.timedelta(days=1)
+    os.makedirs(temproot, exist_ok=True)
+
+    file1 = era5_hourly_single_level_full_month_filename(date=date,
+        variable=variable,target_path=temproot)
+
+    try:
+        if file1.is_file():
+            print(f"File {file1} exists, skipping download")
+        else:
+            print(f"File {file1} does not exist, downloading")
+            raise RuntimeError("File does not exist")
+
+        if next_day.month == date.month:
+            # if the next day is in the same month, we only need to download one file
+            hour_index1 = 24 * (date.day - 1)
+            hour_index2 = hour_index1 + 25
+            ds1 = netcdf_dataset(file1)
+            var = ds1[variable[0]][hour_index1:hour_index2, :, :]
+        else:
+            file2 = era5_hourly_single_level_full_month_filename(date=next_day,
+                variable=variable,target_path=temproot)
+            if file2.is_file():
+                print(f"File {file2} exists, skipping download")
+            else:
+                print(f"File {file2} does not exist, downloading")
+                raise RuntimeError("File does not exist")
+            hour_index1 = 24 * (date.day - 1)
+            hour_index2 = hour_index1 + 25
+            ds1 = netcdf_dataset(file1) 
+            var_temp = ds1[variable[0]][hour_index1:hour_index1+24, :, :]
+            ds2 = netcdf_dataset(file2)
+            var_temp2 = ds2[variable[0]][0, :, :]
+            var = np.concatenate((var_temp, var_temp2[np.newaxis, :, :]), axis=0)
+        
+        mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
+
+        return var,mod_time
+
+    except RuntimeError:    
+        #this is the case when the monthly file does not exist
+        # we see if there are daily files
+        file1 = era5_hourly_single_level_one_day_filename(date=date,
+        variable=variable,target_path=temproot)
+        file2 = era5_hourly_single_level_one_day_filename(date=next_day,
+        variable=variable,target_path=temproot)
+
+        if file1.is_file() and file2.is_file():
+            print(f"File {file1} exists, skipping download")
+            print(f"File {file2} exists, skipping download")
+        else:
+            if not file1.is_file():
+                print(f"File {file1} does not exist")
+            if not file2.is_file():
+                print(f"File {file2} does not exist")
+            raise RuntimeError(f"No files exist for variable {variable[0]} on {date}")
+
+        ds1 = netcdf_dataset(file1)
+        var_temp = ds1[variable[0]][:, :, :]
+        ds2 = netcdf_dataset(file2)
+        var_temp2 = ds2[variable[0]][0, :, :]
+        var = np.concatenate((var_temp, var_temp2[np.newaxis, :, :]), axis=0)
+        mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
+
+        return var,mod_time
 
 
 def add_ERA5_single_level_variable_to_ACCESS_output(
@@ -153,58 +227,18 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
 
         # Download ERA5 data from ECMWF for all 24 hours of day, and the first hour
         # of the next day.
-        next_day = current_day + datetime.timedelta(hours=24)
-        # try:
-        os.makedirs(temproot, exist_ok=True)
-        file1 = era5_hourly_single_level_request(
-            date=current_day,
-            variable=variable[1],
-            target_path=temproot,
-            full_day=True,
-            full_month=True,
-            verbose=True
-        )
-
-        # if next day is in the same month, this second request
-        # refers to the same file, so no second download will be done
-        file2 = era5_hourly_single_level_request(
-            date=next_day,
-            variable=variable[1],
-            target_path=temproot,
-            full_day=True,
-            full_month=True,
-            verbose=True
-        )
-
-        # except Exception:
-        #    raise RuntimeError("Problem downloading ERA5 data using cdsapi")
-
-        # open the file(s), and combine the two files into a
-        # 25-map array for the day being processed
-
-        if current_day.month == next_day.month:
-            hour_index1 = 24 * (current_day.day - 1)
-            hour_index2 = hour_index1 + 25
-            ds1 = netcdf_dataset(file1)
-            var = ds1[variable[0]][hour_index1:hour_index2, :, :]
-
-        else:
-            # This is the case when the 25th hour is in the next month
-            hour_index1 = 24 * (current_day.day - 1)
-            hour_index2 = hour_index1 + 24
-            ds1 = netcdf_dataset(file1)
-            var_first_day = ds1[variable[0]][hour_index1:hour_index2, :, :]
-
-            ds2 = netcdf_dataset(file2)
-            var_next_day = ds2[variable[0]][0, :, :]
-            var = np.concatenate(
-                (var_first_day, var_next_day[np.newaxis, :, :]), axis=0
-            )
+        try:
+            var,mod_time = get_ERA5_var_for_day(date=current_day, 
+                                        variable=variable,
+                                        temproot=temproot,
+                                        verbose=True)
+        except RuntimeError as e:
+            print(e)
+            return
 
         var = np.flip(var, 1)
         # file1 modification time as a datetime.datetime object
-        mod_time = datetime.datetime.utcfromtimestamp(file1.stat().st_mtime)
-
+        
         resample_required = True
         if (target_size == 30) and (grid_type == "equirectangular"):
             resample_required = False
@@ -264,7 +298,7 @@ def add_ERA5_single_level_variable_to_ACCESS_output(
                 satellite=satellite,
                 ksat=ksat,
                 target_size=target_size,
-                look=look,
+                #look=look,
                 grid_type=grid_type,
                 pole=pole,
                 anc_data=var_by_hour,
@@ -370,8 +404,8 @@ if __name__ == "__main__":
         print()
 
         var_dict = {
-            "skt": "Skin temperature",
-            "tcwv": "Total_column_water_vapour",
+            "skt": "skin_temperature",
+            "tcwv": "total_column_water_vapour",
             "tclw": "total_column_cloud_liquid_water",
             "u10n": "10m_u_component_of_neutral_wind",
             "v10n": "10m_v_component_of_neutral_wind",

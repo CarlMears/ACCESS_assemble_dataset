@@ -203,8 +203,8 @@ if __name__ == "__main__":
     else:
         raise ValueError
 
-    satellite = "ssmi"
-    ksat="13"
+    satellite = "SSMI"
+    ksat="15"
     footprint_size = 70
     region = "global"
 
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"region {region} not valid")
 
-    for year in range(2000, 2013):
+    for year in range(2000,2013):
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 
@@ -285,7 +285,7 @@ if __name__ == "__main__":
             fig, ax = plot_summary(
                 start_date, end_date, file_exist_all, base_template, template_list
             )
-        if satellite=='ssmi':
+        if satellite.lower()=='ssmi':
             summary_path = output_root / f'f{int(ksat):02d}'/ "summaries"
         else:
             summary_path = output_root / "summaries"

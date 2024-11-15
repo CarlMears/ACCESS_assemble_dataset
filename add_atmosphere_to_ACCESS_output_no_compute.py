@@ -69,6 +69,7 @@ class DailyRtm:
             path_to_data = data_root / filename
         print(f"Reading ERA5 computed RTM data {path_to_data}")
         with Dataset(path_to_data, "r") as f:
+
             tb_down = f["tb_down"][:, :, :, :]
             tb_up = f["tb_up"][:, :, :, :]
             trans = f["tran"][:, :, :, :]
@@ -86,18 +87,29 @@ class DailyRtm:
         self.transmissivity = np.full(shape_rtm_4d, np.nan, dtype=np.float32)
 
         for hour in range(24):
-            for freq in range(num_freqs - 1):
+            for freq in range(num_freqs):
                 self.downwelling_tb[:, :, hour, freq] = tb_down[hour, :, :, freq]
                 self.upwelling_tb[:, :, hour, freq] = tb_up[hour, :, :, freq]
                 self.transmissivity[:, :, hour, freq] = trans[hour, :, :, freq]
 
+
         date_to_load_plus_one = date_to_load + datetime.timedelta(days=1)
-        filename = (
-            f"era5_tbs_{date_to_load_plus_one.year}-"
-            + f"{date_to_load_plus_one.month:02d}-"
-            + f"{date_to_load_plus_one.day:02d}.ssmi.nc"
-        )
-        path_to_data_plus_one = data_root / f'y{date_to_load_plus_one.year:04d}' / f'm{date_to_load_plus_one.month:02d}' / filename
+        if use_ssmi:
+            filename = (
+                f"era5_tbs_{date_to_load_plus_one.year}-"
+                + f"{date_to_load_plus_one.month:02d}-"
+                + f"{date_to_load_plus_one.day:02d}.ssmi.nc"
+            )
+            path_to_data_plus_one = data_root / f'y{date_to_load_plus_one.year:04d}' / f'm{date_to_load_plus_one.month:02d}' / filename
+        
+        else:
+            filename = (
+                f"era5_tbs_{date_to_load_plus_one.year}-"
+                + f"{date_to_load_plus_one.month:02d}-"
+                + f"{date_to_load_plus_one.day:02d}.nc"
+            )
+            path_to_data_plus_one = data_root / filename
+
         
         print(f"Reading ERA5 computed RTM data {path_to_data_plus_one}")
         with Dataset(path_to_data_plus_one, "r") as f:
@@ -106,7 +118,7 @@ class DailyRtm:
             trans = f["tran"][:, :, :, :]
 
         for hour in [0]:
-            for freq in range(num_freqs - 1):
+            for freq in range(num_freqs):
                 self.downwelling_tb[:, :, hour + 24, freq] = tb_down[hour, :, :, freq]
                 self.upwelling_tb[:, :, hour + 24, freq] = tb_up[hour, :, :, freq]
                 self.transmissivity[:, :, hour + 24, freq] = trans[hour, :, :, freq]

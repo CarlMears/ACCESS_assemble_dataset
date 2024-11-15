@@ -4,6 +4,8 @@ from contextlib import suppress
 from pathlib import Path
 #import git
 import numpy as np
+import sys
+sys.path.append('/home/frank/pkg/geomod10_python_wrapper/src/geomod10')
 from geomod10 import wind_emiss  # python wrapper for geomod10b and geomod10c
 from rss_lock.locked_dataset import LockedDataset
 

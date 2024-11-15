@@ -53,7 +53,7 @@ def convert_to_sec_in_day(
                      date_jan1_2000 - 
                      start_of_day).astype(np.float32)
 
-    obtime_in_day[obtime_in_day < 3600.0] = np.nan
+    obtime_in_day[obtime_in_day < 0.0] = np.nan
     obtime_in_day[obtime_in_day > 86400.0] = np.nan
 
     return obtime_in_day

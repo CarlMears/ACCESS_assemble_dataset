@@ -15,7 +15,7 @@ eval set -- "$args"
 start_date=2015-04-02
 end_date=2015-04-30
 look=0
-version=test_01
+version=v01r00
 region=global
 
 

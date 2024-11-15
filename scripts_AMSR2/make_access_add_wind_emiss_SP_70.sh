@@ -10,7 +10,7 @@ region=south
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
-version=test_01
+version=v01r00
 
 python add_wind_emiss_ACCESS.py \
                     --access_root $access_root \

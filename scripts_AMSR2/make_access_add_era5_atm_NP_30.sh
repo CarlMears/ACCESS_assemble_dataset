@@ -2,17 +2,17 @@ satellite=amsr2
 target_size=30
 
 access_root="/mnt/l/access/"$satellite"_out_NP_"$target_size
-access_root="/mnt/l/access/"$satellite"_out_NP_"$target_size
+output_root="/mnt/l/access/"$satellite"_out_NP_"$target_size
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date=2012-08-01
-end_date=2021-12-31
+start_date=2022-01-01
+end_date=2024-07-31
 
 region=north
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
-version=test_01
+version=v01r00
 
 # python add_land_fraction_to_ACCESS_output.py \
 #                        --output_root $output_root \
@@ -53,9 +53,11 @@ python add_atmosphere_to_ACCESS_output_no_compute.py \
                     --start_date $start_date \
                     --end_date $end_date \
                     --sensor $satellite \
+                    --ksat 13 \
                     --target_size $target_size \
                     --version $version \
                     --region $region \
+                    --look 0 \
                     --overwrite
                     
 # python add_ERA5_2D_vars_ACCESS_output.py \

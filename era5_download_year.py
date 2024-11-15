@@ -8,19 +8,18 @@ from Era5_requests.era5_requests import era5_hourly_single_level_request
 
 output_root = Path("/mnt/b/data/_access_temp/era5")
 var_list = ["tcwv", "u10n", "v10n", "tclw", "skt"]
-var_list = ["skt"]
+var_dict = {
+            "skt": "skin_temperature",
+            "tcwv": "total_column_water_vapour",
+            "tclw": "total_column_cloud_liquid_water",
+            "u10n": "10m_u_component_of_neutral_wind",
+            "v10n": "10m_v_component_of_neutral_wind",
+        }
 
 year = 2022
 
 for var in var_list:
     for month in range(1, 13):
-        var_dict = {
-            "skt": "Skin temperature",
-            "tcwv": "Total column water vapour",
-            "tclw": "total_column_cloud_liquid_water",
-            "u10n": "10m_u_component_of_neutral_wind",
-            "v10n": "10m_v_component_of_neutral_wind",
-        }
         try:
             variable = (var, var_dict[var])
         except KeyError:
@@ -42,15 +41,10 @@ for var in var_list:
 
 year = 2023
 
+
+
 for var in var_list:
     for month in range(1, 13):
-        var_dict = {
-            "skt": "Skin temperature",
-            "tcwv": "Total column water vapour",
-            "tclw": "total_column_cloud_liquid_water",
-            "u10n": "10m_u_component_of_neutral_wind",
-            "v10n": "10m_v_component_of_neutral_wind",
-        }
         try:
             variable = (var, var_dict[var])
         except KeyError:
@@ -68,3 +62,27 @@ for var in var_list:
             full_month=True,
             simpler_path=True,
         )
+
+year = 2024
+
+for var in var_list:
+    for month in range(1, 9):
+        
+        try:
+            variable = (var, var_dict[var])
+        except KeyError:
+            print(f"Variable {var} not defined - skipping")
+            continue
+
+        os.makedirs(output_root, exist_ok=True)
+
+        current_day = datetime.datetime(year, month, 15)
+        file1 = era5_hourly_single_level_request(
+            date=current_day,
+            variable=variable[1],
+            target_path=output_root,
+            full_day=True,
+            full_month=True,
+            simpler_path=True,
+        )
+

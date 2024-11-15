@@ -15,7 +15,7 @@ def is_file_multiple(path_to_test: Path, max_tries: int = 10):
             mod_time = path_to_test.stat().st_mtime
             break
         except OSError:
-            print(f"{num_tries}: path_to_test")
+            #print(f"{num_tries}: path_to_test")
             pass
         num_tries += 1
     return is_file_multiple,mod_time
@@ -23,8 +23,10 @@ def is_file_multiple(path_to_test: Path, max_tries: int = 10):
 
 def radiance_file_exists(date: datetime.date, output_root: Path):
     file = output_root / f"era5_tbs_{date.year:04d}-{date.month:02d}-{date.day:02d}.nc"
-
-    return is_file_multiple(file)
+    exists,mod_time = is_file_multiple(file)
+    if not exists:
+        print(f"File {file} does not exist")
+    return exists,mod_time
 
 
 def plot_summary(
@@ -56,13 +58,13 @@ if __name__ == "__main__":
     import os
 
     if os.name == "nt":
-        output_root = Path("A:/_access_temp/rtm/tbs")
+        output_root = Path("A:/_access_temp/rtm/tbs_2022")
     elif os.name == "posix":
         output_root = Path("/mnt/a/data/_access_temp/rtm/tbs_2022")
     else:
         raise ValueError
 
-    for year in range(2000, 2020):
+    for year in range(2013, 2025):
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 
@@ -87,10 +89,10 @@ if __name__ == "__main__":
         os.makedirs(png_file.parent, exist_ok=True)
         fig.savefig(png_file)
 
-        dmod_time = np.full_like(mod_time_all, np.nan)
-        dmod_time[1:] = np.diff(mod_time_all)
-        fig,ax = plt.subplots()
-        ax.plot(dmod_time/60)
-        ax.set_ylim(0,45)
-        plt.show()
+        # dmod_time = np.full_like(mod_time_all, np.nan)
+        # dmod_time[1:] = np.diff(mod_time_all)
+        # fig,ax = plt.subplots()
+        # ax.plot(dmod_time/60)
+        # ax.set_ylim(0,45)
+        # plt.show()
         print()

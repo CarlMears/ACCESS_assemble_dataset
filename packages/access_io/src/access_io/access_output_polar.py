@@ -100,6 +100,7 @@ def write_daily_lf_netcdf_polar(
     date: datetime.date,
     satellite: str,
     ksat: str,
+    look: int = 1,
     target_size: int,
     pole: str = None,
     grid_type: str = None,
@@ -656,6 +657,7 @@ def write_ocean_emiss_to_daily_ACCESS_polar(
     ocean_emiss: ArrayLike,
     current_day: datetime.date,
     satellite: str,
+    ksat: int,
     target_size: int,
     grid_type: str,
     pole: str,
@@ -664,6 +666,7 @@ def write_ocean_emiss_to_daily_ACCESS_polar(
     dataroot: Path,
     outputroot: Path,
     verbose: bool = False,
+    look: int=1,
 ) -> None:
     """Write ocean emissivity data to daily ACCESS NetCDF file in polar coordinates.
 

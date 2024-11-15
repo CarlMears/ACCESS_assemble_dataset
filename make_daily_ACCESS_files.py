@@ -318,6 +318,7 @@ def make_daily_ACCESS_tb_file(
             dtype=np.float32,
         )
         time_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
+        src_orbit_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
         if satellite.lower() == "smap":
             azim_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
             inc_array_by_hour = np.full((NUM_LATS, NUM_LONS, NUM_HOURS), np.nan)
@@ -327,6 +328,7 @@ def make_daily_ACCESS_tb_file(
             (NUM_X, NUM_Y, NUM_HOURS, NUM_FREQS, NUM_POLS), np.nan, dtype=np.float32
         )
         time_array_by_hour = np.full((NUM_X, NUM_Y, NUM_HOURS), np.nan)
+        src_orbit_by_hour = np.full((NUM_X, NUM_Y, NUM_HOURS), np.nan)
     else:
         raise ValueError(f"Region {region} is not valid")
 
@@ -351,8 +353,29 @@ def make_daily_ACCESS_tb_file(
                 dataroot=tb_orbit_root
             )
         except FileNotFoundError:
-            print(f"Time file corrupt or missing for orbit: {orbit}, - skipping orbit")
-            continue
+            if target_size == 70:
+                target_size2 = 30
+            elif target_size == 30: 
+                target_size2 = 70   
+            else:
+                raise ValueError(f"Target size {target_size} is not valid")
+            try:
+                ob_time, filename = read_resampled_tbs(
+                    satellite=satellite,
+                    ksat=ksat,
+                    channel="time",
+                    look=look,
+                    target_size=target_size2,
+                    orbit=orbit,
+                    grid_type=grid_type,
+                    pole=pole,
+                    verbose=verbose,
+                    file_name_dict=file_name_dict,
+                    dataroot=tb_orbit_root
+                )
+            except FileNotFoundError:
+                print(f"Time file corrupt or missing for orbit: {orbit}, - skipping orbit")
+                continue
 
         file_list.append(filename)
         ref_year = 2000
@@ -360,6 +383,7 @@ def make_daily_ACCESS_tb_file(
         obtime_in_day = convert_to_sec_in_day(ob_time, current_day,ref_year=ref_year)
         for hour in range(0, 24):
             time_slice = time_array_by_hour[:, :, hour]
+            orbit_slice = src_orbit_by_hour[:, :, hour]
             start_time_sec = hour * 3600.0
             end_time_sec = start_time_sec + 3600.0
             ok = np.all(
@@ -368,7 +392,8 @@ def make_daily_ACCESS_tb_file(
             )
             if np.any(ok):
                 time_slice[ok] = obtime_in_day[ok]
-
+                orbit_slice[ok] = orbit
+                 
         if verbose:
             print("reading resampled tb files")
 
@@ -451,6 +476,24 @@ def make_daily_ACCESS_tb_file(
                     )
                 )
                 continue
+
+            #check size of tbs
+            tbs_sz = tbs.shape
+            if region == "global":
+                if tbs_sz != (NUM_LATS, NUM_LONS):
+                    print(
+                        f"Warning: {filename} has wrong size: {tbs_sz} - skipping orbit"
+                    )
+                    continue
+            elif region in ["north", "south"]:
+                if tbs_sz != (NUM_X, NUM_Y):
+                    print(
+                        f"Warning: {filename} has wrong size: {tbs_sz} - skipping orbit"
+                    )
+                    continue
+            else:
+                raise ValueError(f"Region {region} is not valid")
+            
 
             file_list.append(filename)
             at_least_one_orbit = True
@@ -598,7 +641,7 @@ if __name__ == "__main__":
         else:
             channels = list(range(1, 13))
     elif satellite == "SSMI":
-        channels = list(range(1, 7))
+        channels = list(range(1, 9))
     elif satellite == "SMAP":
         channels = list(range(1, 5))
         # 1 freq, but 4 polarizations

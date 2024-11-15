@@ -2,15 +2,15 @@ access_root=/mnt/l/access/amsr2_out_NP_70
 output_root=/mnt/l/access/amsr2_out_NP_70
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date=2012-08-01
-end_date=2021-12-31
+start_date=2022-01-01
+end_date=2024-07-31
 satellite=amsr2
 target_size=70
 region=north
 land_mask_source=modis
 era5_vars_to_include="-v skt tcwv tclw u10n v10n"
 wind_source=era5
-version=test_01
+version=v01r00
 
 # python add_land_fraction_to_ACCESS_output.py \
 #                        --output_root $output_root \

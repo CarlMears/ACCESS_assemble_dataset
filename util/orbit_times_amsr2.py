@@ -11,7 +11,7 @@ from util.numpy_date_utils import convert_to_np_datetime64
 if os.name == "nt":
     AMSR2_ORBIT_FILE = Path("j:/amsr2/tables/orbit_times.dat")
 elif os.name == "posix":
-    AMSR2_ORBIT_FILE = Path("/mnt/ops1p-ren/j/amsr2/tables/orbit_times.dat")
+    AMSR2_ORBIT_FILE = Path("/mnt/j/amsr2/tables/orbit_times.dat")
 
 
 def read_amsr2_orbit_times(
