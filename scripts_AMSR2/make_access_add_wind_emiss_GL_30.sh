@@ -15,8 +15,8 @@ access_root="/mnt/l/access/"$satellite"_out_"$region_code"_"$target_size
 output_root="/mnt/l/access/"$satellite"_out_"$region_code"_"$target_size
 temp_root=/mnt/b/data/_access_temp
 rtm_data_root=/mnt/a/data/_access_temp
-start_date=2022-12-31
-end_date=2022-12-31
+start_date=2022-01-01
+end_date=2022-01-01
 satellite=amsr2
 land_mask_source=modis
 wind_source=era5
@@ -36,5 +36,5 @@ python add_wind_emiss_ACCESS.py \
                     --target_size $target_size \
                     --region $region \
                     --version $version \
-                    "--overwrite"
+                    "--update"
                     

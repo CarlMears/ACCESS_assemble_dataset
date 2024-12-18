@@ -73,13 +73,13 @@ def get_resampled_file_name(
 
         orbit_dir = (
             dataroot
-            / f"{satellite}_tb_orbits"
+            / f"{satellite.lower()}_tb_orbits"
             / folder
             / f"r{orbit_lower:05d}_{orbit_upper:05d}"
         )
         orbit_dir_time = (
             dataroot 
-            / f"{satellite}_tb_orbits" 
+            / f"{satellite.lower()}_tb_orbits" 
             / folder
             / f"r{orbit_lower:05d}_{orbit_upper:05d}"
         )

@@ -25,6 +25,7 @@ def inventory_access_tb_orbit_files(
     channel_list: list,
     footprint_size: int,
     file_template: str,
+    time_template: str,
 ) -> np.ndarray:
     debug = False
     if os.name == "nt":
@@ -45,10 +46,15 @@ def inventory_access_tb_orbit_files(
         )
         l2b_root_this_orbit = AMSR2_L2B_root / f"r{lower_range:05d}_{upper_range:05d}"
         for ich, channel in enumerate(channel_list):
-            filename = (
-                tb_orbit_root_this_orbit / f"r{orbit_num:05d}.{file_template}."
-                f"ch{channel:02d}.{footprint_size:03d}km.nc"
-            )
+            if channel_name[channel] == "time":
+                filename = (
+                    tb_orbit_root_this_orbit / f"r{orbit_num:05d}.{time_template}.nc"
+                )
+            else:
+                filename = (
+                    tb_orbit_root_this_orbit / f"r{orbit_num:05d}.{file_template}."
+                    f"ch{channel:02d}.{footprint_size:03d}km.nc"
+                )
             if debug:
                 print(filename)
             isFile = is_file_multiple_try(filename)
@@ -59,9 +65,11 @@ def inventory_access_tb_orbit_files(
                 isFileL2B = is_file_multiple_try(l2b_filename)
                 if isFileL2B:
                     exists[channel - channel_list[0], orbit_num - start_orbit] = 0
-                    print(f"{filename} is missing but L2B file exists")
+                    if ((channel < 1) or (channel > 4)):
+                        print(f"{filename} is missing but L2B file exists")
                 else:
                     exists[channel - channel_list[0], orbit_num - start_orbit] = 1
+    print()
     return exists
 
 
@@ -96,8 +104,9 @@ if __name__ == "__main__":
     else:
         raise ValueError
 
-    channel_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    channel_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
     channel_name = [
+        "time",
         "6.9V",
         "6.9H",
         "7.3V",
@@ -110,24 +119,30 @@ if __name__ == "__main__":
         "24H",
         "37V",
         "37H",
+        "89V",
+        "89H",
     ]
 
-    footprint_size = 70
+
+    footprint_size = 30
     region = "global"
 
     if region == "global":
         template = "grid_tb"
+        time_template = "time"
         tb_orbit_root = tb_orbit_root / f"GL_{footprint_size:02d}"
     elif region == "north":
         template = "polar_grid_tb.north"
+        time_template = "polar_grid_time.north"
         tb_orbit_root = tb_orbit_root / f"NP_{footprint_size:02d}"
     elif region == "south":
         template = "polar_grid_tb.south"
+        time_template = "polar_grid_time.south"
         tb_orbit_root = tb_orbit_root / f"SP_{footprint_size:02d}"
     else:
         raise ValueError(f"Region: {region} is not valid")
 
-    for orbit_group in range(0, 12):
+    for orbit_group in range(0, 14):
         start_orbit = 5000 * orbit_group + 1
         end_orbit = start_orbit + 4999
 
@@ -138,6 +153,7 @@ if __name__ == "__main__":
             channel_list=channel_list,
             footprint_size=footprint_size,
             file_template=template,
+            time_template=time_template,
         )
 
         print(np.sum(exists))

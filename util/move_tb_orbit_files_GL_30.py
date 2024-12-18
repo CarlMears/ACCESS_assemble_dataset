@@ -9,7 +9,7 @@ elif os.name == "posix":
 else:
     raise ValueError(f'FILE SYSTEM {os.name} not SUPPORTED')
 
-for orbit_set in range(1, 14):
+for orbit_set in range(0, 14):
     start_orbit = 1 + orbit_set * 5000
     end_orbit = start_orbit + 4999
 

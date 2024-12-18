@@ -265,6 +265,7 @@ def write_atmosphere_to_daily_ACCESS(
         pole=pole,
         look=look,
     ):
+        atm_filename.parent.mkdir(parents=True,exist_ok=True)
         if atm_filename_final.is_file():
             if overwrite or update:
                 atm_filename_final.unlink()
@@ -292,7 +293,11 @@ def write_atmosphere_to_daily_ACCESS(
                 use_ssmi = False
                 if satellite == 'ssmi':
                     use_ssmi = True
-                rtm_data = DailyRtm(current_day, temproot, use_ssmi=use_ssmi)
+                try:
+                    rtm_data = DailyRtm(current_day, temproot, use_ssmi=use_ssmi)
+                except FileNotFoundError:
+                    temproot2 = temproot.parent / 'tbs'
+                    rtm_data = DailyRtm(current_day, temproot2, use_ssmi=use_ssmi)
 
                 resample_required = True
                 if (target_size == 30) and (grid_type == "equirectangular"):
@@ -359,6 +364,7 @@ def write_atmosphere_to_daily_ACCESS(
                             trg.variables[var_name].setncatts(
                                 {a: var_in.getncattr(a) for a in var_in.ncattrs()}
                             )
+                            
                             trg[var_name][:] = var_in[:]
                         dimensions_out = ("latitude", "longitude", "hours", "freq")
                     elif grid_type == "ease2":
@@ -446,7 +452,7 @@ def write_atmosphere_to_daily_ACCESS(
                             # os.makedirs(debug_root,exist_ok=True)
                             # # END DEBUG
 
-                            print("Interpolating in time", end="")
+                            print(f"Interpolating in time for {varname}, {freq}: {date_to_do}", end="")
                             for hour_index in range(len(root_grp["hours"][:])):
                                 time_map = root_grp["time"][:, :, hour_index]
                                 time_map = (

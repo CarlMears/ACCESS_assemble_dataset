@@ -307,7 +307,7 @@ def write_daily_tb_netcdf_polar(
             satellite,
             target_size,
             dataroot,
-            "resamp_tbs",
+            "resamp_tbs_w_89",
             grid_type="ease2",
             pole=pole,
             ksat=ksat

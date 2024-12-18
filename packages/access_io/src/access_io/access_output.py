@@ -428,7 +428,7 @@ def write_daily_tb_netcdf(
 
     if pole is None:
         filename = get_access_output_filename_daily_folder(
-            date, satellite, target_size, dataroot, "resamp_tbs",ksat=ksat,look=look
+            date, satellite, target_size, dataroot, "resamp_tbs_w_89",ksat=ksat,look=look
         )
         lats = np.arange(0, NUM_LATS) * 0.25 - 90.0
         lons = np.arange(0, NUM_LONS) * 0.25
@@ -622,6 +622,9 @@ def write_daily_tb_netcdf(
                 neginf=fill_val,
             ).astype(np.float32)
             inc[:, :, :] = inc_to_put
+
+    print(f'Wrote {filename}')
+    print()
 
 
 def edit_attrs_daily_tb_netcdf(

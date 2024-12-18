@@ -7,7 +7,7 @@ import xarray as xr
 from access_io.access_output import get_access_output_filename_daily_folder
 
 start_date = datetime.datetime(2012, 1, 1)
-end_date = datetime.datetime(2021, 12, 31)
+end_date = datetime.datetime(2024, 7, 31)
 
 if os.name == "nt":
     access_root = Path("L:/access/")
